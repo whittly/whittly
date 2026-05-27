@@ -1,0 +1,93 @@
+---
+import Base from '../../../layouts/Base.astro';
+import '../../../styles/account.css';
+
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<Base title="регистрация — whittly" description="Создайте аккаунт whittly для сохранения пресетов и доступа к Pro.">
+  <div class="ac-auth-wrap">
+    <div class="ac-auth-card">
+      <div class="ac-auth-top">
+        <div class="ac-auth-tag">// аккаунт</div>
+        <h1 class="ac-auth-title">создать аккаунт</h1>
+      </div>
+
+      <div class="ac-auth-body">
+        <div class="ac-error-msg" id="errMsg"></div>
+
+        <div class="ac-field">
+          <label for="email">email</label>
+          <input class="ac-input" id="email" type="email" autocomplete="email" spellcheck="false" placeholder="you@example.com" />
+        </div>
+
+        <div class="ac-field">
+          <label for="password">пароль <span style="color:var(--ink-faint);font-size:10px;">(мин. 8 символов)</span></label>
+          <input class="ac-input" id="password" type="password" autocomplete="new-password" placeholder="••••••••" />
+        </div>
+
+        <button class="ac-btn" id="submitBtn">создать аккаунт</button>
+
+        <div class="ac-footer-row">
+          <a class="ac-footer-link" href="/ru/account/login/">уже есть аккаунт? <em>войти →</em></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script is:inline define:vars={{ API }}>
+(function () {
+  if (localStorage.getItem('wh_access')) {
+    location.replace('/ru/account/');
+    return;
+  }
+
+  var emailEl  = document.getElementById('email');
+  var passEl   = document.getElementById('password');
+  var submitEl = document.getElementById('submitBtn');
+  var errEl    = document.getElementById('errMsg');
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+
+  async function submit() {
+    errEl.classList.remove('visible');
+    var email    = emailEl.value.trim();
+    var password = passEl.value;
+    if (!email || !password) { showError('заполните все поля'); return; }
+    if (password.length < 8)  { showError('пароль должен содержать минимум 8 символов'); return; }
+
+    submitEl.disabled = true;
+    submitEl.textContent = 'создаём…';
+
+    try {
+      var res  = await fetch(API + '/auth/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+      var data = await res.json();
+
+      if (!res.ok) { showError(data.error ?? 'что-то пошло не так'); return; }
+
+      localStorage.setItem('wh_access',  data.accessToken);
+      localStorage.setItem('wh_refresh', data.refreshToken);
+      localStorage.setItem('wh_user',    JSON.stringify(data.user));
+      location.replace('/ru/account/');
+    } catch (e) {
+      showError('сервер недоступен — запущен ли whittly-api?');
+    } finally {
+      submitEl.disabled = false;
+      submitEl.textContent = 'создать аккаунт';
+    }
+  }
+
+  submitEl.addEventListener('click', submit);
+  [emailEl, passEl].forEach(function (el) {
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+  });
+})();
+</script>

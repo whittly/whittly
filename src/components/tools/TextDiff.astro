@@ -1,0 +1,305 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  original:   isRu ? 'оригинал'     : 'original',
+  modified:   isRu ? 'изменённый'   : 'modified',
+  copy:       isRu ? 'копировать diff' : 'copy diff',
+  copied:     isRu ? 'скопировано'  : 'copied',
+  clear:      isRu ? 'очистить'     : 'clear',
+  paste:      isRu ? '— вставьте тексты для сравнения' : '— paste two texts to compare',
+  identical:  isRu ? 'тексты идентичны' : 'texts are identical',
+  added:      isRu ? ' добавлено'   : ' added',
+  removed:    isRu ? ' удалено'     : ' removed',
+  lines:      isRu ? ' стр.'        : ' lines',
+  phLeft:     isRu ? 'оригинальный текст…' : 'original text…',
+  phRight:    isRu ? 'изменённый текст…'   : 'modified text…',
+  noDiff:     isRu ? '// тексты идентичны' : '// texts are identical',
+  diffPh:     isRu ? '// результат diff появится здесь' : '// diff appears here',
+  tooLarge:   isRu ? '// слишком большой текст (макс. 3000 строк с каждой стороны)' : '// input too large (max 3000 lines per side)',
+};
+---
+<style is:global>
+  .tdiff {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 300px);
+    min-height: 540px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .tdiff-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .tdiff-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tdiff-status.ok  { color: var(--good); }
+  .tdiff-status.eq  { color: var(--ink-soft); }
+  .tdiff-status.err { color: var(--bad); }
+  .tdiff-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tdiff-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .tdiff-action.done  { color: var(--good); border-color: var(--good); }
+
+  .tdiff-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    height: 40%;
+    min-height: 160px;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .tdiff-label-wrap {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .tdiff-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    padding: 5px 14px 0;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    flex-shrink: 0;
+  }
+  .tdiff-in {
+    flex: 1;
+    padding: 6px 14px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+  .tdiff-vsep { background: var(--line); }
+
+  .tdiff-out-wrap {
+    flex: 1;
+    overflow: auto;
+  }
+  .tdiff-out {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre;
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+  .tdiff-out .td-eq  { color: var(--ink-faint); display: block; }
+  .tdiff-out .td-add { color: var(--good); background: color-mix(in srgb, var(--good) 8%, transparent); display: block; }
+  .tdiff-out .td-del { color: var(--bad);  background: color-mix(in srgb, var(--bad)  8%, transparent); display: block; }
+  .tdiff-out .td-ph  { color: var(--ink-faint); }
+  @media (max-width: 760px) {
+    .tdiff { height: auto; min-height: 0; }
+    .tdiff-inputs { grid-template-columns: 1fr; grid-template-rows: 160px 1px 160px; height: auto; }
+    .tdiff-vsep { width: 100%; height: 1px; }
+    .tdiff-label-wrap { height: 160px; }
+  }
+</style>
+
+<div class="tdiff">
+  <div class="tdiff-bar">
+    <span class="tdiff-status" id="tdStatus">{t.paste}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="tdiff-action" id="tdCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="tdiff-action" id="tdClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+  </div>
+  <div class="tdiff-inputs">
+    <div class="tdiff-label-wrap">
+      <span class="tdiff-label">{t.original}</span>
+      <textarea class="tdiff-in" id="tdLeft"  spellcheck="false" placeholder={t.phLeft}></textarea>
+    </div>
+    <div class="tdiff-vsep"></div>
+    <div class="tdiff-label-wrap">
+      <span class="tdiff-label">{t.modified}</span>
+      <textarea class="tdiff-in" id="tdRight" spellcheck="false" placeholder={t.phRight}></textarea>
+    </div>
+  </div>
+  <div class="tdiff-out-wrap">
+    <pre class="tdiff-out" id="tdOut"><span class="td-ph">{t.diffPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var leftEl   = document.getElementById('tdLeft');
+  var rightEl  = document.getElementById('tdRight');
+  var outEl    = document.getElementById('tdOut');
+  var statusEl = document.getElementById('tdStatus');
+  var copyBtn  = document.getElementById('tdCopy');
+  var clearBtn = document.getElementById('tdClear');
+
+  var lastDiffText = '';
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* LCS-based line diff */
+  function computeDiff(a, b) {
+    var m = a.length, n = b.length;
+    /* Build DP table */
+    var dp = new Array(m + 1);
+    for (var i = 0; i <= m; i++) dp[i] = new Int32Array(n + 1);
+    for (var i = 1; i <= m; i++) {
+      for (var j = 1; j <= n; j++) {
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1] + 1
+          : Math.max(dp[i-1][j], dp[i][j-1]);
+      }
+    }
+    /* Backtrack */
+    var edits = [];
+    var i = m, j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && a[i-1] === b[j-1]) {
+        edits.unshift({ type: 'eq', text: a[i-1] });
+        i--; j--;
+      } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+        edits.unshift({ type: 'add', text: b[j-1] });
+        j--;
+      } else {
+        edits.unshift({ type: 'del', text: a[i-1] });
+        i--;
+      }
+    }
+    return edits;
+  }
+
+  function process() {
+    var left  = leftEl.value;
+    var right = rightEl.value;
+
+    if (!left && !right) {
+      outEl.innerHTML  = '<span class="td-ph">' + t.diffPh + '</span>';
+      statusEl.textContent = t.paste;
+      statusEl.className   = 'tdiff-status';
+      lastDiffText = '';
+      return;
+    }
+
+    var aLines = left.split('\n');
+    var bLines = right.split('\n');
+
+    if (aLines.length > 3000 || bLines.length > 3000) {
+      outEl.innerHTML  = '<span class="td-ph">' + esc(t.tooLarge) + '</span>';
+      statusEl.textContent = t.tooLarge;
+      statusEl.className   = 'tdiff-status err';
+      lastDiffText = '';
+      return;
+    }
+
+    var edits = computeDiff(aLines, bLines);
+
+    var added = 0, removed = 0;
+    edits.forEach(function (e) {
+      if (e.type === 'add') added++;
+      else if (e.type === 'del') removed++;
+    });
+
+    if (added === 0 && removed === 0) {
+      outEl.innerHTML  = '<span class="td-ph">' + esc(t.noDiff) + '</span>';
+      statusEl.textContent = t.identical;
+      statusEl.className   = 'tdiff-status eq';
+      lastDiffText = '';
+      return;
+    }
+
+    var html = '';
+    var plain = '';
+    edits.forEach(function (e) {
+      var line = esc(e.text);
+      if (e.type === 'eq') {
+        html  += '<span class="td-eq"> ' + line + '</span>';
+        plain += '  ' + e.text + '\n';
+      } else if (e.type === 'add') {
+        html  += '<span class="td-add">+' + line + '</span>';
+        plain += '+ ' + e.text + '\n';
+      } else {
+        html  += '<span class="td-del">-' + line + '</span>';
+        plain += '- ' + e.text + '\n';
+      }
+    });
+
+    outEl.innerHTML  = html;
+    lastDiffText = plain;
+    statusEl.textContent = '+' + added + t.added + t.lines + '  −' + removed + t.removed + t.lines;
+    statusEl.className   = 'tdiff-status ok';
+    if (window.pushHistory) window.pushHistory('text diff', statusEl.textContent);
+    outEl.closest('.tdiff-out-wrap').classList.remove('flash-ok');
+    void outEl.closest('.tdiff-out-wrap').offsetWidth;
+    outEl.closest('.tdiff-out-wrap').classList.add('flash-ok');
+  }
+
+  leftEl.addEventListener('input', process);
+  rightEl.addEventListener('input', process);
+
+  copyBtn.addEventListener('click', function () {
+    if (!lastDiffText) return;
+    navigator.clipboard.writeText(lastDiffText).then(function () {
+      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+      copyBtn.classList.add('done');
+      setTimeout(function () {
+        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+        copyBtn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    leftEl.value  = '';
+    rightEl.value = '';
+    process();
+    leftEl.focus();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var toolEl = document.querySelector('.tdiff');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastDiffText) copyBtn.click(); }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
+  });
+})();
+</script>

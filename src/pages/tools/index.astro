@@ -1,0 +1,142 @@
+---
+import Base from '../../layouts/Base.astro';
+import { CATALOG, CAT_META, CAT_ORDER, toolSlug } from '../../data/catalog';
+import '../../styles/tools-index.css';
+
+const catalogWithSlugs = CATALOG.map(t => ({ ...t, slug: toolSlug(t) }));
+const totalTools = CATALOG.length;
+---
+
+<Base
+  title="tools — whittly"
+  description="Browse all developer tools — formatters, encoders, generators, parsers. Every tool runs locally in your browser. No signup required."
+>
+  <header class="tools-header">
+    <div>
+      <div class="badge"><span class="badge-dot"></span><span>{totalTools} tools · v0.18.2</span></div>
+      <h1>every <em>tool</em>, one keystroke away.</h1>
+    </div>
+    <p class="subhead">browse the full catalog. all tools run locally — pick one and start. press <span class="kbd">/</span> from anywhere to jump.</p>
+  </header>
+
+  <div class="filter-bar">
+    <div class="search filter-search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="toolSearch" placeholder="filter — try 'json', 'jwt', 'base64'..." />
+      <span class="kbd">/</span>
+    </div>
+    <div class="filter-chips" id="filterChips">
+      <div class="filter-chip active" data-cat="all">all<span class="count">{totalTools}</span></div>
+      {CAT_ORDER.filter(cat => CATALOG.some(t => t.cat === cat)).map(cat => {
+        const count = CATALOG.filter(t => t.cat === cat).length;
+        return <div class="filter-chip" data-cat={cat}>{CAT_META[cat].label}<span class="count">{count}</span></div>;
+      })}
+    </div>
+  </div>
+
+  <div id="catalog"></div>
+
+  <div class="empty" id="empty" style="display:none;">
+    <div class="em">∅</div>
+    <div>no tools match — try a different keyword</div>
+  </div>
+</Base>
+
+<script is:inline define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER }}>
+  const catalogEl = document.getElementById('catalog');
+  const emptyEl = document.getElementById('empty');
+  const searchInput = document.getElementById('toolSearch');
+  let activeCat = 'all';
+  let query = '';
+
+  const urlParams = new URLSearchParams(location.search);
+
+  const urlCat = urlParams.get('cat');
+  if (urlCat) {
+    activeCat = urlCat;
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.cat === urlCat);
+    });
+  }
+
+  const urlQ = urlParams.get('q');
+  if (urlQ) {
+    query = urlQ;
+    searchInput.value = urlQ;
+  }
+
+  function render() {
+    const filtered = catalog.filter(t => {
+      const matchesCat = activeCat === 'all' || t.cat === activeCat;
+      const q = query.toLowerCase().trim();
+      const matchesQ = !q || t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
+      return matchesCat && matchesQ;
+    });
+
+    if (filtered.length === 0) {
+      catalogEl.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    const groups = {};
+    filtered.forEach(t => { (groups[t.cat] = groups[t.cat] || []).push(t); });
+
+    catalogEl.innerHTML = catOrder.filter(c => groups[c]).map(c => {
+      const tools = groups[c];
+      const meta = catMeta[c];
+      const rows = tools.map(t => `
+        <a class="tool-row" href="/tools/${t.slug}/">
+          <i class="ti ${t.icon} icon"></i>
+          <div class="body">
+            <div class="name">${t.name}${t.new ? '<span class="new">new</span>' : ''}</div>
+            <div class="desc">${t.desc}</div>
+          </div>
+        </a>
+      `).join('');
+
+      return `
+        <section class="cat-section">
+          <div class="cat-head">
+            <span class="cat-name">${meta.label}</span>
+            <span class="cat-count">${tools.length} ${tools.length === 1 ? 'tool' : 'tools'}</span>
+            <span class="cat-desc">${meta.desc}</span>
+          </div>
+          <div class="tool-list">${rows}</div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('filterChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCat = chip.dataset.cat;
+    render();
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    query = e.target.value;
+    render();
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const first = catalogEl.querySelector('.tool-row');
+      if (first) window.location.href = first.href;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      searchInput.focus();
+    }
+  });
+
+
+
+  render();
+</script>

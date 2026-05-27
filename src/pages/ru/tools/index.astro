@@ -1,0 +1,155 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { CATALOG, CAT_META, CAT_ORDER, toolSlug } from '../../../data/catalog';
+import { toolNameRu as nameRu, toolDescRu as descRu, catLabelRu, catDescRu } from '../../../data/ru';
+import '../../../styles/tools-index.css';
+
+const catalogWithSlugs = CATALOG.map(t => ({ ...t, slug: toolSlug(t) }));
+const totalTools = CATALOG.length;
+---
+
+<Base
+  title="инструменты — whittly"
+  description="Каталог инструментов для разработчиков. JSON-форматтер, JWT-декодер, Base64, UUID-генератор, Regex-тестер, Cron-парсер. Все работают прямо в браузере."
+>
+  <header class="tools-header">
+    <div>
+      <div class="badge"><span class="badge-dot"></span><span>{totalTools} инструментов · v0.18.2</span></div>
+      <h1>все инструменты — <em>один клик</em>.</h1>
+    </div>
+    <p class="subhead">полный каталог. все инструменты работают прямо в браузере. нажми <span class="kbd">/</span> чтобы быстро перейти к нужному.</p>
+  </header>
+
+  <div class="filter-bar">
+    <div class="search filter-search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="toolSearch" placeholder="фильтр — json, jwt, base64..." />
+      <span class="kbd">/</span>
+    </div>
+    <div class="filter-chips" id="filterChips">
+      <div class="filter-chip active" data-cat="all">все<span class="count">{totalTools}</span></div>
+      {CAT_ORDER.filter(cat => CATALOG.some(t => t.cat === cat)).map(cat => {
+        const count = CATALOG.filter(t => t.cat === cat).length;
+        const label = catLabelRu[cat] ?? CAT_META[cat].label;
+        return <div class="filter-chip" data-cat={cat}>{label}<span class="count">{count}</span></div>;
+      })}
+    </div>
+  </div>
+
+  <div id="catalog"></div>
+
+  <div class="empty" id="empty" style="display:none;">
+    <div class="em">∅</div>
+    <div>ничего не найдено — попробуй другой запрос</div>
+  </div>
+</Base>
+
+<script is:inline define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER, nameRu, descRu, catLabelRu, catDescRu }}>
+  const catalogEl  = document.getElementById('catalog');
+  const emptyEl    = document.getElementById('empty');
+  const searchInput = document.getElementById('toolSearch');
+  let activeCat = 'all';
+  let query = '';
+
+  const urlParams = new URLSearchParams(location.search);
+  const urlCat = urlParams.get('cat');
+  if (urlCat) {
+    activeCat = urlCat;
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.cat === urlCat);
+    });
+  }
+  const urlQ = urlParams.get('q');
+  if (urlQ) {
+    query = urlQ;
+    searchInput.value = urlQ;
+  }
+
+  function getDisplayName(t) { return nameRu[t.name] || t.name; }
+  function getDisplayDesc(t) { return descRu[t.name] || t.desc; }
+  function getCatLabel(cat)  { return catLabelRu[cat] || catMeta[cat].label; }
+  function getCatDesc(cat)   { return catDescRu[cat] || catMeta[cat].desc; }
+
+  function render() {
+    const q = query.toLowerCase().trim();
+    const filtered = catalog.filter(t => {
+      const matchesCat = activeCat === 'all' || t.cat === activeCat;
+      const ruName = (nameRu[t.name] || '').toLowerCase();
+      const ruDesc = (descRu[t.name] || '').toLowerCase();
+      const matchesQ = !q ||
+        t.name.toLowerCase().includes(q) ||
+        t.desc.toLowerCase().includes(q) ||
+        t.cat.toLowerCase().includes(q) ||
+        ruName.includes(q) ||
+        ruDesc.includes(q);
+      return matchesCat && matchesQ;
+    });
+
+    if (filtered.length === 0) {
+      catalogEl.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    const groups = {};
+    filtered.forEach(t => { (groups[t.cat] = groups[t.cat] || []).push(t); });
+
+    catalogEl.innerHTML = catOrder.filter(c => groups[c]).map(c => {
+      const tools = groups[c];
+      const rows = tools.map(t => `
+        <a class="tool-row" href="/ru/tools/${t.slug}/">
+          <i class="ti ${t.icon} icon"></i>
+          <div class="body">
+            <div class="name">${getDisplayName(t)}${t.new ? '<span class="new">new</span>' : ''}</div>
+            <div class="desc">${getDisplayDesc(t)}</div>
+          </div>
+        </a>
+      `).join('');
+
+      const toolCount = tools.length;
+      const countLabel = toolCount === 1 ? '1 инструмент' : toolCount + ' инструмента';
+
+      return `
+        <section class="cat-section">
+          <div class="cat-head">
+            <span class="cat-name">${getCatLabel(c)}</span>
+            <span class="cat-count">${countLabel}</span>
+            <span class="cat-desc">${getCatDesc(c)}</span>
+          </div>
+          <div class="tool-list">${rows}</div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('filterChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCat = chip.dataset.cat;
+    render();
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    query = e.target.value;
+    render();
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const first = catalogEl.querySelector('.tool-row');
+      if (first) window.location.href = first.href;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      searchInput.focus();
+    }
+  });
+
+  render();
+</script>

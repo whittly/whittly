@@ -1,0 +1,293 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  sep:        isRu ? 'разделитель' : 'separator',
+  maxLen:     isRu ? 'макс. длина' : 'max length',
+  copy:       isRu ? 'копировать'  : 'copy',
+  copied:     isRu ? 'скопировано' : 'copied',
+  clear:      isRu ? 'очистить'    : 'clear',
+  paste:      isRu ? '— вставьте текст' : '— paste text to start',
+  phIn:       isRu ? 'вставьте текст или заголовок…' : 'paste title or any text here…',
+  outputPh:   isRu ? '// slug появится здесь' : '// slug appears here',
+  charCount:  isRu ? ' симв.' : ' chars',
+  unlimited:  isRu ? 'без ограничений' : 'unlimited',
+};
+---
+<style is:global>
+  .sg {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .sg-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .sg-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  .sg-opt label { white-space: nowrap; }
+
+  .sg-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 4px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+  }
+  .sg-select:focus { border-color: var(--line-strong); }
+
+  .sg-len-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 4px 7px;
+    width: 58px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    text-align: center;
+  }
+  .sg-len-input:focus { border-color: var(--line-strong); }
+
+  .sg-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sg-status.ok { color: var(--good); }
+
+  .sg-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .sg-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .sg-action.done  { color: var(--good); border-color: var(--good); }
+
+  .sg-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 260px;
+  }
+
+  .sg-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    box-sizing: border-box;
+  }
+
+  .sg-sep-line { background: var(--line); }
+
+  .sg-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .sg-out .ok { color: var(--ink); }
+  .sg-out .ph { color: var(--ink-faint); }
+
+  @media (max-width: 760px) {
+    .sg-panels { grid-template-columns: 1fr; grid-template-rows: 200px 1px 200px; }
+    .sg-sep-line { width: 100%; height: 1px; }
+    .sg-in { min-height: 200px; height: 200px; }
+    .sg-out { height: 200px; }
+  }
+</style>
+
+<div class="sg">
+  <div class="sg-bar">
+    <div class="sg-opt">
+      <label for="sgSep">{t.sep}</label>
+      <select class="sg-select" id="sgSep">
+        <option value="-">-</option>
+        <option value="_">_</option>
+      </select>
+    </div>
+    <div class="sg-opt">
+      <label for="sgMax">{t.maxLen}</label>
+      <input class="sg-len-input" id="sgMax" type="number" min="0" max="999" value="0" />
+    </div>
+    <span class="sg-status" id="sgStatus">{t.paste}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="sg-action" id="sgCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="sg-action" id="sgClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+  </div>
+  <div class="sg-panels">
+    <textarea class="sg-in" id="sgIn" spellcheck="false" placeholder={t.phIn}></textarea>
+    <div class="sg-sep-line"></div>
+    <pre class="sg-out" id="sgOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var inEl     = document.getElementById('sgIn');
+  var outEl    = document.getElementById('sgOut');
+  var statusEl = document.getElementById('sgStatus');
+  var sepEl    = document.getElementById('sgSep');
+  var maxEl    = document.getElementById('sgMax');
+  var copyBtn  = document.getElementById('sgCopy');
+  var clearBtn = document.getElementById('sgClear');
+
+  var lastOutput = '';
+
+  /* Transliteration map: Cyrillic + Latin diacritics → ASCII */
+  var TRANSLIT = {
+    'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh',
+    'з':'z','и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o',
+    'п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts',
+    'ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu',
+    'я':'ya',
+    'À':'A','Á':'A','Â':'A','Ã':'A','Ä':'A','Å':'A','Æ':'AE',
+    'Ç':'C','È':'E','É':'E','Ê':'E','Ë':'E','Ì':'I','Í':'I','Î':'I',
+    'Ï':'I','Ð':'D','Ñ':'N','Ò':'O','Ó':'O','Ô':'O','Õ':'O','Ö':'O',
+    'Ø':'O','Ù':'U','Ú':'U','Û':'U','Ü':'U','Ý':'Y','Þ':'Th','ß':'ss',
+    'à':'a','á':'a','â':'a','ã':'a','ä':'a','å':'a','æ':'ae',
+    'ç':'c','è':'e','é':'e','ê':'e','ë':'e','ì':'i','í':'i','î':'i',
+    'ï':'i','ð':'d','ñ':'n','ò':'o','ó':'o','ô':'o','õ':'o','ö':'o',
+    'ø':'o','ù':'u','ú':'u','û':'u','ü':'u','ý':'y','þ':'th','ÿ':'y',
+    '&':'and','@':'at','#':'hash','%':'pct','$':'dollar','+':'plus',
+    '=':'eq','~':'tilde',
+  };
+
+  function slugify(text, sep, maxLen) {
+    var s = text;
+    /* transliterate */
+    s = s.replace(/./gu, function(ch) {
+      var lo = ch.toLowerCase();
+      if (TRANSLIT[ch] !== undefined) return TRANSLIT[ch];
+      if (TRANSLIT[lo] !== undefined) return TRANSLIT[lo];
+      return ch;
+    });
+    /* lowercase */
+    s = s.toLowerCase();
+    /* replace non-alphanumeric with separator */
+    s = s.replace(/[^a-z0-9]+/g, sep);
+    /* trim leading/trailing sep */
+    var re = new RegExp('^[' + sep + ']+|[' + sep + ']+$', 'g');
+    s = s.replace(re, '');
+    /* truncate */
+    if (maxLen > 0 && s.length > maxLen) {
+      s = s.slice(0, maxLen);
+      /* trim trailing sep after truncate */
+      s = s.replace(re, '');
+    }
+    return s;
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function process() {
+    var raw    = inEl.value;
+    var sep    = sepEl.value;
+    var maxLen = parseInt(maxEl.value, 10) || 0;
+
+    if (!raw.trim()) {
+      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
+      statusEl.textContent = t.paste;
+      statusEl.className   = 'sg-status';
+      lastOutput           = '';
+      return;
+    }
+
+    var result = slugify(raw, sep, maxLen);
+    lastOutput = result;
+    outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+    var maxNote = maxLen > 0 ? ' · max ' + maxLen : '';
+    statusEl.textContent = result.length + t.charCount + maxNote;
+    statusEl.className   = 'sg-status ok';
+    if (window.pushHistory) window.pushHistory('slug generator', result);
+    outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
+  }
+
+  inEl.addEventListener('input', process);
+  sepEl.addEventListener('change', process);
+  maxEl.addEventListener('input', process);
+
+  copyBtn.addEventListener('click', function () {
+    if (!lastOutput) return;
+    navigator.clipboard.writeText(lastOutput).then(function () {
+      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+      copyBtn.classList.add('done');
+      setTimeout(function () {
+        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+        copyBtn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    inEl.value = '';
+    process();
+    inEl.focus();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var toolEl = document.querySelector('.sg');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
+  });
+})();
+</script>

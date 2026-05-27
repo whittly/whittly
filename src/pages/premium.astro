@@ -1,0 +1,189 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/premium.css';
+---
+
+<Base
+  title="support & pro — whittly"
+  description="Simple, honest pricing. Core tools are free forever. Pro features — cloud API, batch processing, large files — coming soon."
+>
+  <header class="premium-hero">
+    <div class="badge"><span class="badge-dot"></span><span>support &amp; pro plans</span></div>
+    <h1>simple, <em>honest</em> pricing.</h1>
+    <p class="lede">core tools are free and ad-free, always. pro features — cloud api, batch processing, large file handling — are coming soon with transparent, infrastructure-only pricing.</p>
+  </header>
+
+  <h2 class="h-section">// plans</h2>
+
+  <div class="billing-row">
+    <div class="bt-wrap" id="billingToggle">
+      <button class="bt-opt active" data-period="mo">monthly</button>
+      <button class="bt-opt" data-period="yr">annual <span class="bt-save">save 30%</span></button>
+    </div>
+  </div>
+
+  <div class="plans-grid">
+
+    <div class="plan-card">
+      <div>
+        <div class="plan-tier">free · always</div>
+        <div class="plan-name">core tools</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount">$0</span>
+      </div>
+      <ul class="plan-features">
+        <li>all tools — runs in your browser</li>
+        <li>no signup, no tracking, no ads</li>
+        <li>files up to 5 MB</li>
+        <li>open source · Apache 2.0</li>
+      </ul>
+      <a href="/tools/" class="plan-cta outline">start using →</a>
+    </div>
+
+    <div class="plan-card featured">
+      <div>
+        <div class="plan-tier">coming soon</div>
+        <div class="plan-name">pro</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount" data-mo="$6" data-yr="$49">$6</span>
+        <span class="period" data-mo="/ mo" data-yr="/ yr">/ mo</span>
+        <span class="annual-note" id="proAnnualNote">billed annually</span>
+      </div>
+      <ul class="plan-features">
+        <li>everything in free</li>
+        <li class="f-sep"></li>
+        <li>batch processing — up to 500 items</li>
+        <li>files up to 100 MB</li>
+        <li>persistent history &amp; saved presets</li>
+        <li>priority server processing</li>
+      </ul>
+      <span class="plan-cta ghost plan-cta-cs">coming soon</span>
+    </div>
+
+    <div class="plan-card">
+      <div>
+        <div class="plan-tier">coming soon</div>
+        <div class="plan-name">api</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount" data-mo="$24" data-yr="$199">$24</span>
+        <span class="period" data-mo="/ mo" data-yr="/ yr">/ mo</span>
+        <span class="annual-note" id="apiAnnualNote">billed annually</span>
+      </div>
+      <ul class="plan-features">
+        <li>everything in pro</li>
+        <li class="f-sep"></li>
+        <li>personal API keys</li>
+        <li>50,000 requests / month</li>
+        <li>CLI integration</li>
+        <li>programmatic access to all tools</li>
+        <li>usage dashboard</li>
+      </ul>
+      <span class="plan-cta ghost plan-cta-cs">coming soon</span>
+    </div>
+
+  </div>
+
+  <h2 class="h-section">// what runs where</h2>
+  <div class="runs-grid">
+    <div class="runs-col">
+      <div class="runs-col-head local"><i class="ti ti-device-laptop"></i>in your browser — always free</div>
+      <ul class="runs-list">
+        <li>JSON formatting &amp; validation</li>
+        <li>Base64 encode / decode</li>
+        <li>JWT decode &amp; inspect</li>
+        <li>Regex testing &amp; highlighting</li>
+        <li>UUID / NanoID generation</li>
+        <li>Cron expression parsing</li>
+        <li>Timestamp conversion</li>
+        <li>URL encode / decode</li>
+        <li>SHA hash generation</li>
+      </ul>
+    </div>
+    <div class="runs-col">
+      <div class="runs-col-head cloud"><i class="ti ti-cloud"></i>on our servers — pro &amp; api</div>
+      <ul class="runs-list">
+        <li>Batch jobs — hundreds of files at once</li>
+        <li>Large file processing (&gt; 5 MB)</li>
+        <li>Persistent history sync across devices</li>
+        <li>Saved presets &amp; custom configurations</li>
+        <li>REST API endpoints for all tools</li>
+        <li>CLI integration for CI/CD pipelines</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="h-section">// while you wait</h2>
+  <div class="free-grid">
+
+    <a class="free-card" href="https://github.com/whittly/issues" target="_blank" rel="noopener">
+      <i class="ti ti-bug"></i>
+      <div>
+        <div class="title">report a bug</div>
+        <div class="desc">found something broken or confusing? open an issue — it genuinely helps.</div>
+      </div>
+    </a>
+
+    <a class="free-card" href="#" id="shareBtn">
+      <i class="ti ti-share-2"></i>
+      <div>
+        <div class="title">share with a teammate</div>
+        <div class="desc">that one person who keeps using sketchy json sites. you know who.</div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="thanks">
+    <span class="thanks-icon"><i class="ti ti-heart"></i></span>
+    <div class="thanks-body">if you find a bug, have a feature idea, or just use the tools daily and share them with teammates — <strong>thank you</strong>. it matters more than you'd think.</div>
+  </div>
+
+</Base>
+
+<script>
+  // Billing toggle
+  const toggle = document.getElementById('billingToggle')!;
+  toggle.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.bt-opt') as HTMLElement | null;
+    if (!btn) return;
+    const period = btn.dataset.period!;
+    toggle.querySelectorAll('.bt-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isAnnual = period === 'yr';
+
+    document.querySelectorAll('.plan-price .amount[data-mo]').forEach(el => {
+      const e = el as HTMLElement;
+      e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
+    });
+    document.querySelectorAll('.plan-price .period[data-mo]').forEach(el => {
+      const e = el as HTMLElement;
+      e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
+    });
+    ['proAnnualNote', 'apiAnnualNote'].forEach(id => {
+      const el = document.getElementById(id)!;
+      el.style.display = isAnnual ? 'inline' : 'none';
+    });
+  });
+
+  // Share button
+  document.getElementById('shareBtn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const data = { title: 'whittly', text: 'small sharp tools for developers', url: 'https://whittly.dev' };
+    if (navigator.share) {
+      try { await navigator.share(data); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(data.url);
+        const card = e.currentTarget as HTMLElement;
+        const title = card.querySelector('.title') as HTMLElement;
+        const original = title.textContent!;
+        title.textContent = 'link copied!';
+        setTimeout(() => { title.textContent = original; }, 1600);
+      } catch {}
+    }
+  });
+
+</script>

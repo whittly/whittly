@@ -1,0 +1,15 @@
+---
+import ToolPage from '../../../components/ToolPage.astro';
+import { CATALOG, toolSlug, type Tool } from '../../../data/catalog';
+
+export function getStaticPaths() {
+  return CATALOG.map(tool => ({
+    params: { slug: toolSlug(tool) },
+    props: { tool },
+  }));
+}
+
+interface Props { tool: Tool; }
+const { tool } = Astro.props;
+---
+<ToolPage lang="ru" tool={tool} />

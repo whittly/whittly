@@ -1,0 +1,662 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  phToken:       isRu ? '— вставьте токен выше' : '— paste a token above',
+  phDecoded:     isRu ? '// расшифрованные header и payload — здесь' : '// decoded header and payload appear here',
+  invalidJwt:    isRu ? 'неверный JWT — ожидается 3 части, разделённые "."' : 'invalid JWT — expected 3 parts separated by "."',
+  invalidFmt:    isRu ? '// неверный формат' : '// invalid format',
+  copyPayload:   isRu ? 'скопировать payload' : 'copy payload',
+  copied:        isRu ? 'скопировано' : 'copied',
+  validStruct:   isRu ? 'структура верна' : 'valid structure',
+  headerPanel:   isRu ? 'заголовок' : 'header',
+  payloadPanel:  isRu ? 'данные' : 'payload',
+  expires:       isRu ? 'истекает' : 'expires',
+  expired:       isRu ? 'истёк' : 'expired',
+  verifyHead:    isRu ? '// проверка подписи' : '// verify signature',
+  enterSecret:   isRu ? 'введите секрет' : 'enter the secret',
+  pastePublicKey:isRu ? 'вставьте публичный ключ' : 'paste the public key',
+  verifying:     isRu ? 'проверка…' : 'verifying…',
+  sigValid:      isRu ? 'подпись действительна' : 'signature valid',
+  sigInvalid:    isRu ? 'подпись недействительна' : 'signature invalid',
+  algNone:       isRu ? 'алгоритм "none" — токен без подписи' : 'alg is "none" — this token has no signature',
+  unsupportedAlg:isRu ? 'неподдерживаемый алгоритм:' : 'unsupported algorithm:',
+  claimSub:      isRu ? 'субъект' : 'subject',
+  claimIss:      isRu ? 'издатель' : 'issuer',
+  claimAud:      isRu ? 'аудитория' : 'audience',
+  claimJti:      isRu ? 'идентификатор' : 'token id',
+  timeAgo:       isRu ? ' назад' : ' ago',
+  timeIn:        isRu ? 'через ' : 'in ',
+};
+---
+<style is:global>
+  .jd {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jd-input-wrap {
+    padding: 14px 16px 12px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .jd-token {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 10px 13px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.15s;
+  }
+
+  .jd-token:focus { border-color: var(--accent); }
+  .jd-token.jd-err { border-color: var(--bad); }
+
+  .jd-token-colored {
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    word-break: break-all;
+    display: none;
+  }
+
+  .jd-token-colored.visible { display: block; }
+  .jd-part-h   { color: var(--accent); }
+  .jd-part-dot { color: var(--ink-faint); }
+  .jd-part-p   { color: var(--good); }
+  .jd-part-s   { color: var(--ink-soft); }
+
+  .jd-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 0.5px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    flex-wrap: wrap;
+    min-height: 38px;
+  }
+
+  .jd-alg {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 0.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .jd-exp         { color: var(--good); }
+  .jd-exp.expired { color: var(--bad); }
+  .jd-exp.soon    { color: oklch(65% 0.18 60); }
+
+  .jd-status-msg { color: var(--ink-faint); flex: 1; }
+  .jd-status-msg.ok  { color: var(--good); }
+  .jd-status-msg.err { color: var(--bad); }
+
+  .jd-copy-decoded {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .jd-copy-decoded:hover { color: var(--ink); border-color: var(--line-strong); }
+  .jd-copy-decoded.done  { color: var(--good); border-color: var(--good); }
+
+  .jd-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+  }
+
+  .jd-panel {
+    overflow: auto;
+    max-height: 320px;
+  }
+
+  .jd-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .jd-panel-dot-h { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .jd-panel-dot-p { width: 8px; height: 8px; border-radius: 50%; background: var(--good);   flex-shrink: 0; }
+
+  .jd-json {
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 0;
+    background: transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .jd-json .k  { color: var(--accent); }
+  .jd-json .s  { color: var(--good); }
+  .jd-json .n  { color: var(--ink); }
+  .jd-json .b  { color: var(--ink-soft); }
+  .jd-json .nl { color: var(--ink-soft); }
+
+  .jd-sep { background: var(--line); }
+
+  .jd-claims {
+    border-top: 0.5px solid var(--line);
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .jd-claim {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    min-width: 100px;
+  }
+
+  .jd-claim-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .jd-claim-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .jd-claim-sub {
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .jd-sig-note {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border-top: 0.5px solid var(--line);
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+
+  .jd-placeholder {
+    padding: 40px 16px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .jd-verify {
+    border-top: 0.5px solid var(--line);
+    padding: 14px 16px 16px;
+  }
+
+  .jd-verify-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .jd-verify-alg {
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  .jd-secret-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .jd-secret {
+    flex: 1;
+    min-width: 200px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .jd-secret:focus { border-color: var(--accent); }
+
+  .jd-pem {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.15s;
+    line-height: 1.55;
+  }
+
+  .jd-pem:focus { border-color: var(--accent); }
+
+  .jd-b64-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .jd-b64-label input { accent-color: var(--accent); cursor: pointer; }
+
+  .jd-verify-result {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 28px;
+  }
+
+  .jd-vr-ok   { color: var(--good); }
+  .jd-vr-fail { color: var(--bad); }
+  .jd-vr-wait { color: var(--ink-faint); }
+
+  .jd-none-warn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: oklch(65% 0.18 60);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .jd-panels { grid-template-columns: 1fr; }
+    .jd-sep    { height: 1px; width: 100%; }
+  }
+</style>
+
+<div class="jd">
+  <div class="jd-input-wrap">
+    <div style="padding-bottom:6px;"><span class="local-badge">// client-only · webcrypto api</span></div>
+    <textarea class="jd-token" id="jdToken" spellcheck="false"
+              placeholder="paste a JWT token here… eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZSJ9.XdaY8…"></textarea>
+    <div class="jd-token-colored" id="jdColored"></div>
+  </div>
+
+  <div class="jd-status-bar" id="jdStatusBar">
+    <span class="jd-status-msg" id="jdMsg">{t.phToken}</span>
+  </div>
+
+  <div id="jdBody">
+    <div class="jd-placeholder" id="jdPlaceholder">
+      {t.phDecoded}
+    </div>
+  </div>
+  <div id="jdVerify"></div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var tokenEl  = document.getElementById('jdToken');
+  var colorEl  = document.getElementById('jdColored');
+  var barEl    = document.getElementById('jdStatusBar');
+  var bodyEl   = document.getElementById('jdBody');
+  var verifyEl = document.getElementById('jdVerify');
+  var msgEl    = document.getElementById('jdMsg');
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function b64urlToBytes(s) {
+    var b64 = s.replace(/-/g,'+').replace(/_/g,'/');
+    while (b64.length % 4) b64 += '=';
+    return Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); });
+  }
+
+  function b64urlDecode(s) {
+    return new TextDecoder().decode(b64urlToBytes(s));
+  }
+
+  function highlight(obj) {
+    var json = JSON.stringify(obj, null, 2);
+    return json.replace(
+      /("(?:\\u[0-9a-fA-F]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      function (m) {
+        var c = m[0] === '"' ? (m.trimEnd().endsWith(':') ? 'k' : 's')
+              : /true|false/.test(m) ? 'b' : /null/.test(m) ? 'nl' : 'n';
+        return '<span class="' + c + '">' + esc(m) + '</span>';
+      }
+    );
+  }
+
+  function fmtDate(ts) {
+    return new Date(ts * 1000).toISOString().replace('T',' ').slice(0,19) + ' UTC';
+  }
+
+  function fmtRelative(ts) {
+    var diff = ts - Date.now() / 1000, abs = Math.abs(diff), str;
+    if (abs < 60)         str = Math.round(abs) + 's';
+    else if (abs < 3600)  str = Math.round(abs/60) + 'm';
+    else if (abs < 86400) str = (abs/3600).toFixed(1) + 'h';
+    else                  str = Math.floor(abs/86400) + 'd';
+    return diff < 0 ? str + t.timeAgo : t.timeIn + str;
+  }
+
+  function algFamily(alg) {
+    if (!alg || alg === 'none')                   return 'none';
+    if (/^HS(256|384|512)$/.test(alg))            return 'hmac';
+    if (/^RS(256|384|512)$/.test(alg))            return 'rsa';
+    if (/^PS(256|384|512)$/.test(alg))            return 'rsa-pss';
+    if (/^ES(256|384|512)$/.test(alg))            return 'ecdsa';
+    return 'unknown';
+  }
+
+  var HASH_MAP = {
+    HS256:'SHA-256', HS384:'SHA-384', HS512:'SHA-512',
+    RS256:'SHA-256', RS384:'SHA-384', RS512:'SHA-512',
+    PS256:'SHA-256', PS384:'SHA-384', PS512:'SHA-512',
+    ES256:'SHA-256', ES384:'SHA-384', ES512:'SHA-512',
+  };
+  var CURVE_MAP = { ES256:'P-256', ES384:'P-384', ES512:'P-521' };
+  var SALT_MAP  = { PS256:32,      PS384:48,      PS512:64 };
+
+  function parsePem(pem) {
+    var b64 = pem.replace(/-----[^-]+-----/g,'').replace(/\s/g,'');
+    return b64urlToBytes(b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''));
+  }
+
+  async function verifySig(token, alg, keyInput, isBase64) {
+    var parts    = token.split('.');
+    var sigBytes = b64urlToBytes(parts[2]);
+    var data     = new TextEncoder().encode(parts[0] + '.' + parts[1]);
+    var family   = algFamily(alg);
+    var hash     = HASH_MAP[alg];
+
+    if (family === 'hmac') {
+      var keyBytes = isBase64
+        ? b64urlToBytes(keyInput.trim())
+        : new TextEncoder().encode(keyInput);
+      var key = await crypto.subtle.importKey('raw', keyBytes, {name:'HMAC', hash}, false, ['verify']);
+      return await crypto.subtle.verify('HMAC', key, sigBytes, data);
+    }
+
+    var derBytes = parsePem(keyInput);
+
+    if (family === 'rsa') {
+      var key2 = await crypto.subtle.importKey('spki', derBytes, {name:'RSASSA-PKCS1-v1_5', hash}, false, ['verify']);
+      return await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key2, sigBytes, data);
+    }
+    if (family === 'rsa-pss') {
+      var key3 = await crypto.subtle.importKey('spki', derBytes, {name:'RSA-PSS', hash}, false, ['verify']);
+      return await crypto.subtle.verify({name:'RSA-PSS', saltLength: SALT_MAP[alg]}, key3, sigBytes, data);
+    }
+    if (family === 'ecdsa') {
+      var key4 = await crypto.subtle.importKey('spki', derBytes, {name:'ECDSA', namedCurve: CURVE_MAP[alg]}, false, ['verify']);
+      return await crypto.subtle.verify({name:'ECDSA', hash}, key4, sigBytes, data);
+    }
+    throw new Error('unsupported algorithm: ' + alg);
+  }
+
+  function renderVerify(alg, token) {
+    var family = algFamily(alg);
+
+    if (family === 'none') {
+      verifyEl.innerHTML =
+        '<div class="jd-verify"><div class="jd-none-warn">' +
+        '<i class="ti ti-alert-triangle"></i>' + t.algNone + '</div></div>';
+      return;
+    }
+    if (family === 'unknown') {
+      verifyEl.innerHTML =
+        '<div class="jd-verify"><div class="jd-none-warn">' +
+        '<i class="ti ti-help"></i>' + t.unsupportedAlg + ' ' + esc(alg) + '</div></div>';
+      return;
+    }
+
+    var isHmac = family === 'hmac';
+    var inputHtml = isHmac
+      ? '<div class="jd-secret-row">' +
+          '<input class="jd-secret" id="jdSecretInput" type="text" spellcheck="false" placeholder="secret key…" autocomplete="off" />' +
+          '<label class="jd-b64-label"><input type="checkbox" id="jdB64Check" /> base64-encoded</label>' +
+        '</div>'
+      : '<textarea class="jd-pem" id="jdPemInput" spellcheck="false" ' +
+          'placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA…&#10;-----END PUBLIC KEY-----"></textarea>';
+
+    verifyEl.innerHTML =
+      '<div class="jd-verify">' +
+        '<div class="jd-verify-head">' + t.verifyHead + ' <span class="jd-verify-alg">' + esc(alg) + '</span></div>' +
+        inputHtml +
+        '<div class="jd-verify-result" id="jdVResult">' +
+          '<span class="jd-vr-wait">— ' + (isHmac ? t.enterSecret : t.pastePublicKey) + '</span>' +
+        '</div>' +
+      '</div>';
+
+    function runVerify() {
+      var keyInput = isHmac
+        ? document.getElementById('jdSecretInput').value
+        : document.getElementById('jdPemInput').value.trim();
+      var resultEl = document.getElementById('jdVResult');
+
+      if (!keyInput) {
+        resultEl.innerHTML = '<span class="jd-vr-wait">— ' + (isHmac ? t.enterSecret : t.pastePublicKey) + '</span>';
+        return;
+      }
+
+      var isBase64 = isHmac && document.getElementById('jdB64Check').checked;
+      resultEl.innerHTML = '<span class="jd-vr-wait">' + t.verifying + '</span>';
+
+      verifySig(token, alg, keyInput, isBase64).then(function (valid) {
+        if (valid) {
+          resultEl.innerHTML = '<i class="ti ti-circle-check" style="font-size:16px;color:var(--good)"></i>' +
+            '<span class="jd-vr-ok">' + t.sigValid + '</span>';
+        } else {
+          resultEl.innerHTML = '<i class="ti ti-circle-x" style="font-size:16px;color:var(--bad)"></i>' +
+            '<span class="jd-vr-fail">' + t.sigInvalid + '</span>';
+        }
+      }).catch(function (e) {
+        resultEl.innerHTML = '<span class="jd-vr-fail">// ' + esc(e.message) + '</span>';
+      });
+    }
+
+    if (isHmac) {
+      document.getElementById('jdSecretInput').addEventListener('input', runVerify);
+      document.getElementById('jdB64Check').addEventListener('change', runVerify);
+    } else {
+      document.getElementById('jdPemInput').addEventListener('input', runVerify);
+    }
+  }
+
+  function process() {
+    var raw = tokenEl.value.trim();
+    tokenEl.classList.remove('jd-err');
+    colorEl.classList.remove('visible');
+    colorEl.innerHTML = '';
+
+    if (!raw) {
+      barEl.innerHTML  = '<span class="jd-status-msg" id="jdMsg">' + t.phToken + '</span>';
+      msgEl = document.getElementById('jdMsg');
+      bodyEl.innerHTML = '<div class="jd-placeholder">' + t.phDecoded + '</div>';
+      verifyEl.innerHTML = '';
+      return;
+    }
+
+    var parts = raw.split('.');
+    if (parts.length !== 3) {
+      tokenEl.classList.add('jd-err');
+      barEl.innerHTML  = '<span class="jd-status-msg err" id="jdMsg">' + t.invalidJwt + '</span>';
+      msgEl = document.getElementById('jdMsg');
+      bodyEl.innerHTML = '<div class="jd-placeholder" style="color:var(--bad)">' + t.invalidFmt + '</div>';
+      verifyEl.innerHTML = '';
+      return;
+    }
+
+    var header, payload;
+    try {
+      header  = JSON.parse(b64urlDecode(parts[0]));
+      payload = JSON.parse(b64urlDecode(parts[1]));
+    } catch (e) {
+      tokenEl.classList.add('jd-err');
+      barEl.innerHTML  = '<span class="jd-status-msg err" id="jdMsg">// ' + esc(e.message) + '</span>';
+      msgEl = document.getElementById('jdMsg');
+      bodyEl.innerHTML = '';
+      verifyEl.innerHTML = '';
+      return;
+    }
+
+    colorEl.innerHTML =
+      '<span class="jd-part-h">'   + esc(parts[0]) + '</span>' +
+      '<span class="jd-part-dot">.</span>' +
+      '<span class="jd-part-p">'   + esc(parts[1]) + '</span>' +
+      '<span class="jd-part-dot">.</span>' +
+      '<span class="jd-part-s">'   + esc(parts[2]) + '</span>';
+    colorEl.classList.add('visible');
+
+    var alg = header.alg || '?';
+    var typ = header.typ || 'JWT';
+    var expHtml = '';
+    if (payload.exp) {
+      var diff   = payload.exp - Date.now() / 1000;
+      var expCls = diff < 0 ? 'expired' : diff < 300 ? 'soon' : '';
+      var expLabel = diff < 0 ? t.expired + ' ' + fmtRelative(payload.exp) : t.expires + ' ' + fmtRelative(payload.exp);
+      expHtml = '<span class="jd-exp ' + expCls + '">' + esc(expLabel) + '</span>';
+    }
+
+    barEl.innerHTML =
+      '<span class="jd-alg">' + esc(alg) + '</span>' +
+      '<span class="jd-status-msg ok">' + esc(typ) + ' · ' + t.validStruct + '</span>' +
+      expHtml +
+      '<button class="jd-copy-decoded" id="jdCopyBtn"><i class="ti ti-copy"></i>' + t.copyPayload + '</button>';
+    if (window.pushHistory) window.pushHistory('jwt decoder', alg + ' · ' + typ + ' · ' + t.validStruct);
+    var jdBodyEl = document.getElementById('jdBody');
+    if (jdBodyEl) { jdBodyEl.classList.remove('flash-ok'); void jdBodyEl.offsetWidth; jdBodyEl.classList.add('flash-ok'); }
+
+    document.getElementById('jdCopyBtn').addEventListener('click', function () {
+      var btn = this;
+      navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(function () {
+        btn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        btn.classList.add('done');
+        setTimeout(function () { btn.innerHTML = '<i class="ti ti-copy"></i>' + t.copyPayload; btn.classList.remove('done'); }, 1600);
+      });
+    });
+
+    var NAMES = { sub: t.claimSub, iss: t.claimIss, aud: t.claimAud, jti: t.claimJti };
+    bodyEl.innerHTML =
+      '<div class="jd-panels">' +
+        '<div class="jd-panel"><div class="jd-panel-head"><span class="jd-panel-dot-h"></span>' + t.headerPanel + '</div>' +
+          '<pre class="jd-json">' + highlight(header) + '</pre></div>' +
+        '<div class="jd-sep"></div>' +
+        '<div class="jd-panel"><div class="jd-panel-head"><span class="jd-panel-dot-p"></span>' + t.payloadPanel + '</div>' +
+          '<pre class="jd-json">' + highlight(payload) + '</pre></div>' +
+      '</div>' +
+      buildClaims(payload, parts[2], NAMES);
+
+    renderVerify(alg, raw);
+  }
+
+  function buildClaims(payload, sig, NAMES) {
+    var claims = [];
+    ['sub','iss','aud','jti'].forEach(function (k) {
+      if (payload[k] === undefined) return;
+      var val = Array.isArray(payload[k]) ? payload[k].join(', ') : String(payload[k]);
+      claims.push('<div class="jd-claim"><span class="jd-claim-key">' + esc(k) + '</span>' +
+        '<span class="jd-claim-val">' + esc(val.length > 28 ? val.slice(0,28)+'…' : val) + '</span>' +
+        '<span class="jd-claim-sub">' + (NAMES[k]||'') + '</span></div>');
+    });
+    ['iat','nbf','exp'].forEach(function (k) {
+      if (payload[k] === undefined) return;
+      var rel = k === 'exp' ? fmtRelative(payload[k]) : '';
+      claims.push('<div class="jd-claim"><span class="jd-claim-key">' + esc(k) + '</span>' +
+        '<span class="jd-claim-val">' + esc(fmtDate(payload[k])) + '</span>' +
+        (rel ? '<span class="jd-claim-sub">' + esc(rel) + '</span>' : '') + '</div>');
+    });
+    if (!claims.length) return '';
+    return '<div class="jd-claims">' + claims.join('') + '</div>';
+  }
+
+  tokenEl.addEventListener('input', process);
+  process();
+
+  document.addEventListener('keydown', function(e) {
+    var toolEl = document.querySelector('.jd');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      var copyBtnEl = document.getElementById('jdCopyBtn');
+      if (copyBtnEl) copyBtnEl.click();
+    }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { tokenEl.value = ''; process(); tokenEl.focus(); }
+  });
+
+  var jdPreload = sessionStorage.getItem('jwt_payload');
+  if (jdPreload) { tokenEl.value = jdPreload; sessionStorage.removeItem('jwt_payload'); process(); }
+  var jdMagic = sessionStorage.getItem('magic_box_payload');
+  if (jdMagic && !tokenEl.value) { tokenEl.value = jdMagic; sessionStorage.removeItem('magic_box_payload'); process(); }
+})();
+</script>

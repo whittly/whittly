@@ -1,0 +1,229 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+
+const t = {
+  inputPh:    isRu ? 'введите число…'          : 'enter a number…',
+  fromBase:   isRu ? 'основание ввода'          : 'input base',
+  binary:     isRu ? 'двоичная'                 : 'binary',
+  octal:      isRu ? 'восьмеричная'             : 'octal',
+  decimal:    isRu ? 'десятичная'               : 'decimal',
+  hex:        isRu ? 'шестнадцатеричная'        : 'hex',
+  custom:     isRu ? 'произвольная (2–36)'      : 'custom (2–36)',
+  customPh:   isRu ? 'основание'                : 'base',
+  copy:       isRu ? 'копировать'               : 'copy',
+  copied:     isRu ? 'скопировано'              : 'copied',
+  invalid:    isRu ? '// недопустимое значение' : '// invalid value',
+  empty:      isRu ? '// введите число выше'    : '// enter a number above',
+  tooBig:     isRu ? '// число вне диапазона'   : '// number out of safe range',
+};
+---
+<style is:global>
+.nb { display: flex; flex-direction: column; gap: 16px; }
+
+.nb-input-row {
+  display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;
+}
+.nb-input {
+  flex: 1; min-width: 140px;
+  font-family: 'JetBrains Mono', monospace; font-size: 15px;
+  background: var(--surface); border: 0.5px solid var(--line-strong);
+  border-radius: var(--radius-md); padding: 10px 14px; color: var(--ink);
+  outline: none; transition: border-color 0.15s;
+}
+.nb-input:focus { border-color: var(--accent); }
+.nb-input.err   { border-color: var(--bad); color: var(--bad); }
+
+.nb-bases {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.nb-base-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  border: 0.5px solid var(--line-strong);
+  background: var(--surface); color: var(--ink-soft);
+  cursor: pointer; transition: all 0.12s; white-space: nowrap;
+}
+.nb-base-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nb-base-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.nb-grid {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--line); border: 0.5px solid var(--line);
+  border-radius: var(--radius-md); overflow: hidden;
+}
+.nb-row {
+  display: grid; grid-template-columns: 80px 1fr auto;
+  align-items: center; gap: 12px;
+  background: var(--surface); padding: 10px 14px;
+}
+.nb-row-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  color: var(--ink-faint); letter-spacing: 0.04em;
+}
+.nb-row-val {
+  font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+  color: var(--ink); word-break: break-all; line-height: 1.5;
+}
+.nb-row-val.dim { color: var(--ink-faint); }
+
+.nb-copy-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  padding: 4px 10px; border-radius: 4px;
+  border: 0.5px solid var(--line-strong);
+  background: none; color: var(--ink-faint);
+  cursor: pointer; transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+}
+.nb-copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.nb-custom-row {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.nb-custom-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--ink-faint); white-space: nowrap;
+}
+.nb-custom-base {
+  width: 60px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  background: var(--surface); border: 0.5px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 6px 10px; color: var(--ink);
+  outline: none; transition: border-color 0.15s; text-align: center;
+}
+.nb-custom-base:focus { border-color: var(--accent); }
+.nb-custom-result {
+  flex: 1; min-width: 120px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  color: var(--ink); word-break: break-all;
+}
+.nb-custom-result.dim { color: var(--ink-faint); }
+</style>
+
+<div class="nb" id="nb">
+  <div class="nb-input-row">
+    <input class="nb-input" id="nbInput" type="text" placeholder={t.inputPh} spellcheck="false" autocomplete="off" />
+    <div class="nb-bases">
+      <button class="nb-base-btn" data-base="2">BIN 2</button>
+      <button class="nb-base-btn" data-base="8">OCT 8</button>
+      <button class="nb-base-btn active" data-base="10">DEC 10</button>
+      <button class="nb-base-btn" data-base="16">HEX 16</button>
+    </div>
+  </div>
+
+  <div class="nb-grid">
+    <div class="nb-row">
+      <span class="nb-row-label">BIN · 2</span>
+      <span class="nb-row-val dim" id="nbBin">{t.empty}</span>
+      <button class="nb-copy-btn" data-target="nbBin">{t.copy}</button>
+    </div>
+    <div class="nb-row">
+      <span class="nb-row-label">OCT · 8</span>
+      <span class="nb-row-val dim" id="nbOct">{t.empty}</span>
+      <button class="nb-copy-btn" data-target="nbOct">{t.copy}</button>
+    </div>
+    <div class="nb-row">
+      <span class="nb-row-label">DEC · 10</span>
+      <span class="nb-row-val dim" id="nbDec">{t.empty}</span>
+      <button class="nb-copy-btn" data-target="nbDec">{t.copy}</button>
+    </div>
+    <div class="nb-row">
+      <span class="nb-row-label">HEX · 16</span>
+      <span class="nb-row-val dim" id="nbHex">{t.empty}</span>
+      <button class="nb-copy-btn" data-target="nbHex">{t.copy}</button>
+    </div>
+  </div>
+
+  <div class="nb-custom-row">
+    <span class="nb-custom-label">{t.custom} →</span>
+    <input class="nb-custom-base" id="nbCustomBase" type="number" min="2" max="36" value="36" />
+    <span class="nb-custom-result dim" id="nbCustomResult">{t.empty}</span>
+    <button class="nb-copy-btn" data-target="nbCustomResult">{t.copy}</button>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  const input      = document.getElementById('nbInput');
+  const binEl      = document.getElementById('nbBin');
+  const octEl      = document.getElementById('nbOct');
+  const decEl      = document.getElementById('nbDec');
+  const hexEl      = document.getElementById('nbHex');
+  const customBase = document.getElementById('nbCustomBase');
+  const customRes  = document.getElementById('nbCustomResult');
+  const baseBtns   = document.querySelectorAll('.nb-base-btn');
+
+  let fromBase = 10;
+
+  function setFromBase(b) {
+    fromBase = b;
+    baseBtns.forEach(btn => btn.classList.toggle('active', +btn.dataset.base === b));
+    convert();
+  }
+
+  baseBtns.forEach(btn => {
+    btn.addEventListener('click', () => setFromBase(+btn.dataset.base));
+  });
+
+  function setVal(el, val, isError) {
+    el.textContent = val;
+    el.classList.toggle('dim', isError || !val || val === t.empty);
+  }
+
+  function convert() {
+    const raw = input.value.trim();
+    if (!raw) {
+      [binEl, octEl, decEl, hexEl, customRes].forEach(e => { e.textContent = t.empty; e.classList.add('dim'); });
+      input.classList.remove('err');
+      return;
+    }
+
+    const n = parseInt(raw, fromBase);
+    if (isNaN(n)) {
+      input.classList.add('err');
+      [binEl, octEl, decEl, hexEl, customRes].forEach(e => { e.textContent = t.invalid; e.classList.add('dim'); });
+      return;
+    }
+    if (n > Number.MAX_SAFE_INTEGER || n < Number.MIN_SAFE_INTEGER) {
+      input.classList.add('err');
+      [binEl, octEl, decEl, hexEl, customRes].forEach(e => { e.textContent = t.tooBig; e.classList.add('dim'); });
+      return;
+    }
+
+    input.classList.remove('err');
+    setVal(binEl, n.toString(2),  false);
+    setVal(octEl, n.toString(8),  false);
+    setVal(decEl, n.toString(10), false);
+    setVal(hexEl, n.toString(16).toUpperCase(), false);
+    convertCustom(n);
+    if (window.pushHistory) window.pushHistory('number base converter', 'base ' + fromBase + ' → ' + n.toString(10) + ' (dec)');
+  }
+
+  function convertCustom(n) {
+    const b = parseInt(customBase.value, 10);
+    if (isNaN(b) || b < 2 || b > 36) { customRes.textContent = t.invalid; customRes.classList.add('dim'); return; }
+    setVal(customRes, n !== undefined ? n.toString(b).toUpperCase() : t.empty, false);
+  }
+
+  input.addEventListener('input', convert);
+  customBase.addEventListener('input', () => {
+    const raw = input.value.trim();
+    if (!raw) return;
+    const n = parseInt(raw, fromBase);
+    if (!isNaN(n)) convertCustom(n);
+  });
+
+  document.querySelectorAll('.nb-copy-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const target = document.getElementById(this.dataset.target);
+      const val = target?.textContent;
+      if (!val || val === t.empty || val === t.invalid || val === t.tooBig) return;
+      navigator.clipboard.writeText(val).then(() => {
+        const orig = this.textContent;
+        this.textContent = t.copied;
+        setTimeout(() => { this.textContent = orig; }, 1500);
+      });
+    });
+  });
+})();
+</script>

@@ -1,0 +1,360 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  encode:       isRu ? 'кодировать'  : 'encode',
+  decode:       isRu ? 'декодировать': 'decode',
+  pasteEncode:  isRu ? '— вставьте текст' : '— paste text to start',
+  pasteDecode:  isRu ? '— вставьте base64' : '— paste base64 to start',
+  swap:         isRu ? 'поменять'    : 'swap',
+  copy:         isRu ? 'копировать'  : 'copy',
+  copied:       isRu ? 'скопировано' : 'copied',
+  clear:        isRu ? 'очистить'    : 'clear',
+  phEncode:     isRu ? 'вставьте текст или base64…' : 'paste text or base64 here…',
+  phDecode:     isRu ? 'вставьте base64…' : 'paste base64 here…',
+  outputPh:     isRu ? '// результат появится здесь' : '// output appears here',
+  encoded:      isRu ? 'закодировано' : 'encoded',
+  decoded:      isRu ? 'декодировано' : 'decoded',
+};
+---
+<style is:global>
+  .b64 {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .b64-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .b64-modes { display: flex; gap: 4px; }
+
+  .b64-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .b64-mode:hover { color: var(--ink); border-color: var(--line-strong); }
+  .b64-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .b64-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    padding: 5px 8px;
+    border: 0.5px solid transparent;
+    border-radius: 5px;
+    transition: all 0.12s;
+  }
+
+  .b64-check:hover { color: var(--ink); border-color: var(--line); }
+  .b64-check input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+
+  .b64-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .b64-status.ok  { color: var(--good); }
+  .b64-status.err { color: var(--bad); }
+
+  .b64-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .b64-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .b64-action.done  { color: var(--good); border-color: var(--good); }
+
+  .b64-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .b64-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .b64-sep { background: var(--line); }
+
+  .b64-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .b64-out .ok { color: var(--ink); }
+  .b64-out .ph { color: var(--ink-faint); }
+  .b64-out .er { color: var(--bad); }
+
+  .b64-swap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .b64-swap:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .b64 { height: auto; min-height: 0; }
+    .b64-panels { grid-template-columns: 1fr; grid-template-rows: 240px 1px 240px; }
+    .b64-sep { width: 100%; height: 1px; }
+    .b64-in, .b64-out { height: 240px; }
+  }
+</style>
+
+<div class="b64">
+  <div class="b64-bar">
+    <div class="b64-modes">
+      <button class="b64-mode active" data-mode="encode">{t.encode}</button>
+      <button class="b64-mode" data-mode="decode">{t.decode}</button>
+    </div>
+    <label class="b64-check">
+      <input type="checkbox" id="b64UrlSafe" />
+      url-safe
+    </label>
+    <span class="b64-status" id="b64Status">{t.pasteEncode}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="b64-swap" id="b64Swap"><i class="ti ti-transfer-vertical"></i>{t.swap}</button>
+    <button class="b64-action" id="b64Copy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="b64-action" id="b64Clear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+  </div>
+  <div class="b64-panels">
+    <textarea class="b64-in" id="b64In" spellcheck="false" placeholder={t.phEncode}></textarea>
+    <div class="b64-sep"></div>
+    <pre class="b64-out" id="b64Out"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  const inEl     = document.getElementById('b64In');
+  const outEl    = document.getElementById('b64Out');
+  const statusEl = document.getElementById('b64Status');
+  const urlSafe  = document.getElementById('b64UrlSafe');
+  const swapBtn  = document.getElementById('b64Swap');
+  const copyBtn  = document.getElementById('b64Copy');
+  const clearBtn = document.getElementById('b64Clear');
+
+  let mode       = 'encode';
+  let lastOutput = '';
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function formatSize(n) {
+    return n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB';
+  }
+
+  function encodeText(str, safe) {
+    const bytes = new TextEncoder().encode(str);
+    let binary  = '';
+    bytes.forEach(function (b) { binary += String.fromCharCode(b); });
+    let b64 = btoa(binary);
+    if (safe) b64 = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    return b64;
+  }
+
+  function decodeText(b64, safe) {
+    let s = b64.replace(/\s/g, '');
+    if (safe) {
+      s = s.replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4) s += '=';
+    }
+    const binary = atob(s);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function process() {
+    const raw  = inEl.value;
+    const safe = urlSafe.checked;
+
+    if (!raw.trim()) {
+      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
+      statusEl.textContent = mode === 'encode' ? t.pasteEncode : t.pasteDecode;
+      statusEl.className   = 'b64-status';
+      lastOutput           = '';
+      return;
+    }
+
+    try {
+      if (mode === 'encode') {
+        const result   = encodeText(raw, safe);
+        lastOutput     = result;
+        outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+        const inSize   = new TextEncoder().encode(raw).length;
+        const outSize  = result.length;
+        statusEl.textContent = t.encoded + ' · ' + formatSize(inSize) + ' → ' + outSize + ' chars';
+        statusEl.className   = 'b64-status ok';
+        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent);
+        flashOutput(outEl);
+      } else {
+        const result   = decodeText(raw, safe);
+        lastOutput     = result;
+        outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+        const outSize  = new TextEncoder().encode(result).length;
+        statusEl.textContent = t.decoded + ' · ' + raw.replace(/\s/g, '').length + ' chars → ' + formatSize(outSize);
+        statusEl.className   = 'b64-status ok';
+        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent);
+        flashOutput(outEl);
+      }
+    } catch (e) {
+      lastOutput          = '';
+      outEl.innerHTML     = '<span class="er">// ' + esc(e.message) + '</span>';
+      statusEl.textContent = e.message;
+      statusEl.className  = 'b64-status err';
+    }
+  }
+
+  inEl.addEventListener('input', process);
+  urlSafe.addEventListener('change', process);
+
+  document.querySelectorAll('.b64-mode').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.b64-mode').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      inEl.placeholder = mode === 'encode' ? t.phEncode : t.phDecode;
+      process();
+    });
+  });
+
+  swapBtn.addEventListener('click', function () {
+    if (!lastOutput) return;
+    inEl.value = lastOutput;
+    mode       = mode === 'encode' ? 'decode' : 'encode';
+    document.querySelectorAll('.b64-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    process();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    if (!lastOutput) return;
+    navigator.clipboard.writeText(lastOutput).then(function () {
+      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+      copyBtn.classList.add('done');
+      setTimeout(function () {
+        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+        copyBtn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    inEl.value = '';
+    process();
+    inEl.focus();
+  });
+
+  try {
+    const sharedPayload = sessionStorage.getItem('magic_box_payload');
+    if (sharedPayload) {
+      inEl.value = sharedPayload;
+      sessionStorage.removeItem('magic_box_payload');
+      const isBase64 = /^[A-Za-z0-9+/=_-]+$/.test(sharedPayload.trim()) && sharedPayload.trim().length > 4;
+      if (isBase64) {
+        mode = 'decode';
+        document.querySelectorAll('.b64-mode').forEach(b => {
+          b.classList.toggle('active', b.dataset.mode === 'decode');
+        });
+        inEl.placeholder = t.phDecode;
+      }
+      process();
+    }
+  } catch (e) {}
+
+  function flashOutput(el) {
+    if (!el) return;
+    el.classList.remove('flash-ok');
+    void el.offsetWidth;
+    el.classList.add('flash-ok');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var toolEl = document.querySelector('.b64');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); process(); }
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
+  });
+})();
+</script>

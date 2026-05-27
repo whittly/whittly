@@ -1,0 +1,294 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  encode:       isRu ? 'кодировать'  : 'encode',
+  decode:       isRu ? 'декодировать': 'decode',
+  pasteEncode:  isRu ? '— вставьте текст' : '— paste text to start',
+  pasteDecode:  isRu ? '— вставьте закодированный url' : '— paste encoded url to start',
+  swap:         isRu ? 'поменять'    : 'swap',
+  copy:         isRu ? 'копировать'  : 'copy',
+  copied:       isRu ? 'скопировано' : 'copied',
+  clear:        isRu ? 'очистить'    : 'clear',
+  phEncode:     isRu ? 'вставьте url или текст…' : 'paste url or text here…',
+  phDecode:     isRu ? 'вставьте закодированный url…' : 'paste encoded url here…',
+  outputPh:     isRu ? '// результат появится здесь' : '// encoded/decoded output appears here',
+  encoded:      isRu ? 'закодировано' : 'encoded',
+  decoded:      isRu ? 'декодировано' : 'decoded',
+  sequences:    isRu ? ' последовательностей' : ' sequences',
+  chars:        isRu ? ' символов' : ' chars',
+};
+---
+<style is:global>
+  .ue {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ue-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .ue-modes { display: flex; gap: 4px; }
+
+  .ue-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .ue-mode:hover { color: var(--ink); border-color: var(--line-strong); }
+  .ue-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .ue-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ue-status.ok  { color: var(--good); }
+  .ue-status.err { color: var(--bad); }
+
+  .ue-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ue-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .ue-action.done  { color: var(--good); border-color: var(--good); }
+
+  .ue-swap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ue-swap:hover { color: var(--accent); border-color: var(--accent); }
+
+  .ue-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .ue-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .ue-sep { background: var(--line); }
+
+  .ue-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .ue-out .ok { color: var(--ink); }
+  .ue-out .ph { color: var(--ink-faint); }
+  .ue-out .er { color: var(--bad); }
+
+  @media (max-width: 760px) {
+    .ue { height: auto; min-height: 0; }
+    .ue-panels { grid-template-columns: 1fr; grid-template-rows: 240px 1px 240px; }
+    .ue-sep { width: 100%; height: 1px; }
+    .ue-in, .ue-out { height: 240px; }
+  }
+</style>
+
+<div class="ue">
+  <div class="ue-bar">
+    <div class="ue-modes">
+      <button class="ue-mode active" data-mode="encode">{t.encode}</button>
+      <button class="ue-mode" data-mode="decode">{t.decode}</button>
+    </div>
+    <span class="ue-status" id="ueStatus">{t.pasteEncode}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="ue-swap" id="ueSwap"><i class="ti ti-transfer-vertical"></i>{t.swap}</button>
+    <button class="ue-action" id="ueCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="ue-action" id="ueClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+  </div>
+  <div class="ue-panels">
+    <textarea class="ue-in" id="ueIn" spellcheck="false" placeholder={t.phEncode}></textarea>
+    <div class="ue-sep"></div>
+    <pre class="ue-out" id="ueOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var inEl     = document.getElementById('ueIn');
+  var outEl    = document.getElementById('ueOut');
+  var statusEl = document.getElementById('ueStatus');
+  var swapBtn  = document.getElementById('ueSwap');
+  var copyBtn  = document.getElementById('ueCopy');
+  var clearBtn = document.getElementById('ueClear');
+
+  var mode       = 'encode';
+  var lastOutput = '';
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function process() {
+    var raw = inEl.value;
+    if (!raw.trim()) {
+      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
+      statusEl.textContent = mode === 'encode' ? t.pasteEncode : t.pasteDecode;
+      statusEl.className   = 'ue-status';
+      lastOutput           = '';
+      return;
+    }
+
+    try {
+      var result;
+      if (mode === 'encode') {
+        result = encodeURIComponent(raw);
+        var escaped = (result.match(/%[0-9A-F]{2}/gi) || []).length;
+        statusEl.textContent = t.encoded + ' · ' + escaped + t.sequences;
+        statusEl.className   = 'ue-status ok';
+      } else {
+        result = decodeURIComponent(raw.replace(/\+/g, ' '));
+        statusEl.textContent = t.decoded + ' · ' + result.length + t.chars;
+        statusEl.className   = 'ue-status ok';
+      }
+      lastOutput      = result;
+      outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+      if (window.pushHistory) window.pushHistory('url encoder', statusEl.textContent);
+      outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
+    } catch (e) {
+      lastOutput           = '';
+      outEl.innerHTML      = '<span class="er">// ' + esc(e.message) + '</span>';
+      statusEl.textContent = e.message;
+      statusEl.className   = 'ue-status err';
+    }
+  }
+
+  inEl.addEventListener('input', process);
+
+  document.querySelectorAll('.ue-mode').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.ue-mode').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      mode             = btn.dataset.mode;
+      inEl.placeholder = mode === 'encode' ? t.phEncode : t.phDecode;
+      process();
+    });
+  });
+
+  swapBtn.addEventListener('click', function () {
+    if (!lastOutput) return;
+    inEl.value = lastOutput;
+    mode       = mode === 'encode' ? 'decode' : 'encode';
+    document.querySelectorAll('.ue-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    process();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    if (!lastOutput) return;
+    navigator.clipboard.writeText(lastOutput).then(function () {
+      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+      copyBtn.classList.add('done');
+      setTimeout(function () {
+        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+        copyBtn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    inEl.value = '';
+    process();
+    inEl.focus();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    var toolEl = document.querySelector('.ue');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); process(); }
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
+  });
+
+  try {
+    var p = sessionStorage.getItem('url_payload') || sessionStorage.getItem('magic_box_payload');
+    if (p) {
+      inEl.value = p;
+      sessionStorage.removeItem('url_payload');
+      sessionStorage.removeItem('magic_box_payload');
+      if (/%[0-9A-F]{2}/i.test(p) || p.includes('+')) {
+        mode = 'decode';
+        document.querySelectorAll('.ue-mode').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.mode === 'decode');
+        });
+        inEl.placeholder = t.phDecode;
+      }
+      process();
+    }
+  } catch (e) {}
+})();
+</script>

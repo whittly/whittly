@@ -1,0 +1,205 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<Base title="api keys — whittly">
+  <div class="ac-page">
+    <div class="ac-loading" id="acLoading">
+      <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
+      loading…
+    </div>
+
+    <div id="acContent" style="display:none">
+      <div class="ac-header">
+        <div>
+          <div class="ac-breadcrumb">
+            <a href="/account/">account</a>
+            <span class="sep">/</span>
+            <span>api keys</span>
+          </div>
+          <h1 style="font-size:24px; margin:0;">API keys</h1>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="ac-btn-ghost" id="signOutBtn"><i class="ti ti-logout"></i> sign out</button>
+          <button class="ac-btn-sm" id="genBtn"><i class="ti ti-plus"></i> generate key</button>
+        </div>
+      </div>
+
+      <!-- Reveal banner (shown once after generation) -->
+      <div class="ac-reveal" id="revealBanner">
+        <div class="ac-reveal-warn">
+          <i class="ti ti-alert-triangle"></i>
+          copy this key now — it will not be shown again
+        </div>
+        <div class="ac-reveal-key" id="revealKey"></div>
+        <button class="ac-btn-sm" id="copyKeyBtn"><i class="ti ti-copy"></i> copy key</button>
+      </div>
+
+      <!-- Keys list -->
+      <div class="ac-keys-list" id="keysList">
+        <div class="ac-keys-empty">no api keys yet — generate one above</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate key modal -->
+  <div class="ac-modal-overlay" id="genModal">
+    <div class="ac-modal">
+      <h3>// new api key</h3>
+      <div class="ac-field">
+        <label for="keyName">name <span style="color:var(--ink-faint);font-size:10px;">(optional)</span></label>
+        <input class="ac-input" id="keyName" type="text" placeholder="e.g. production, ci-cd" maxlength="64" />
+      </div>
+      <div class="ac-modal-footer">
+        <button class="ac-btn-outline" id="cancelGenBtn" style="width:auto; padding:8px 16px;">cancel</button>
+        <button class="ac-btn-sm" id="confirmGenBtn"><i class="ti ti-key"></i> generate</button>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script is:inline define:vars={{ API }}>
+(function () {
+  var token = localStorage.getItem('wh_access');
+  if (!token) { location.replace('/account/login/'); return; }
+
+  var loadingEl  = document.getElementById('acLoading');
+  var contentEl  = document.getElementById('acContent');
+  var keysListEl = document.getElementById('keysList');
+  var revealEl   = document.getElementById('revealBanner');
+  var revealKeyEl= document.getElementById('revealKey');
+  var copyKeyBtn = document.getElementById('copyKeyBtn');
+  var genBtn     = document.getElementById('genBtn');
+  var genModal   = document.getElementById('genModal');
+  var cancelBtn  = document.getElementById('cancelGenBtn');
+  var confirmBtn = document.getElementById('confirmGenBtn');
+  var keyNameEl  = document.getElementById('keyName');
+  var signOutBtn = document.getElementById('signOutBtn');
+
+  function logout() {
+    var rt = localStorage.getItem('wh_refresh');
+    if (rt) fetch(API + '/auth/logout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({refreshToken:rt}) }).catch(function(){});
+    localStorage.removeItem('wh_access'); localStorage.removeItem('wh_refresh'); localStorage.removeItem('wh_user');
+    location.replace('/account/login/');
+  }
+  signOutBtn.addEventListener('click', logout);
+
+  async function authFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token }, opts.headers || {});
+    var res = await fetch(url, opts);
+    if (res.status === 401) {
+      var rt = localStorage.getItem('wh_refresh');
+      if (!rt) { logout(); return null; }
+      var rr = await fetch(API + '/auth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({refreshToken:rt}) });
+      if (!rr.ok) { logout(); return null; }
+      var rd = await rr.json();
+      token = rd.accessToken;
+      localStorage.setItem('wh_access', rd.accessToken);
+      localStorage.setItem('wh_refresh', rd.refreshToken);
+      opts.headers['Authorization'] = 'Bearer ' + token;
+      res = await fetch(url, opts);
+    }
+    return res;
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function renderKeys(keys) {
+    if (!keys.length) {
+      keysListEl.innerHTML = '<div class="ac-keys-empty">no api keys yet — generate one above</div>';
+      return;
+    }
+    keysListEl.innerHTML = '';
+    keys.forEach(function (k) {
+      var row = document.createElement('div');
+      row.className = 'ac-key-row' + (k.revokedAt ? ' revoked' : '');
+      row.innerHTML =
+        '<span class="ac-key-prefix">' + k.keyPrefix + '…</span>' +
+        '<div class="ac-key-info">' +
+          '<div class="ac-key-name">' + k.name + '</div>' +
+          '<div class="ac-key-meta">created ' + formatDate(k.createdAt) + ' · last used: ' + (k.lastUsedAt ? formatDate(k.lastUsedAt) : 'never') + '</div>' +
+        '</div>' +
+        '<span class="ac-key-status ' + (k.revokedAt ? 'revoked' : 'active') + '">' + (k.revokedAt ? 'revoked' : 'active') + '</span>' +
+        (!k.revokedAt ? '<button class="ac-btn-danger" data-id="' + k.id + '">revoke</button>' : '');
+      keysListEl.appendChild(row);
+    });
+
+    keysListEl.querySelectorAll('.ac-btn-danger').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        if (!confirm('Revoke this key? It will stop working immediately.')) return;
+        var res = await authFetch(API + '/user/keys/' + btn.dataset.id, { method: 'DELETE' });
+        if (res && res.ok) loadKeys();
+      });
+    });
+  }
+
+  async function loadKeys() {
+    var res = await authFetch(API + '/user/keys');
+    if (!res) return;
+    var data = await res.json();
+    renderKeys(data.keys || []);
+  }
+
+  // Modal
+  genBtn.addEventListener('click', function () {
+    keyNameEl.value = '';
+    genModal.classList.add('active');
+    keyNameEl.focus();
+  });
+  cancelBtn.addEventListener('click', function () { genModal.classList.remove('active'); });
+  genModal.addEventListener('click', function (e) { if (e.target === genModal) genModal.classList.remove('active'); });
+
+  confirmBtn.addEventListener('click', async function () {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'generating…';
+    try {
+      var res = await authFetch(API + '/user/keys', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name: keyNameEl.value.trim() || 'default' }),
+      });
+      if (!res) return;
+      var data = await res.json();
+      genModal.classList.remove('active');
+
+      // show reveal banner
+      revealKeyEl.textContent = data.key;
+      revealEl.classList.add('visible');
+      revealEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      await loadKeys();
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="ti ti-key"></i> generate';
+    }
+  });
+
+  copyKeyBtn.addEventListener('click', function () {
+    navigator.clipboard.writeText(revealKeyEl.textContent).then(function () {
+      copyKeyBtn.innerHTML = '<i class="ti ti-check"></i> copied';
+      setTimeout(function () { copyKeyBtn.innerHTML = '<i class="ti ti-copy"></i> copy key'; }, 2000);
+    });
+  });
+
+  // Init
+  (async function () {
+    try {
+      await loadKeys();
+      loadingEl.style.display = 'none';
+      contentEl.style.display = '';
+    } catch (e) {
+      loadingEl.innerHTML = '<span style="color:var(--bad)">// failed to load</span>';
+    }
+  })();
+})();
+</script>

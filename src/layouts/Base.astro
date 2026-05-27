@@ -1,0 +1,458 @@
+---
+import '../styles/global.css';
+import { CATALOG, toolSlug } from '../data/catalog';
+import pkg from '../../package.json';
+const version = pkg.version;
+const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+const SITE = 'https://whittly.dev';
+const pathname = Astro.url.pathname;
+const isRu = pathname.startsWith('/ru');
+const altUrl = isRu
+  ? (pathname.replace(/^\/ru/, '') || '/')
+  : '/ru' + pathname;
+const canonical = SITE + pathname;
+const altAbsolute = SITE + altUrl;
+const enUrl = isRu ? altAbsolute : canonical;
+const ruUrl = isRu ? canonical : altAbsolute;
+
+const catalog = CATALOG.map(t => ({
+  name: t.name,
+  slug: toolSlug(t),
+  desc: t.desc,
+  cat: t.cat as string,
+  icon: t.icon,
+}));
+---
+
+<style is:global>
+/* ─── Cmd+K Palette ─────────────────────────────────── */
+.palette-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
+  z-index: 1000; align-items: flex-start; justify-content: center;
+  padding-top: 18vh;
+}
+.palette-overlay.active { display: flex; }
+
+.palette-modal {
+  background: var(--surface); border: 0.5px solid var(--line-strong);
+  border-radius: var(--radius-lg); width: calc(100% - 32px); max-width: 540px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+}
+
+.palette-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-bottom: 0.5px solid var(--line);
+}
+.palette-bar .pi { font-size: 15px; color: var(--ink-faint); flex-shrink: 0; }
+.palette-bar input {
+  flex: 1; border: none; outline: none; background: none;
+  font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--ink);
+}
+.palette-bar input::placeholder { color: var(--ink-faint); }
+.palette-esc {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
+  border: 0.5px solid var(--line-strong); border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+}
+
+.palette-list { max-height: 340px; overflow-y: auto; }
+
+.pl-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px; text-decoration: none; color: var(--ink);
+  transition: background 0.1s;
+}
+.pl-item:hover, .pl-item.pl-on { background: var(--accent-soft); }
+.pl-icon { font-size: 15px; color: var(--ink-soft); flex-shrink: 0; width: 20px; }
+.pl-name { font-size: 13.5px; flex: 1; }
+.pl-cat { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
+.pl-empty { padding: 22px 18px; font-size: 13px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
+
+/* ─── History Sidebar ───────────────────────────────── */
+.hist-sidebar {
+  position: fixed; right: 0; top: 0; height: 100vh; width: 268px;
+  background: var(--surface); border-left: 0.5px solid var(--line);
+  transform: translateX(100%); transition: transform 0.22s ease;
+  z-index: 900; display: flex; flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.06);
+}
+.hist-sidebar.open { transform: translateX(0); }
+
+.hist-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 0.5px solid var(--line);
+}
+.hist-head-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  font-weight: 500; color: var(--ink-soft); letter-spacing: 0.06em;
+}
+.hist-x {
+  background: none; border: none; cursor: pointer; color: var(--ink-faint);
+  display: flex; align-items: center; font-size: 14px; padding: 4px;
+  border-radius: 4px; transition: color 0.12s, background 0.12s;
+}
+.hist-x:hover { color: var(--ink); background: var(--surface-sunken); }
+
+.hist-pro {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-bottom: 0.5px solid var(--line);
+  background: var(--surface-sunken); font-size: 12px; color: var(--ink-faint);
+}
+.hist-pro a { color: var(--accent); text-decoration: none; }
+.hist-pro a:hover { text-decoration: underline; }
+.hist-pro-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 0.5px solid var(--accent); border-radius: 4px;
+  padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.hist-list { flex: 1; overflow-y: auto; }
+.hist-none { padding: 24px 18px; font-size: 12.5px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
+
+.hist-row { padding: 10px 18px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.hist-row:last-child { border-bottom: none; }
+.hist-row-t { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
+.hist-row-s { font-size: 13px; color: var(--ink-soft); }
+.hist-row-ts { font-size: 11px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
+
+.hist-btn {
+  position: fixed; right: 20px; bottom: 24px;
+  width: 40px; height: 40px;
+  background: var(--surface); border: 0.5px solid var(--line-strong);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--ink-soft);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transition: all 0.12s; z-index: 800;
+}
+.hist-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.nav-pro {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #C44520 0%, #D4A030 100%);
+  color: white !important;
+  text-decoration: none !important;
+  letter-spacing: 0.06em;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.nav-pro:hover { opacity: 0.82; }
+.nav-pro-cs { opacity: 0.45; cursor: default; }
+.nav-pro-cs:hover { opacity: 0.45; }
+
+.nav-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-faint);
+  border: 0.5px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 8px;
+  text-decoration: none;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.nav-lang:hover { color: var(--accent); border-color: var(--accent); }
+
+.nav-account {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-faint);
+  border: 0.5px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 8px;
+  text-decoration: none;
+  display: flex; align-items: center; gap: 4px;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.nav-account:hover { color: var(--accent); border-color: var(--accent); }
+.nav-account.authed { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+</style>
+
+<!DOCTYPE html>
+<html lang={isRu ? 'ru' : 'en'}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  {description && <meta name="description" content={description} />}
+  <link rel="canonical" href={canonical} />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:title" content={title} />
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:site_name" content="whittly" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content={title} />
+  {description && <meta name="twitter:description" content={description} />}
+
+  <link rel="alternate" hreflang="en" href={enUrl} />
+  <link rel="alternate" hreflang="ru" href={ruUrl} />
+  <link rel="alternate" hreflang="x-default" href={enUrl} />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,1,400&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <slot name="head" />
+  <script is:inline>
+  /* Auto-redirect CIS browser languages to /ru/ — skips if user explicitly chose EN */
+  (function () {
+    try {
+      if (localStorage.getItem('wh_lang') === 'en') return;
+      var path = location.pathname;
+      if (path.startsWith('/ru')) return;
+
+      var lang = (navigator.language || '').toLowerCase();
+      var isCis = /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang);
+      if (!isCis) return;
+      location.replace(path === '/' ? '/ru/' : '/ru' + path);
+    } catch (e) {}
+  })();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a class="logo" href={isRu ? '/ru/' : '/'}>
+        <span class="logo-mark"><img src="/whittly-logo.svg" alt="whittly" width="28" height="28" /></span>
+        <span>whittly</span>
+      </a>
+
+      <button class="nav-search" id="navCmdK" type="button">
+        <i class="ti ti-search"></i>
+        <span class="nav-search-ph">{isRu ? 'поиск инструментов…' : 'search tools…'}</span>
+        <kbd class="nav-search-kbd">alt K</kbd>
+      </button>
+
+      <div class="nav-util">
+        <a href={isRu ? '/ru/premium/' : '/premium/'} class="nav-pro">PRO</a>
+        <a href={altUrl} class="nav-lang">{isRu ? 'EN' : 'RU'}</a>
+        <a class="nav-account" id="navAccount" href={isRu ? '/ru/account/login/' : '/account/login/'}>
+          <i class="ti ti-user-circle"></i>
+          <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
+        </a>
+      </div>
+    </nav>
+
+    <slot />
+
+    <footer>
+      <span>{isRu ? 'сделано с заботой о разработчиках · ' : 'made with care for fellow developers · '}<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener">popelyshko.com</a></span>
+      <span class="meta">v{version} · build {buildDate} · <a href="https://github.com/whittly" target="_blank" rel="noopener" class="meta-link">github ↗</a></span>
+    </footer>
+  </div>
+
+  <!-- Cmd+K Palette -->
+  <div id="whPalette" class="palette-overlay" role="dialog" aria-modal="true" aria-label="command palette">
+    <div class="palette-modal">
+      <div class="palette-bar">
+        <i class="ti ti-search pi"></i>
+        <input id="paletteInput" type="text" placeholder={isRu ? 'поиск инструментов…' : 'search tools…'} autocomplete="off" spellcheck="false" />
+        <kbd class="palette-esc">esc</kbd>
+      </div>
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+  </div>
+
+  <!-- History Sidebar -->
+  <div id="whHist" class="hist-sidebar">
+    <div class="hist-head">
+      <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
+      <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="hist-pro">
+      <span class="hist-pro-tag">Pro</span>
+      <span>{isRu ? 'Облачная синхронизация — ' : 'Cloud Sync — '}<a href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее' : 'upgrade'}</a></span>
+    </div>
+    <div class="hist-list" id="histList"><div class="hist-none">{isRu ? 'операций пока нет' : 'no operations yet'}</div></div>
+  </div>
+  <button class="hist-btn" id="histBtn" type="button" title={isRu ? 'история операций' : 'operation history'}>
+    <i class="ti ti-history"></i>
+  </button>
+
+  <!-- Catalog data for Cmd+K palette -->
+  <div id="whCatalog" hidden>{JSON.stringify(catalog)}</div>
+
+  <script is:inline>
+  (function () {
+    var isRu = document.documentElement.lang === 'ru';
+    var catalog = [];
+    try { catalog = JSON.parse(document.getElementById('whCatalog').textContent || '[]'); } catch (e) {}
+
+    /* ─── Palette ─── */
+    var palette = document.getElementById('whPalette');
+    var pInput  = document.getElementById('paletteInput');
+    var pList   = document.getElementById('paletteList');
+
+    function renderPalette(q) {
+      q = (q || '').toLowerCase().trim();
+      var items = q
+        ? catalog.filter(function (t) {
+            return t.name.indexOf(q) !== -1 || t.desc.indexOf(q) !== -1 || t.cat.indexOf(q) !== -1;
+          })
+        : catalog;
+      if (!items.length) {
+        pList.innerHTML = '<div class="pl-empty">// ' + (isRu ? 'инструменты не найдены' : 'no tools found') + '</div>';
+        return;
+      }
+      pList.innerHTML = items.map(function (t, i) {
+        return '<a class="pl-item' + (i === 0 ? ' pl-on' : '') + '" href="' + (isRu ? '/ru/tools/' : '/tools/') + t.slug + '/">'
+          + '<i class="ti ' + t.icon + ' pl-icon"></i>'
+          + '<span class="pl-name">' + t.name + '</span>'
+          + '<span class="pl-cat">' + t.cat + '</span>'
+          + '</a>';
+      }).join('');
+    }
+
+    function openPalette() {
+      palette.classList.add('active');
+      pInput.value = '';
+      renderPalette('');
+      requestAnimationFrame(function () { pInput.focus(); });
+    }
+
+    function closePalette() { palette.classList.remove('active'); }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        palette.classList.contains('active') ? closePalette() : openPalette();
+      }
+      if (e.key === 'Escape' && palette.classList.contains('active')) closePalette();
+    });
+
+    pInput && pInput.addEventListener('input', function () { renderPalette(pInput.value); });
+
+    pInput && pInput.addEventListener('keydown', function (e) {
+      var items  = pList.querySelectorAll('.pl-item');
+      var active = pList.querySelector('.pl-item.pl-on');
+      var idx    = Array.prototype.indexOf.call(items, active);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (active) active.classList.remove('pl-on');
+        var nxt = items[(idx + 1) % items.length];
+        if (nxt) { nxt.classList.add('pl-on'); nxt.scrollIntoView({ block: 'nearest' }); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (active) active.classList.remove('pl-on');
+        var prv = items[(idx - 1 + items.length) % items.length];
+        if (prv) { prv.classList.add('pl-on'); prv.scrollIntoView({ block: 'nearest' }); }
+      } else if (e.key === 'Enter') {
+        var cur = pList.querySelector('.pl-item.pl-on');
+        if (cur) window.location.href = cur.getAttribute('href');
+      }
+    });
+
+    palette && palette.addEventListener('click', function (e) {
+      if (e.target === palette) closePalette();
+    });
+
+    var navCmdK = document.getElementById('navCmdK');
+    navCmdK && navCmdK.addEventListener('click', openPalette);
+
+    /* ─── History ─── */
+    var HIST_KEY = 'wh_hist';
+    var HIST_MAX = 15;
+
+    window.pushHistory = function (tool, summary) {
+      try {
+        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+        entries.unshift({ tool: tool, summary: summary, ts: Date.now() });
+        if (entries.length > HIST_MAX) entries.pop();
+        localStorage.setItem(HIST_KEY, JSON.stringify(entries));
+        renderHistory();
+      } catch (err) {}
+    };
+
+    function timeAgo(ts) {
+      var diff = Date.now() - ts;
+      var m = Math.floor(diff / 60000);
+      if (isRu) {
+        if (m < 1) return 'только что';
+        if (m < 60) return m + 'м назад';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'ч назад';
+        return Math.floor(h / 24) + 'д назад';
+      }
+      if (m < 1) return 'just now';
+      if (m < 60) return m + 'm ago';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    function renderHistory() {
+      var list = document.getElementById('histList');
+      if (!list) return;
+      try {
+        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+        if (!entries.length) {
+          list.innerHTML = '<div class="hist-none">' + (isRu ? 'операций пока нет' : 'no operations yet') + '</div>';
+          return;
+        }
+        list.innerHTML = entries.map(function (e) {
+          return '<div class="hist-row">'
+            + '<span class="hist-row-t">' + e.tool + '</span>'
+            + '<span class="hist-row-s">' + e.summary + '</span>'
+            + '<span class="hist-row-ts">' + timeAgo(e.ts) + '</span>'
+            + '</div>';
+        }).join('');
+      } catch (err) {
+        list.innerHTML = '<div class="hist-none">' + (isRu ? 'операций пока нет' : 'no operations yet') + '</div>';
+      }
+    }
+
+    var histSidebar = document.getElementById('whHist');
+    var histBtn     = document.getElementById('histBtn');
+    var histClose   = document.getElementById('histClose');
+
+    histBtn && histBtn.addEventListener('click', function () {
+      histSidebar.classList.toggle('open');
+      if (histSidebar.classList.contains('open')) renderHistory();
+    });
+
+    histClose && histClose.addEventListener('click', function () {
+      histSidebar.classList.remove('open');
+    });
+
+    /* ─── Account nav ─── */
+    var navAccount      = document.getElementById('navAccount');
+    var navAccountLabel = document.getElementById('navAccountLabel');
+    if (navAccount && navAccountLabel && localStorage.getItem('wh_access')) {
+      navAccount.href = isRu ? '/ru/account/' : '/account/';
+      navAccount.classList.add('authed');
+      navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
+    }
+
+    /* ─── Language switcher — persist explicit choice ─── */
+    var langSwitcherEl = document.querySelector('.nav-lang');
+    if (langSwitcherEl) {
+      langSwitcherEl.addEventListener('click', function () {
+        if (isRu) {
+          localStorage.setItem('wh_lang', 'en');
+        } else {
+          localStorage.removeItem('wh_lang');
+        }
+      });
+    }
+
+  })();
+  </script>
+</body>
+</html>

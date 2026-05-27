@@ -1,0 +1,192 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<Base title="account — whittly">
+  <div class="ac-page" id="acPage">
+    <div class="ac-loading" id="acLoading">
+      <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
+      loading…
+    </div>
+
+    <div id="acContent" style="display:none">
+      <div class="ac-header">
+        <div>
+          <div class="ac-heading">// account</div>
+          <h1 id="acEmail" style="font-size:24px; margin:0;"></h1>
+        </div>
+        <button class="ac-btn-ghost" id="signOutBtn">
+          <i class="ti ti-logout"></i> sign out
+        </button>
+      </div>
+
+      <div class="ac-top-row">
+        <!-- Plan card -->
+        <div class="ac-card">
+          <div class="ac-card-label">plan</div>
+          <div class="ac-plan-badge" id="planBadge">—</div>
+          <div id="upgradeWrap"></div>
+        </div>
+
+        <!-- Stats card -->
+        <div class="ac-card">
+          <div class="ac-card-label">overview</div>
+          <div class="ac-stat-grid">
+            <div class="ac-stat-row">
+              <span class="ac-stat-label">api keys</span>
+              <span class="ac-stat-val" id="statKeys">—</span>
+            </div>
+            <div class="ac-stat-row">
+              <span class="ac-stat-label">saved presets</span>
+              <span class="ac-stat-val" id="statPresets">—</span>
+            </div>
+            <div class="ac-stat-row">
+              <span class="ac-stat-label">member since</span>
+              <span class="ac-stat-val" id="statSince">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ac-bottom-row">
+        <a class="ac-action-card" href="/account/keys/">
+          <div class="ac-action-icon"><i class="ti ti-key"></i></div>
+          <div class="ac-action-title">API keys</div>
+          <div class="ac-action-desc" id="descKeys">generate &amp; manage keys</div>
+          <div class="ac-action-arrow">manage →</div>
+        </a>
+
+        <div class="ac-action-card" id="presetsCard">
+          <div class="ac-action-icon"><i class="ti ti-bookmark"></i></div>
+          <div class="ac-action-title">saved presets</div>
+          <div class="ac-action-desc" id="descPresets">tool configurations</div>
+          <div class="ac-action-arrow" id="presetsArrow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script is:inline define:vars={{ API }}>
+(function () {
+  var token = localStorage.getItem('wh_access');
+  if (!token) { location.replace('/account/login/'); return; }
+
+  var loadingEl  = document.getElementById('acLoading');
+  var contentEl  = document.getElementById('acContent');
+  var emailEl    = document.getElementById('acEmail');
+  var planEl     = document.getElementById('planBadge');
+  var upgradeEl  = document.getElementById('upgradeWrap');
+  var statKeysEl = document.getElementById('statKeys');
+  var statPreEl  = document.getElementById('statPresets');
+  var statSinceEl= document.getElementById('statSince');
+  var descKeysEl = document.getElementById('descKeys');
+  var descPreEl  = document.getElementById('descPresets');
+  var presetsArrowEl = document.getElementById('presetsArrow');
+  var signOutBtn = document.getElementById('signOutBtn');
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en', { month: 'short', year: 'numeric' });
+  }
+
+  async function authFetch(url) {
+    var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.status === 401) {
+      // try refresh
+      var rt = localStorage.getItem('wh_refresh');
+      if (!rt) { logout(); return null; }
+      var rr = await fetch(API + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      });
+      if (!rr.ok) { logout(); return null; }
+      var rd = await rr.json();
+      token = rd.accessToken;
+      localStorage.setItem('wh_access',  rd.accessToken);
+      localStorage.setItem('wh_refresh', rd.refreshToken);
+      // retry
+      res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    }
+    return res;
+  }
+
+  function logout() {
+    var rt = localStorage.getItem('wh_refresh');
+    if (rt) {
+      fetch(API + '/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      }).catch(function(){});
+    }
+    localStorage.removeItem('wh_access');
+    localStorage.removeItem('wh_refresh');
+    localStorage.removeItem('wh_user');
+    location.replace('/account/login/');
+  }
+
+  signOutBtn.addEventListener('click', logout);
+
+  async function load() {
+    try {
+      var [meRes, keysRes, presetsRes] = await Promise.all([
+        authFetch(API + '/user/me'),
+        authFetch(API + '/user/keys'),
+        authFetch(API + '/user/presets'),
+      ]);
+
+      if (!meRes) return;
+      var me = (await meRes.json()).user;
+
+      // update cached user
+      localStorage.setItem('wh_user', JSON.stringify(me));
+
+      emailEl.textContent = me.email;
+
+      planEl.textContent = me.plan.toUpperCase();
+      planEl.className   = 'ac-plan-badge ' + me.plan;
+
+      if (me.plan === 'free') {
+        upgradeEl.innerHTML = '<a class="ac-plan-upgrade" href="/premium/">upgrade to pro →</a>';
+      }
+
+      statSinceEl.textContent = formatDate(me.createdAt);
+
+      var keysData    = keysRes  ? await keysRes.json()    : { keys: [] };
+      var presetsData = presetsRes ? await presetsRes.json() : { presets: [] };
+
+      var activeKeys = (keysData.keys || []).filter(function(k){ return !k.revokedAt; }).length;
+      statKeysEl.textContent = activeKeys + ' active';
+
+      if (me.plan === 'free') {
+        statPreEl.textContent = 'pro required';
+        descPreEl.textContent = 'upgrade to save presets';
+        presetsArrowEl.innerHTML = '<a href="/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">upgrade →</a>';
+      } else {
+        var pCount = (presetsData.presets || []).length;
+        statPreEl.textContent = pCount + ' saved';
+        descPreEl.textContent = pCount + ' preset' + (pCount === 1 ? '' : 's') + ' across all tools';
+        presetsArrowEl.textContent = 'view presets →';
+        presetsArrowEl.style.color = 'var(--accent)';
+        presetsArrowEl.style.fontFamily = "'JetBrains Mono', monospace";
+        presetsArrowEl.style.fontSize = '11.5px';
+      }
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = '';
+    } catch (e) {
+      loadingEl.innerHTML = '<span style="color:var(--bad)">// failed to load — check API connection</span>';
+    }
+  }
+
+  load();
+})();
+</script>

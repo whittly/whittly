@@ -1,0 +1,350 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  regenerate:        isRu ? 'пересоздать' : 'regenerate',
+  copyAll:           isRu ? 'скопировать всё' : 'copy all',
+  copiedAll:         isRu ? 'скопировано' : 'copied',
+  copy:              isRu ? 'копировать' : 'copy',
+  copied:            isRu ? '✓ скопировано' : '✓ copied',
+  noHyphens:         isRu ? 'без дефисов' : 'no hyphens',
+  customFmt:         isRu ? 'свой' : 'custom',
+  customPlaceholder: 'user_{id}',
+};
+---
+<style is:global>
+  .ug {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ug-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .ug-group { display: flex; gap: 3px; }
+
+  .ug-sep {
+    width: 0.5px;
+    height: 18px;
+    background: var(--line-strong);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .ug-opt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .ug-opt:hover { color: var(--ink); border-color: var(--line-strong); }
+  .ug-opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .ug-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .ug-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .ug-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .ug-action.done  { color: var(--good); border-color: var(--good); }
+
+  .ug-list {
+    padding: 8px 0;
+  }
+
+  .ug-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    border-radius: 0;
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+
+  .ug-row:hover { background: var(--accent-soft); }
+
+  .ug-idx {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+    width: 20px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .ug-uuid {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    flex: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .ug-copy-one {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    opacity: 0;
+    transition: opacity 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .ug-row:hover .ug-copy-one { opacity: 1; }
+  .ug-copy-one.flash { opacity: 1; color: var(--good); }
+
+  .ug-custom-wrap { display: none; align-items: center; gap: 6px; }
+  .ug-custom-wrap.visible { display: flex; }
+
+  .ug-custom-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    width: 150px;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .ug-custom-input:focus { border-color: var(--accent); }
+  .ug-custom-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .ug-uuid { font-size: 12px; }
+    .ug-sep  { display: none; }
+    .ug-custom-input { width: 120px; }
+  }
+</style>
+
+<div class="ug">
+  <div class="ug-bar">
+    <div class="ug-group" id="ugVerGroup">
+      <button class="ug-opt active" data-ver="4">v4</button>
+      <button class="ug-opt"        data-ver="7">v7</button>
+      <button class="ug-opt"        data-ver="nano">nano</button>
+    </div>
+    <div class="ug-sep"></div>
+    <div class="ug-group" id="ugCntGroup">
+      <button class="ug-opt"        data-cnt="1">1</button>
+      <button class="ug-opt active" data-cnt="5">5</button>
+      <button class="ug-opt"        data-cnt="10">10</button>
+      <button class="ug-opt"        data-cnt="25">25</button>
+    </div>
+    <div class="ug-sep"></div>
+    <div class="ug-group" id="ugFmtGroup">
+      <button class="ug-opt active" data-fmt="lower">lowercase</button>
+      <button class="ug-opt"        data-fmt="upper">UPPER</button>
+      <button class="ug-opt"        data-fmt="plain">{t.noHyphens}</button>
+      <button class="ug-opt"        data-fmt="custom">{t.customFmt}</button>
+    </div>
+    <div class="ug-sep" id="ugCustomSep" style="display:none"></div>
+    <div class="ug-custom-wrap" id="ugCustomWrap">
+      <input type="text" class="ug-custom-input" id="ugCustomInput" placeholder={t.customPlaceholder} value="user_{id}" />
+      <span class="ug-custom-hint">{isRu ? '← шаблон' : '← template'}</span>
+    </div>
+    <span class="local-badge">// client-only · webcrypto</span>
+    <span class="ug-status" id="ugStatus"></span>
+    <button class="ug-action" id="ugRegen"><i class="ti ti-refresh"></i>{t.regenerate}<span class="kbd-hint">⌘↵</span></button>
+    <button class="ug-action" id="ugCopyAll"><i class="ti ti-copy"></i>{t.copyAll}<span class="kbd-hint">⌘⇧C</span></button>
+  </div>
+  <div class="ug-list" id="ugList"></div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var ver    = '4';
+  var count  = 5;
+  var fmt    = 'lower';
+  var uuids  = [];
+  var customTpl = 'user_{id}';
+
+  function rndHex(bytes) {
+    var a = new Uint8Array(bytes);
+    crypto.getRandomValues(a);
+    return Array.from(a, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  function uuidv4() {
+    var h = rndHex(16).split('');
+    h[12] = '4';
+    h[16] = (parseInt(h[16], 16) & 0x3 | 0x8).toString(16);
+    var s = h.join('');
+    return s.slice(0,8)+'-'+s.slice(8,12)+'-'+s.slice(12,16)+'-'+s.slice(16,20)+'-'+s.slice(20);
+  }
+
+  function uuidv7() {
+    var ms     = Date.now();
+    var msFull = ms.toString(16).padStart(12, '0');
+    var tsA    = msFull.slice(0, 8);
+    var tsB    = msFull.slice(8, 12);
+    var randA  = rndHex(2).slice(1);
+    var varB   = (0x8000 | (parseInt(rndHex(2), 16) & 0x3fff)).toString(16).padStart(4, '0');
+    var randC  = rndHex(6);
+    return tsA + '-' + tsB + '-7' + randA + '-' + varB + '-' + randC;
+  }
+
+  var NANO_ALPHA = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-';
+  function nanoid(size) {
+    size = size || 21;
+    var bytes = new Uint8Array(size);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, function (b) { return NANO_ALPHA[b & 63]; }).join('');
+  }
+
+  function generate() {
+    uuids = [];
+    for (var i = 0; i < count; i++) {
+      uuids.push(ver === 'nano' ? nanoid() : ver === '7' ? uuidv7() : uuidv4());
+    }
+    render();
+    var label = ver === 'nano' ? 'nanoid' : 'v' + ver;
+    if (window.pushHistory) window.pushHistory('uuid generator', uuids.length + ' · ' + label);
+    var listEl2 = document.getElementById('ugList');
+    if (listEl2) { listEl2.classList.remove('flash-ok'); void listEl2.offsetWidth; listEl2.classList.add('flash-ok'); }
+  }
+
+  function applyFmt(u) {
+    if (fmt === 'upper')  return u.toUpperCase();
+    if (fmt === 'plain')  return u.replace(/-/g, '');
+    if (fmt === 'custom') return customTpl.replace(/\{id\}/g, u.toLowerCase());
+    return u.toLowerCase();
+  }
+
+  var customWrap = document.getElementById('ugCustomWrap');
+  var customSep  = document.getElementById('ugCustomSep');
+  var customInput = document.getElementById('ugCustomInput');
+
+  function updateCustomVisibility() {
+    var isCustom = fmt === 'custom';
+    customWrap.classList.toggle('visible', isCustom);
+    customSep.style.display = isCustom ? '' : 'none';
+  }
+
+  var listEl   = document.getElementById('ugList');
+  var statusEl = document.getElementById('ugStatus');
+
+  function render() {
+    var verLabel = ver === 'nano' ? 'nanoid' : 'v' + ver;
+    var fmtLabel = fmt === 'plain' ? t.noHyphens : fmt;
+    var unitLabel = ver === 'nano' ? ' id' : ' UUID';
+    statusEl.textContent = uuids.length + unitLabel + (uuids.length !== 1 ? 's' : '') + ' · ' + verLabel + ' · ' + fmtLabel;
+
+    listEl.innerHTML = uuids.map(function (u, i) {
+      var display = applyFmt(u);
+      return '<div class="ug-row" data-uuid="' + display + '">' +
+             '<span class="ug-idx">' + (i + 1) + '</span>' +
+             '<span class="ug-uuid">' + display + '</span>' +
+             '<span class="ug-copy-one"><i class="ti ti-copy"></i>' + t.copy + '</span>' +
+             '</div>';
+    }).join('');
+  }
+
+  function flashRow(row) {
+    var hint = row.querySelector('.ug-copy-one');
+    hint.textContent = t.copied;
+    hint.classList.add('flash');
+    setTimeout(function () {
+      hint.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+      hint.classList.remove('flash');
+    }, 1400);
+  }
+
+  listEl.addEventListener('click', function (e) {
+    var row = e.target.closest('.ug-row');
+    if (!row) return;
+    navigator.clipboard.writeText(row.dataset.uuid).then(function () { flashRow(row); });
+  });
+
+  function bindGroup(groupId, prop, setter) {
+    document.getElementById(groupId).addEventListener('click', function (e) {
+      var btn = e.target.closest('.ug-opt');
+      if (!btn) return;
+      document.querySelectorAll('#' + groupId + ' .ug-opt').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      setter(btn.dataset[prop]);
+    });
+  }
+
+  bindGroup('ugVerGroup', 'ver', function (v) { ver = v; generate(); });
+  bindGroup('ugCntGroup', 'cnt', function (v) { count = parseInt(v, 10); generate(); });
+  bindGroup('ugFmtGroup', 'fmt', function (v) { fmt = v; updateCustomVisibility(); render(); });
+
+  customInput.addEventListener('input', function () {
+    customTpl = customInput.value || '{id}';
+    render();
+  });
+
+  document.getElementById('ugRegen').addEventListener('click', generate);
+
+  document.getElementById('ugCopyAll').addEventListener('click', function () {
+    var btn = this;
+    var all = uuids.map(applyFmt).join('\n');
+    navigator.clipboard.writeText(all).then(function () {
+      btn.innerHTML = '<i class="ti ti-check"></i>' + t.copiedAll;
+      btn.classList.add('done');
+      setTimeout(function () {
+        btn.innerHTML = '<i class="ti ti-copy"></i>' + t.copyAll;
+        btn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  generate();
+
+  document.addEventListener('keydown', function(e) {
+    var toolEl = document.querySelector('.ug');
+    if (!toolEl || !toolEl.contains(document.activeElement)) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); generate(); }
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); document.getElementById('ugCopyAll').click(); }
+  });
+})();
+</script>

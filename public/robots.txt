@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://whittly.dev/sitemap-index.xml

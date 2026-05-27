@@ -1,0 +1,504 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+
+const t = {
+  ph:          isRu ? 'расширение (.avif) или mime-тип (image/)…' : 'extension (.avif) or mime type (image/)…',
+  all:         isRu ? 'все'          : 'all',
+  catText:     isRu ? 'текст'        : 'text',
+  catImage:    isRu ? 'изображения'  : 'image',
+  catAudio:    isRu ? 'аудио'        : 'audio',
+  catVideo:    isRu ? 'видео'        : 'video',
+  catFont:     isRu ? 'шрифты'       : 'font',
+  catArchive:  isRu ? 'архивы'       : 'archive',
+  catDoc:      isRu ? 'документы'    : 'doc',
+  catApp:      isRu ? 'бинарники'    : 'binary',
+  copy:        isRu ? 'копировать'   : 'copy',
+  copied:      isRu ? 'скопировано'  : 'copied',
+  clear:       isRu ? 'очистить'     : 'clear',
+  noResults:   isRu ? '∅ ничего не найдено' : '∅ no results',
+  comp:        'gzip',
+  colExt:      isRu ? 'расширение'   : 'extension',
+  colMime:     isRu ? 'mime тип'     : 'mime type',
+  colCt:       isRu ? 'content-type' : 'content-type',
+};
+---
+<style is:global>
+  .ml {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ml-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .ml-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 6px 10px;
+    transition: border-color 0.12s;
+  }
+  .ml-search:focus-within { border-color: var(--line-strong); }
+  .ml-search i { color: var(--ink-faint); font-size: 13px; flex-shrink: 0; }
+  .ml-search input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .ml-search input::placeholder { color: var(--ink-faint); }
+
+  .ml-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .ml-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .ml-action:hover { color: var(--ink); border-color: var(--line-strong); }
+
+  .ml-chips {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .ml-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    border: 0.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .ml-chip:hover  { color: var(--ink); border-color: var(--line-strong); }
+  .ml-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .ml-thead {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr 36px;
+    gap: 12px;
+    padding: 6px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+  .ml-thead span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+  }
+
+  .ml-list { overflow-y: auto; max-height: 560px; }
+
+  .ml-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr 36px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    border-bottom: 0.5px solid var(--line);
+    transition: background 0.08s;
+  }
+  .ml-row:last-child { border-bottom: none; }
+  .ml-row:hover { background: var(--surface-sunken); }
+
+  .ml-exts { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ml-ext {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .ml-ext-none {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .ml-mime {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .ml-ct-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ml-ct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ml-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ml-badge-comp {
+    color: var(--good);
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+  }
+
+  .ml-copy {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    border: 0.5px solid var(--line); border-radius: 4px;
+    background: var(--bg); color: var(--ink-faint);
+    cursor: pointer; transition: all 0.12s; flex-shrink: 0;
+  }
+  .ml-copy:hover { color: var(--ink); border-color: var(--line-strong); }
+  .ml-copy.done  { color: var(--good); border-color: var(--good); }
+
+  .ml-empty {
+    padding: 48px 24px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 680px) {
+    .ml-thead { display: none; }
+    .ml-row   { grid-template-columns: 100px 1fr 36px; }
+    .ml-ct-wrap { display: none; }
+    .ml-mime  { font-size: 11.5px; }
+  }
+</style>
+
+<div class="ml">
+  <div class="ml-bar">
+    <div class="ml-search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="mlInput" spellcheck="false" placeholder={t.ph} autocomplete="off" />
+    </div>
+    <span class="ml-count" id="mlCount"></span>
+    <span class="local-badge">// client-only</span>
+    <button class="ml-action" id="mlClear"><i class="ti ti-x"></i>{t.clear}</button>
+  </div>
+
+  <div class="ml-chips" id="mlChips">
+    <button class="ml-chip active" data-cat="all">{t.all}</button>
+    <button class="ml-chip" data-cat="text">{t.catText}</button>
+    <button class="ml-chip" data-cat="image">{t.catImage}</button>
+    <button class="ml-chip" data-cat="audio">{t.catAudio}</button>
+    <button class="ml-chip" data-cat="video">{t.catVideo}</button>
+    <button class="ml-chip" data-cat="font">{t.catFont}</button>
+    <button class="ml-chip" data-cat="archive">{t.catArchive}</button>
+    <button class="ml-chip" data-cat="doc">{t.catDoc}</button>
+    <button class="ml-chip" data-cat="app">{t.catApp}</button>
+  </div>
+
+  <div class="ml-thead">
+    <span>{t.colExt}</span>
+    <span>{t.colMime}</span>
+    <span>{t.colCt}</span>
+    <span></span>
+  </div>
+
+  <div class="ml-list" id="mlList"></div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+(function () {
+  var DB = [
+    // text
+    { ext:['html','htm'],  mime:'text/html',                                   cs:'utf-8', c:1, cat:'text'    },
+    { ext:['css'],         mime:'text/css',                                    cs:'utf-8', c:1, cat:'text'    },
+    { ext:['js','mjs'],    mime:'text/javascript',                             cs:'utf-8', c:1, cat:'text'    },
+    { ext:['ts'],          mime:'text/typescript',                             cs:'utf-8', c:1, cat:'text'    },
+    { ext:['json'],        mime:'application/json',                            cs:'utf-8', c:1, cat:'text'    },
+    { ext:['jsonld'],      mime:'application/ld+json',                         cs:'utf-8', c:1, cat:'text'    },
+    { ext:['xml'],         mime:'application/xml',                             cs:'utf-8', c:1, cat:'text'    },
+    { ext:['yaml','yml'],  mime:'application/yaml',                            cs:'utf-8', c:1, cat:'text'    },
+    { ext:['csv'],         mime:'text/csv',                                    cs:'utf-8', c:1, cat:'text'    },
+    { ext:['tsv'],         mime:'text/tab-separated-values',                   cs:'utf-8', c:1, cat:'text'    },
+    { ext:['txt'],         mime:'text/plain',                                  cs:'utf-8', c:1, cat:'text'    },
+    { ext:['md'],          mime:'text/markdown',                               cs:'utf-8', c:1, cat:'text'    },
+    { ext:['toml'],        mime:'application/toml',                            cs:'utf-8', c:1, cat:'text'    },
+    { ext:['sh','bash'],   mime:'application/x-sh',                            cs:'utf-8', c:1, cat:'text'    },
+    { ext:['rtf'],         mime:'application/rtf',                                         c:1, cat:'text'    },
+    { ext:['ndjson'],      mime:'application/x-ndjson',                        cs:'utf-8', c:1, cat:'text'    },
+    { ext:['geojson'],     mime:'application/geo+json',                        cs:'utf-8', c:1, cat:'text'    },
+    { ext:['graphql','gql'],mime:'application/graphql+json',                   cs:'utf-8', c:1, cat:'text'    },
+    { ext:['ics'],         mime:'text/calendar',                               cs:'utf-8', c:1, cat:'text'    },
+    { ext:['vcf'],         mime:'text/vcard',                                  cs:'utf-8', c:1, cat:'text'    },
+    // image
+    { ext:['png'],         mime:'image/png',                                               cat:'image'   },
+    { ext:['jpg','jpeg'],  mime:'image/jpeg',                                              cat:'image'   },
+    { ext:['gif'],         mime:'image/gif',                                               cat:'image'   },
+    { ext:['webp'],        mime:'image/webp',                                              cat:'image'   },
+    { ext:['avif'],        mime:'image/avif',                                              cat:'image'   },
+    { ext:['svg'],         mime:'image/svg+xml',                               cs:'utf-8', c:1, cat:'image'   },
+    { ext:['ico'],         mime:'image/x-icon',                                            cat:'image'   },
+    { ext:['bmp'],         mime:'image/bmp',                                               cat:'image'   },
+    { ext:['tiff','tif'],  mime:'image/tiff',                                              cat:'image'   },
+    { ext:['heic'],        mime:'image/heic',                                              cat:'image'   },
+    { ext:['heif'],        mime:'image/heif',                                              cat:'image'   },
+    { ext:['jxl'],         mime:'image/jxl',                                               cat:'image'   },
+    { ext:['apng'],        mime:'image/apng',                                              cat:'image'   },
+    // audio
+    { ext:['mp3'],         mime:'audio/mpeg',                                              cat:'audio'   },
+    { ext:['wav'],         mime:'audio/wav',                                               cat:'audio'   },
+    { ext:['ogg','oga'],   mime:'audio/ogg',                                               cat:'audio'   },
+    { ext:['m4a'],         mime:'audio/mp4',                                               cat:'audio'   },
+    { ext:['flac'],        mime:'audio/flac',                                              cat:'audio'   },
+    { ext:['aac'],         mime:'audio/aac',                                               cat:'audio'   },
+    { ext:['opus'],        mime:'audio/opus',                                              cat:'audio'   },
+    { ext:['weba'],        mime:'audio/webm',                                              cat:'audio'   },
+    // video
+    { ext:['mp4'],         mime:'video/mp4',                                               cat:'video'   },
+    { ext:['webm'],        mime:'video/webm',                                              cat:'video'   },
+    { ext:['avi'],         mime:'video/x-msvideo',                                         cat:'video'   },
+    { ext:['mov'],         mime:'video/quicktime',                                         cat:'video'   },
+    { ext:['mkv'],         mime:'video/x-matroska',                                        cat:'video'   },
+    { ext:['ogv'],         mime:'video/ogg',                                               cat:'video'   },
+    { ext:['ts'],          mime:'video/mp2t',                                              cat:'video'   },
+    { ext:['mpeg','mpg'],  mime:'video/mpeg',                                              cat:'video'   },
+    { ext:['3gp'],         mime:'video/3gpp',                                              cat:'video'   },
+    // font
+    { ext:['woff'],        mime:'font/woff',                                               cat:'font'    },
+    { ext:['woff2'],       mime:'font/woff2',                                              cat:'font'    },
+    { ext:['ttf'],         mime:'font/ttf',                                                cat:'font'    },
+    { ext:['otf'],         mime:'font/otf',                                                cat:'font'    },
+    { ext:['eot'],         mime:'application/vnd.ms-fontobject',                           cat:'font'    },
+    // archive
+    { ext:['zip'],         mime:'application/zip',                                         cat:'archive' },
+    { ext:['gz'],          mime:'application/gzip',                                        cat:'archive' },
+    { ext:['tar'],         mime:'application/x-tar',                                       cat:'archive' },
+    { ext:['bz2'],         mime:'application/x-bzip2',                                     cat:'archive' },
+    { ext:['7z'],          mime:'application/x-7z-compressed',                             cat:'archive' },
+    { ext:['rar'],         mime:'application/vnd.rar',                                     cat:'archive' },
+    { ext:['xz'],          mime:'application/x-xz',                                        cat:'archive' },
+    { ext:['zst'],         mime:'application/zstd',                                        cat:'archive' },
+    // doc
+    { ext:['pdf'],         mime:'application/pdf',                                         cat:'doc'     },
+    { ext:['doc'],         mime:'application/msword',                                      cat:'doc'     },
+    { ext:['docx'],        mime:'application/vnd.openxmlformats-officedocument.wordprocessingml.document', cat:'doc' },
+    { ext:['xls'],         mime:'application/vnd.ms-excel',                                cat:'doc'     },
+    { ext:['xlsx'],        mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', cat:'doc' },
+    { ext:['ppt'],         mime:'application/vnd.ms-powerpoint',                           cat:'doc'     },
+    { ext:['pptx'],        mime:'application/vnd.openxmlformats-officedocument.presentationml.presentation', cat:'doc' },
+    { ext:['odt'],         mime:'application/vnd.oasis.opendocument.text',                 cat:'doc'     },
+    { ext:['ods'],         mime:'application/vnd.oasis.opendocument.spreadsheet',          cat:'doc'     },
+    { ext:['odp'],         mime:'application/vnd.oasis.opendocument.presentation',         cat:'doc'     },
+    { ext:['epub'],        mime:'application/epub+zip',                                    cat:'doc'     },
+    // app / binary
+    { ext:['wasm'],        mime:'application/wasm',                                        cat:'app'     },
+    { ext:['bin'],         mime:'application/octet-stream',                                cat:'app'     },
+    { ext:['exe'],         mime:'application/vnd.microsoft.portable-executable',           cat:'app'     },
+    { ext:['dmg'],         mime:'application/x-apple-diskimage',                           cat:'app'     },
+    { ext:['deb'],         mime:'application/vnd.debian.binary-package',                   cat:'app'     },
+    { ext:['apk'],         mime:'application/vnd.android.package-archive',                 cat:'app'     },
+    { ext:[],              mime:'multipart/form-data',                                     cat:'app'     },
+    { ext:[],              mime:'application/x-www-form-urlencoded',           c:1,        cat:'app'     },
+  ];
+
+  var TOTAL = DB.length;
+
+  var inputEl  = document.getElementById('mlInput');
+  var countEl  = document.getElementById('mlCount');
+  var listEl   = document.getElementById('mlList');
+  var clearBtn = document.getElementById('mlClear');
+  var chipsEl  = document.getElementById('mlChips');
+
+  var activeCat = 'all';
+
+  function ctValue(row) {
+    return row.cs ? row.mime + '; charset=' + row.cs : row.mime;
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(function () {
+      if (window.pushHistory) window.pushHistory('mime lookup', text);
+      btn.innerHTML = '<i class="ti ti-check"></i>';
+      btn.classList.add('done');
+      setTimeout(function () {
+        btn.innerHTML = '<i class="ti ti-copy"></i>';
+        btn.classList.remove('done');
+      }, 1400);
+    });
+  }
+
+  function buildRow(row) {
+    var el = document.createElement('div');
+    el.className = 'ml-row';
+
+    // extensions
+    var extsEl = document.createElement('div');
+    extsEl.className = 'ml-exts';
+    if (row.ext.length === 0) {
+      var dash = document.createElement('span');
+      dash.className = 'ml-ext-none';
+      dash.textContent = '—';
+      extsEl.appendChild(dash);
+    } else {
+      row.ext.forEach(function (e) {
+        var pill = document.createElement('span');
+        pill.className = 'ml-ext';
+        pill.textContent = '.' + e;
+        extsEl.appendChild(pill);
+      });
+    }
+
+    // mime type
+    var mimeEl = document.createElement('div');
+    mimeEl.className = 'ml-mime';
+    mimeEl.textContent = row.mime;
+    mimeEl.title = row.mime;
+
+    // content-type column
+    var ctWrap = document.createElement('div');
+    ctWrap.className = 'ml-ct-wrap';
+    var ctEl = document.createElement('span');
+    ctEl.className = 'ml-ct';
+    ctEl.textContent = ctValue(row);
+    ctEl.title = ctValue(row);
+    ctWrap.appendChild(ctEl);
+    if (row.c) {
+      var badge = document.createElement('span');
+      badge.className = 'ml-badge ml-badge-comp';
+      badge.textContent = t.comp;
+      ctWrap.appendChild(badge);
+    }
+
+    // copy button
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'ml-copy';
+    copyBtn.title = t.copy + ': ' + row.mime;
+    copyBtn.innerHTML = '<i class="ti ti-copy"></i>';
+    var mime = row.mime;
+    copyBtn.addEventListener('click', function () { copyText(mime, copyBtn); });
+
+    el.appendChild(extsEl);
+    el.appendChild(mimeEl);
+    el.appendChild(ctWrap);
+    el.appendChild(copyBtn);
+    return el;
+  }
+
+  function render() {
+    var raw = inputEl.value.trim().toLowerCase().replace(/^\./, '');
+    var results = DB.filter(function (row) {
+      if (activeCat !== 'all' && row.cat !== activeCat) return false;
+      if (!raw) return true;
+      var extMatch  = row.ext.some(function (e) { return e.startsWith(raw) || e.includes(raw); });
+      var mimeMatch = row.mime.includes(raw);
+      return extMatch || mimeMatch;
+    });
+
+    countEl.textContent = results.length + ' / ' + TOTAL;
+
+    if (results.length === 0) {
+      listEl.innerHTML = '<div class="ml-empty">' + t.noResults + '</div>';
+      return;
+    }
+
+    var frag = document.createDocumentFragment();
+    results.forEach(function (row) { frag.appendChild(buildRow(row)); });
+    listEl.innerHTML = '';
+    listEl.appendChild(frag);
+  }
+
+  inputEl.addEventListener('input', render);
+
+  chipsEl.querySelectorAll('.ml-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      activeCat = chip.dataset.cat;
+      chipsEl.querySelectorAll('.ml-chip').forEach(function (c) {
+        c.classList.toggle('active', c.dataset.cat === activeCat);
+      });
+      render();
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    inputEl.value = '';
+    activeCat = 'all';
+    chipsEl.querySelectorAll('.ml-chip').forEach(function (c) {
+      c.classList.toggle('active', c.dataset.cat === 'all');
+    });
+    render();
+    inputEl.focus();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var toolEl = document.querySelector('.ml');
+    if (!toolEl) return;
+    var pal = document.getElementById('whPalette');
+    if (pal && pal.classList.contains('active')) return;
+    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      if (document.activeElement === inputEl) { clearBtn.click(); }
+    }
+  });
+
+  render();
+})();
+</script>

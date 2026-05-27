@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/about.css';
+---
+
+<Base
+  title="about — whittly"
+  description="About whittly — a collection of developer utilities that run entirely in your browser. Open-source frontend, no tracking, no ads, no dark patterns."
+>
+  <header class="about-hero">
+    <div class="badge"><span class="badge-dot"></span><span>about whittly</span></div>
+    <h1>a small, sharp <em>workshop</em>.</h1>
+    <p class="lede">small, sharp dev tools — the kind you reach for a dozen times a week and don't want to install, sign up for, or scroll past ads to use.</p>
+  </header>
+
+  <div class="manifesto">
+    <div class="diff">
+      <div class="diff-line minus"><span class="sign">−</span><span>cookie modals, ad banners, opaque data collection</span></div>
+      <div class="diff-line minus"><span class="sign">−</span><span>"sign up to use this basic utility"</span></div>
+      <div class="diff-line minus"><span class="sign">−</span><span>uploading your JWT tokens to someone's mystery server</span></div>
+      <div class="diff-line plus"> <span class="sign">+</span><span>runs in your browser — no network calls for core tools</span></div>
+      <div class="diff-line plus"> <span class="sign">+</span><span>one tap from home, no signup, no dark patterns</span></div>
+      <div class="diff-line plus"> <span class="sign">+</span><span>frontend is open source — auditable, self-hostable anywhere</span></div>
+    </div>
+  </div>
+
+  <div class="about-content">
+
+    <h2 class="h-section">// tech stack</h2>
+    <div class="stack">
+      <div class="stack-head">
+        <span class="prompt">$</span>
+        <span>cat</span>
+        <span class="file">stack.txt</span>
+      </div>
+      <pre class="stack-body"><span class="c"># the stack</span>
+<span class="k">astro</span>         <span class="p">·</span> static site generator, zero js by default
+<span class="k">css</span>           <span class="p">·</span> vanilla, custom-properties for theming
+<span class="k">typescript</span>    <span class="p">·</span> for catalog types and build-time logic
+<span class="k">fonts</span>         <span class="p">·</span> fraunces, inter tight, jetbrains mono
+<span class="k">icons</span>         <span class="p">·</span> tabler icons (open source, mit)
+<span class="k">hosting</span>       <span class="p">·</span> static, deployable anywhere
+<span class="k">analytics</span>     <span class="p">·</span> cloudflare web analytics <span class="c"># cookieless, aggregate only</span>
+
+<span class="c"># what's not here</span>
+<span class="p">×</span> react / vue / svelte
+<span class="p">×</span> tracking pixels, retargeting, third-party ads</pre>
+    </div>
+
+    <h2 class="h-section">// questions</h2>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">security &amp; privacy</div>
+
+      <div class="faq-item open">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">where exactly is my data processed?</span><span class="toggle">+</span></div>
+        <div class="faq-a">for all core tools (JSON, JWT, Base64, regex, hashing, etc.) — <strong>exclusively in your browser</strong>. processing runs via JavaScript and the WebCrypto API on your device. your tokens, API keys, and log payloads physically cannot leave your tab because there is no backend for these operations.<br><br>for Pro cloud features (batch jobs, large file processing, REST API) data is transmitted to an isolated server, processed in memory, and immediately discarded — never logged, never stored.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">any trackers, ads, or cookies?</span><span class="toggle">+</span></div>
+        <div class="faq-a">none. no Google Analytics, no Facebook Pixel, no retargeting scripts, no third-party cookies. the only analytics is <strong>Cloudflare Web Analytics</strong> — cookieless, privacy-first, aggregate only (which pages load, which country). it has zero access to anything you paste into the tools. no cookie banner because there are no cookies to consent to.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">can I use whittly offline?</span><span class="toggle">+</span></div>
+        <div class="faq-a">once a page is loaded, yes — all core tools work without internet. self-hosting is easy: clone the <a href="https://github.com/whittly/whittly" target="_blank" rel="noopener">frontend repo</a> and serve the static files however you like. the API is proprietary and runs separately.</div>
+      </div>
+    </div>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">pro &amp; pricing</div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">why introduce paid plans if core tools are free?</span><span class="toggle">+</span></div>
+        <div class="faq-a">core tools are browser-local and cost almost nothing to run. but cloud features — batch processing, large file handling, REST API endpoints — require real server-side compute. paid tiers exist solely to cover those infrastructure costs. not to fund ads, not to build a data profile on you, not to create lock-in. <strong>the free tier stays complete and useful forever.</strong></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">what does pro actually cost?</span><span class="toggle">+</span></div>
+        <div class="faq-a"><strong>Pro</strong> is $6/month or $49/year (~2 months free). <strong>API</strong> is $24/month or $199/year. both are coming soon — join the waitlist on the <a href="/premium/">pricing page</a>. pricing in rubles for RU/CIS is also available.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">where is my pro history stored?</span><span class="toggle">+</span></div>
+        <div class="faq-a">by default, history is stored locally in your browser. if you enable cloud sync in your pro account, it is encrypted and stored on our servers. you can export or delete it at any time.</div>
+      </div>
+    </div>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">philosophy</div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">why "whittly"?</span><span class="toggle">+</span></div>
+        <div class="faq-a">to whittle is to slowly shave a piece of wood with a sharp knife until you get exactly the shape you want — nothing more, nothing less. it felt right for a project about small, sharp tools and about whittling away the noise of most dev-tool sites: the banners, the modals, the mystery servers, the dark patterns. <strong>cut until only the useful part remains.</strong></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">Q.</span><span class="text">can I contribute a tool?</span><span class="toggle">+</span></div>
+        <div class="faq-a">please do. the frontend is open source — each tool is one self-contained Astro component. open an issue on <a href="https://github.com/whittly/whittly" target="_blank" rel="noopener">GitHub</a> describing what you want to add, or send a pull request directly.</div>
+      </div>
+    </div>
+
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      q.parentElement?.classList.toggle('open');
+    });
+  });
+</script>

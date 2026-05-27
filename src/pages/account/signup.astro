@@ -1,0 +1,93 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<Base title="create account — whittly" description="Create a whittly account to save presets and access Pro features.">
+  <div class="ac-auth-wrap">
+    <div class="ac-auth-card">
+      <div class="ac-auth-top">
+        <div class="ac-auth-tag">// account</div>
+        <h1 class="ac-auth-title">create account</h1>
+      </div>
+
+      <div class="ac-auth-body">
+        <div class="ac-error-msg" id="errMsg"></div>
+
+        <div class="ac-field">
+          <label for="email">email</label>
+          <input class="ac-input" id="email" type="email" autocomplete="email" spellcheck="false" placeholder="you@example.com" />
+        </div>
+
+        <div class="ac-field">
+          <label for="password">password <span style="color:var(--ink-faint);font-size:10px;">(min 8 chars)</span></label>
+          <input class="ac-input" id="password" type="password" autocomplete="new-password" placeholder="••••••••" />
+        </div>
+
+        <button class="ac-btn" id="submitBtn">create account</button>
+
+        <div class="ac-footer-row">
+          <a class="ac-footer-link" href="/account/login/">already have one? <em>sign in →</em></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script is:inline define:vars={{ API }}>
+(function () {
+  if (localStorage.getItem('wh_access')) {
+    location.replace('/account/');
+    return;
+  }
+
+  var emailEl  = document.getElementById('email');
+  var passEl   = document.getElementById('password');
+  var submitEl = document.getElementById('submitBtn');
+  var errEl    = document.getElementById('errMsg');
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+
+  async function submit() {
+    errEl.classList.remove('visible');
+    var email    = emailEl.value.trim();
+    var password = passEl.value;
+    if (!email || !password) { showError('please fill in all fields'); return; }
+    if (password.length < 8)  { showError('password must be at least 8 characters'); return; }
+
+    submitEl.disabled = true;
+    submitEl.textContent = 'creating…';
+
+    try {
+      var res  = await fetch(API + '/auth/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+      var data = await res.json();
+
+      if (!res.ok) { showError(data.error ?? 'something went wrong'); return; }
+
+      localStorage.setItem('wh_access',  data.accessToken);
+      localStorage.setItem('wh_refresh', data.refreshToken);
+      localStorage.setItem('wh_user',    JSON.stringify(data.user));
+      location.replace('/account/');
+    } catch (e) {
+      showError('could not reach the server — is whittly-api running?');
+    } finally {
+      submitEl.disabled = false;
+      submitEl.textContent = 'create account';
+    }
+  }
+
+  submitEl.addEventListener('click', submit);
+  [emailEl, passEl].forEach(function (el) {
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+  });
+})();
+</script>

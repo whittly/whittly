@@ -1,0 +1,529 @@
+---
+interface Props { lang?: 'en' | 'ru'; }
+const { lang = 'en' } = Astro.props;
+---
+<style is:global>
+  .bc {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .bc-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .bc-modes { display: flex; gap: 4px; }
+
+  .bc-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .bc-mode:hover  { color: var(--ink); border-color: var(--line-strong); }
+  .bc-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .bc-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bc-status.ok  { color: var(--good); }
+  .bc-status.err { color: var(--bad); }
+
+  .bc-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .bc-action:hover          { color: var(--ink); border-color: var(--line-strong); }
+  .bc-action.done           { color: var(--good); border-color: var(--good); }
+  .bc-action:disabled       { opacity: 0.45; cursor: not-allowed; }
+  .bc-action:disabled:hover { color: var(--ink-soft); border-color: var(--line); }
+
+  .bc-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .bc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .bc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+  }
+
+  .bc-input {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.12s;
+  }
+  .bc-input:focus { border-color: var(--line-strong); }
+
+  .bc-cost-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .bc-cost-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .bc-cost-btns { display: flex; gap: 4px; }
+
+  .bc-cost-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    padding: 4px 9px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .bc-cost-btn:hover  { color: var(--ink); border-color: var(--line-strong); }
+  .bc-cost-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .bc-cost-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+  }
+
+  .bc-row-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .bc-compute {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 18px;
+    border: 0.5px solid var(--accent);
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bc-compute:hover    { background: var(--accent); color: var(--bg); }
+  .bc-compute:disabled { opacity: 0.45; cursor: not-allowed; background: var(--accent-soft); color: var(--accent); }
+
+  .bc-output {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+    color: var(--ink);
+    box-sizing: border-box;
+    word-break: break-all;
+    min-height: 48px;
+    cursor: default;
+    outline: none;
+    resize: none;
+    user-select: text;
+  }
+  .bc-output.ph  { color: var(--ink-faint); }
+  .bc-output.ok  { color: var(--ink); }
+  .bc-output.err { color: var(--bad); }
+
+  .bc-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    color: var(--ink-faint);
+    min-height: 44px;
+  }
+  .bc-result.match    { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, transparent); }
+  .bc-result.mismatch { color: var(--bad);  border-color: var(--bad);  background: color-mix(in srgb, var(--bad)  8%, transparent); }
+  .bc-result i { font-size: 16px; }
+
+  @media (max-width: 640px) {
+    .bc-body { padding: 16px; }
+  }
+</style>
+
+<div class="bc" data-lang={lang}>
+  <div class="bc-bar">
+    <div class="bc-modes">
+      <button class="bc-mode active" data-mode="hash" id="bcModeHash">hash</button>
+      <button class="bc-mode" data-mode="verify" id="bcModeVerify">verify</button>
+    </div>
+    <span class="bc-status" id="bcStatus">— enter a password to hash</span>
+    <span class="local-badge">// client-only · bcryptjs</span>
+    <button class="bc-action" id="bcCopy"><i class="ti ti-copy"></i>copy<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="bc-action" id="bcClear"><i class="ti ti-x"></i>clear<span class="kbd-hint">esc</span></button>
+  </div>
+
+  <!-- hash mode -->
+  <div class="bc-body" id="bcHashBody">
+    <div class="bc-field">
+      <span class="bc-label" id="bcPasswordLabel">password</span>
+      <input class="bc-input" id="bcPassword" type="text" spellcheck="false" autocomplete="off" placeholder="enter password to hash…" />
+    </div>
+    <div class="bc-cost-row">
+      <span class="bc-cost-label" id="bcCostLabel">cost factor</span>
+      <div class="bc-cost-btns" id="bcCostBtns">
+        <button class="bc-cost-btn" data-cost="8">8</button>
+        <button class="bc-cost-btn active" data-cost="10">10</button>
+        <button class="bc-cost-btn" data-cost="12">12</button>
+        <button class="bc-cost-btn" data-cost="14">14</button>
+      </div>
+      <span class="bc-cost-note" id="bcCostNote">~100ms</span>
+    </div>
+    <div class="bc-row-actions">
+      <button class="bc-compute" id="bcHashBtn" disabled>
+        <i class="ti ti-lock"></i><span id="bcHashBtnLabel">hash password</span>
+      </button>
+    </div>
+    <div class="bc-field">
+      <span class="bc-label" id="bcOutputLabel">bcrypt hash</span>
+      <div class="bc-output ph" id="bcOutput">// hash appears here</div>
+    </div>
+  </div>
+
+  <!-- verify mode -->
+  <div class="bc-body" id="bcVerifyBody" style="display:none">
+    <div class="bc-field">
+      <span class="bc-label" id="bcVPasswordLabel">password</span>
+      <input class="bc-input" id="bcVPassword" type="text" spellcheck="false" autocomplete="off" placeholder="enter password to check…" />
+    </div>
+    <div class="bc-field">
+      <span class="bc-label" id="bcVHashLabel">bcrypt hash</span>
+      <input class="bc-input" id="bcVHash" type="text" spellcheck="false" autocomplete="off" placeholder="$2b$10$…" />
+    </div>
+    <div class="bc-row-actions">
+      <button class="bc-compute" id="bcVerifyBtn" disabled>
+        <i class="ti ti-shield-check"></i><span id="bcVerifyBtnLabel">verify</span>
+      </button>
+    </div>
+    <div class="bc-result" id="bcResult">
+      <i class="ti ti-shield"></i>
+      <span id="bcResultText">— enter password and hash</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import bcrypt from 'bcryptjs';
+
+  const root = document.querySelector('.bc') as HTMLElement | null;
+  if (!root) throw new Error('bc root not found');
+
+  const isRu = root.dataset.lang === 'ru';
+
+  const T = {
+    statusEmpty:    isRu ? '— введите пароль для хеширования' : '— enter a password to hash',
+    statusEmptyV:   isRu ? '— введите пароль и хеш'          : '— enter password and hash',
+    passwordLbl:    isRu ? 'пароль'                           : 'password',
+    costLbl:        isRu ? 'коэффициент сложности'            : 'cost factor',
+    outputLbl:      isRu ? 'bcrypt хеш'                       : 'bcrypt hash',
+    hashBtn:        isRu ? 'хешировать'                       : 'hash password',
+    verifyBtn:      isRu ? 'проверить'                        : 'verify',
+    computing:      isRu ? 'вычисляется…'                     : 'computing…',
+    outputPh:       isRu ? '// хеш появится здесь'            : '// hash appears here',
+    vPasswordLbl:   isRu ? 'пароль'                           : 'password',
+    vHashLbl:       isRu ? 'bcrypt хеш'                       : 'bcrypt hash',
+    verifyPh:       isRu ? 'введите пароль для проверки…'     : 'enter password to check…',
+    hashPh:         isRu ? '$2b$10$…'                         : '$2b$10$…',
+    passwordPh:     isRu ? 'введите пароль для хеширования…'  : 'enter password to hash…',
+    done:           isRu ? 'скопировано'                      : 'copied',
+    copy:           isRu ? 'копировать'                       : 'copy',
+    clear:          isRu ? 'очистить'                         : 'clear',
+    match:          isRu ? 'совпадает'                        : 'match',
+    noMatch:        isRu ? 'не совпадает'                     : 'no match',
+    resultEmpty:    isRu ? '— введите пароль и хеш'           : '— enter password and hash',
+    hashDone:       isRu ? 'хеш готов'                        : 'hash ready',
+    invalidHash:    isRu ? 'неверный формат хеша'             : 'invalid hash format',
+    verifying:      isRu ? 'проверяется…'                     : 'verifying…',
+  };
+
+  const COST_NOTES: Record<number, string> = { 8: '~20ms', 10: '~100ms', 12: '~400ms', 14: '~1.5s' };
+
+  /* Elements */
+  const statusEl     = root.querySelector('#bcStatus')         as HTMLElement;
+  const hashBody     = root.querySelector('#bcHashBody')       as HTMLElement;
+  const verifyBody   = root.querySelector('#bcVerifyBody')     as HTMLElement;
+  const modeHashBtn  = root.querySelector('#bcModeHash')       as HTMLButtonElement;
+  const modeVerBtn   = root.querySelector('#bcModeVerify')     as HTMLButtonElement;
+  const passwordEl   = root.querySelector('#bcPassword')       as HTMLInputElement;
+  const costBtns     = root.querySelectorAll('.bc-cost-btn')   as NodeListOf<HTMLButtonElement>;
+  const costNote     = root.querySelector('#bcCostNote')       as HTMLElement;
+  const hashBtn      = root.querySelector('#bcHashBtn')        as HTMLButtonElement;
+  const hashBtnLabel = root.querySelector('#bcHashBtnLabel')   as HTMLElement;
+  const outputEl     = root.querySelector('#bcOutput')         as HTMLElement;
+  const vPasswordEl  = root.querySelector('#bcVPassword')      as HTMLInputElement;
+  const vHashEl      = root.querySelector('#bcVHash')          as HTMLInputElement;
+  const verifyBtn    = root.querySelector('#bcVerifyBtn')      as HTMLButtonElement;
+  const verifyBtnLbl = root.querySelector('#bcVerifyBtnLabel') as HTMLElement;
+  const resultEl     = root.querySelector('#bcResult')         as HTMLElement;
+  const resultText   = root.querySelector('#bcResultText')     as HTMLElement;
+  const copyBtn      = root.querySelector('#bcCopy')           as HTMLButtonElement;
+  const clearBtn     = root.querySelector('#bcClear')          as HTMLButtonElement;
+
+  /* Localise static labels */
+  (root.querySelector('#bcPasswordLabel')  as HTMLElement).textContent = T.passwordLbl;
+  (root.querySelector('#bcCostLabel')      as HTMLElement).textContent = T.costLbl;
+  (root.querySelector('#bcOutputLabel')    as HTMLElement).textContent = T.outputLbl;
+  (root.querySelector('#bcHashBtnLabel')   as HTMLElement).textContent = T.hashBtn;
+  (root.querySelector('#bcVPasswordLabel') as HTMLElement).textContent = T.vPasswordLbl;
+  (root.querySelector('#bcVHashLabel')     as HTMLElement).textContent = T.vHashLbl;
+  (root.querySelector('#bcVerifyBtnLabel') as HTMLElement).textContent = T.verifyBtn;
+  passwordEl.placeholder  = T.passwordPh;
+  vPasswordEl.placeholder = T.verifyPh;
+  vHashEl.placeholder     = T.hashPh;
+  outputEl.textContent    = T.outputPh;
+  resultText.textContent  = T.resultEmpty;
+  statusEl.textContent    = T.statusEmpty;
+  (root.querySelector('#bcCopy') as HTMLElement).innerHTML = `<i class="ti ti-copy"></i>${T.copy}<span class="kbd-hint">⌘⇧C</span>`;
+  (root.querySelector('#bcClear') as HTMLElement).innerHTML = `<i class="ti ti-x"></i>${T.clear}<span class="kbd-hint">esc</span>`;
+
+  let mode = 'hash';
+  let cost = 10;
+  let lastHash = '';
+  let busy = false;
+
+  /* Mode switch */
+  [modeHashBtn, modeVerBtn].forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode as string;
+      modeHashBtn.classList.toggle('active', mode === 'hash');
+      modeVerBtn.classList.toggle('active', mode === 'verify');
+      hashBody.style.display   = mode === 'hash'   ? '' : 'none';
+      verifyBody.style.display = mode === 'verify' ? '' : 'none';
+      statusEl.textContent = mode === 'hash' ? T.statusEmpty : T.statusEmptyV;
+      statusEl.className = 'bc-status';
+      lastHash = '';
+    });
+  });
+
+  /* Cost factor */
+  costBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      costBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cost = parseInt(btn.dataset.cost as string, 10);
+      costNote.textContent = COST_NOTES[cost] ?? '';
+    });
+  });
+
+  /* Enable hash button when password non-empty */
+  passwordEl.addEventListener('input', () => {
+    hashBtn.disabled = !passwordEl.value.trim() || busy;
+  });
+
+  /* Enable verify button when both fields non-empty */
+  function updateVerifyBtn() {
+    verifyBtn.disabled = !vPasswordEl.value.trim() || !vHashEl.value.trim() || busy;
+  }
+  vPasswordEl.addEventListener('input', updateVerifyBtn);
+  vHashEl.addEventListener('input', updateVerifyBtn);
+
+  /* Hash */
+  hashBtn.addEventListener('click', async () => {
+    const pw = passwordEl.value;
+    if (!pw || busy) return;
+    busy = true;
+    hashBtn.disabled = true;
+    hashBtnLabel.textContent = T.computing;
+    outputEl.textContent = T.computing;
+    outputEl.className = 'bc-output ph';
+    statusEl.textContent = T.computing;
+    statusEl.className = 'bc-status';
+
+    try {
+      const t0   = performance.now();
+      const hash = await bcrypt.hash(pw, cost);
+      const ms   = Math.round(performance.now() - t0);
+      lastHash = hash;
+      outputEl.textContent = hash;
+      outputEl.className   = 'bc-output ok';
+      statusEl.textContent = `${T.hashDone} · cost ${cost} · ${ms}ms`;
+      statusEl.className   = 'bc-status ok';
+      outputEl.classList.remove('flash-ok'); void outputEl.offsetWidth; outputEl.classList.add('flash-ok');
+      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent);
+    } catch (err: any) {
+      outputEl.textContent = '// ' + (err?.message ?? 'error');
+      outputEl.className   = 'bc-output err';
+      statusEl.textContent = err?.message ?? 'error';
+      statusEl.className   = 'bc-status err';
+    }
+
+    busy = false;
+    hashBtn.disabled = !passwordEl.value.trim();
+    hashBtnLabel.textContent = T.hashBtn;
+  });
+
+  /* Verify */
+  verifyBtn.addEventListener('click', async () => {
+    const pw   = vPasswordEl.value;
+    const hash = vHashEl.value.trim();
+    if (!pw || !hash || busy) return;
+
+    if (!hash.match(/^\$2[aby]\$\d{2}\$/)) {
+      resultEl.className = 'bc-result err';
+      resultText.textContent = T.invalidHash;
+      statusEl.textContent = T.invalidHash;
+      statusEl.className   = 'bc-status err';
+      return;
+    }
+
+    busy = true;
+    verifyBtn.disabled = true;
+    verifyBtnLbl.textContent = T.verifying;
+    resultEl.className = 'bc-result';
+    resultText.textContent = T.verifying;
+    statusEl.textContent = T.verifying;
+    statusEl.className   = 'bc-status';
+
+    try {
+      const t0      = performance.now();
+      const matched = await bcrypt.compare(pw, hash);
+      const ms      = Math.round(performance.now() - t0);
+
+      if (matched) {
+        resultEl.className = 'bc-result match';
+        resultEl.innerHTML = `<i class="ti ti-circle-check"></i><span>${T.match} · ${ms}ms</span>`;
+        statusEl.textContent = T.match + ' · ' + ms + 'ms';
+        statusEl.className   = 'bc-status ok';
+      } else {
+        resultEl.className = 'bc-result mismatch';
+        resultEl.innerHTML = `<i class="ti ti-circle-x"></i><span>${T.noMatch} · ${ms}ms</span>`;
+        statusEl.textContent = T.noMatch + ' · ' + ms + 'ms';
+        statusEl.className   = 'bc-status err';
+      }
+      resultEl.classList.remove('flash-ok'); void resultEl.offsetWidth; resultEl.classList.add('flash-ok');
+      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent);
+    } catch (err: any) {
+      resultEl.className = 'bc-result mismatch';
+      resultEl.innerHTML = `<i class="ti ti-alert-circle"></i><span>// ${err?.message ?? 'error'}</span>`;
+      statusEl.textContent = err?.message ?? 'error';
+      statusEl.className   = 'bc-status err';
+    }
+
+    busy = false;
+    updateVerifyBtn();
+    verifyBtnLbl.textContent = T.verifyBtn;
+  });
+
+  /* Copy (copies hash in hash mode, nothing in verify) */
+  copyBtn.addEventListener('click', () => {
+    const text = mode === 'hash' ? lastHash : '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.innerHTML = `<i class="ti ti-check"></i>${T.done}`;
+      copyBtn.classList.add('done');
+      setTimeout(() => {
+        copyBtn.innerHTML = `<i class="ti ti-copy"></i>${T.copy}<span class="kbd-hint">⌘⇧C</span>`;
+        copyBtn.classList.remove('done');
+      }, 1600);
+    });
+  });
+
+  /* Clear */
+  clearBtn.addEventListener('click', () => {
+    if (mode === 'hash') {
+      passwordEl.value = '';
+      outputEl.textContent = T.outputPh;
+      outputEl.className   = 'bc-output ph';
+      hashBtn.disabled     = true;
+      statusEl.textContent = T.statusEmpty;
+      statusEl.className   = 'bc-status';
+      lastHash = '';
+      passwordEl.focus();
+    } else {
+      vPasswordEl.value = '';
+      vHashEl.value     = '';
+      resultEl.className = 'bc-result';
+      resultEl.innerHTML = `<i class="ti ti-shield"></i><span>${T.resultEmpty}</span>`;
+      verifyBtn.disabled = true;
+      statusEl.textContent = T.statusEmptyV;
+      statusEl.className   = 'bc-status';
+      vPasswordEl.focus();
+    }
+  });
+
+  /* Keyboard shortcuts */
+  document.addEventListener('keydown', (e) => {
+    if (!root.contains(document.activeElement)) return;
+    const pal = document.getElementById('whPalette');
+    if (pal?.classList.contains('active')) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
+      if (mode === 'hash' && !hashBtn.disabled) hashBtn.click();
+      else if (mode === 'verify' && !verifyBtn.disabled) verifyBtn.click();
+    }
+    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      copyBtn.click();
+    }
+    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+      clearBtn.click();
+    }
+  });
+</script>
