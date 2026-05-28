@@ -18,6 +18,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
+            export PATH=$PATH:/usr/bin:/usr/local/bin
             cd /var/www/whittly/whittly
             git pull origin ${{ github.ref_name }}
             npm ci
