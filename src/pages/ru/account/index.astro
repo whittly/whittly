@@ -13,6 +13,12 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
     </div>
 
     <div id="acContent" style="display:none">
+      <div class="ac-verify-banner" id="verifyBanner" style="display:none">
+        <i class="ti ti-mail"></i>
+        <span>пожалуйста, подтвердите адрес электронной почты.</span>
+        <button id="resendBtn" class="ac-verify-resend">отправить повторно →</button>
+      </div>
+
       <div class="ac-header">
         <div>
           <div class="ac-heading">// аккаунт</div>
@@ -143,6 +149,22 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
       localStorage.setItem('wh_user', JSON.stringify(me));
       emailEl.textContent = me.email;
+
+      if (!me.emailVerifiedAt) {
+        document.getElementById('verifyBanner').style.display = 'flex';
+        document.getElementById('resendBtn').addEventListener('click', async function () {
+          var btn = document.getElementById('resendBtn');
+          btn.disabled = true;
+          btn.textContent = 'отправлено ✓';
+          try {
+            await fetch(API + '/auth/resend-verification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: me.email }),
+            });
+          } catch {}
+        });
+      }
 
       var planLabels = { free: 'FREE', pro: 'PRO', api: 'API' };
       planEl.textContent = planLabels[me.plan] || me.plan.toUpperCase();
