@@ -52,6 +52,17 @@ const content = isRu
   ? (TOOL_CONTENT_RU[slug] ?? null)
   : (TOOL_CONTENT_EN[slug] ?? null);
 
+const related = CATALOG
+  .filter(t => t.cat === tool.cat && !t.soon && toolSlug(t) !== slug)
+  .slice(0, 3);
+
+const seoTitle = SEO_TITLE[slug]
+  ? `${SEO_TITLE[slug]} — whittly`
+  : `${name} — whittly`;
+const seoDesc = isRu
+  ? (SEO_DESC_RU[slug] ?? desc)
+  : (SEO_DESC[slug]    ?? desc);
+
 const SITE = 'https://whittly.dev';
 const toolUrl = `${SITE}${isRu ? '/ru' : ''}/tools/${slug}/`;
 const jsonLd = {
@@ -65,17 +76,6 @@ const jsonLd = {
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   provider: { '@type': 'Organization', name: 'whittly', url: SITE },
 };
-
-const related = CATALOG
-  .filter(t => t.cat === tool.cat && !t.soon && toolSlug(t) !== slug)
-  .slice(0, 3);
-
-const seoTitle = SEO_TITLE[slug]
-  ? `${SEO_TITLE[slug]} — whittly`
-  : `${name} — whittly`;
-const seoDesc = isRu
-  ? (SEO_DESC_RU[slug] ?? desc)
-  : (SEO_DESC[slug]    ?? desc);
 ---
 <style is:global>
   .tool-page { padding: 48px 0 64px; }
