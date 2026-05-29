@@ -1,4 +1,7 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -118,12 +121,15 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="hash-generator" lang={lang} />
+<BatchPanel toolName="hash-generator" lang={lang} />
+<FileLoader targetId="hgInput" lang={lang} />
 <div class="hg">
   <div class="hg-bar">
     <span class="hg-label local-badge">// hash · webcrypto api</span>
     <span class="hg-status" id="hgStatus">{t.statusPh}</span>
   </div>
-  <textarea class="hg-input" id="hgInput" spellcheck="false" placeholder={t.ph}></textarea>
+  <textarea class="hg-input" id="hgInput" data-hist-main-input spellcheck="false" placeholder={t.ph}></textarea>
   <div class="hg-results">
     <div class="hg-row">
       <span class="hg-algo">sha-1</span>
@@ -196,7 +202,7 @@ const t = {
         var bytes = data.byteLength;
         statusEl.textContent = t.hashed + ' · ' + bytes + ' ' + (bytes === 1 ? t.byte : t.bytes);
         statusEl.className   = 'hg-status ok';
-        if (window.pushHistory) window.pushHistory('hash generator', statusEl.textContent);
+        if (window.pushHistory) window.pushHistory('hash generator', statusEl.textContent, inputEl.value.trim());
         var resultsEl = document.querySelector('.hg-results');
         if (resultsEl) { resultsEl.classList.remove('flash-ok'); void resultsEl.offsetWidth; resultsEl.classList.add('flash-ok'); }
       });
@@ -218,6 +224,14 @@ const t = {
   });
 
   inputEl.addEventListener('input', process);
+
+  window.toolGetPreset = function () {
+    return { input: inputEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inputEl.value = cfg.input ?? '';
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   document.addEventListener('keydown', function(e) {
     var toolEl = document.querySelector('.hg');
@@ -246,5 +260,20 @@ const t = {
       process();
     }
   } catch (e) {}
+
+  window.toolBatchProcess = function(lines) {
+    var encode = new TextEncoder();
+    return Promise.all(lines.map(function(line) {
+      var bytes = encode.encode(line);
+      return Promise.all([
+        crypto.subtle.digest('SHA-1',   bytes).then(toHex),
+        crypto.subtle.digest('SHA-256', bytes).then(toHex),
+        crypto.subtle.digest('SHA-384', bytes).then(toHex),
+        crypto.subtle.digest('SHA-512', bytes).then(toHex),
+      ]).then(function(hashes) {
+        return 'SHA-1:   ' + hashes[0] + '\nSHA-256: ' + hashes[1] + '\nSHA-384: ' + hashes[2] + '\nSHA-512: ' + hashes[3];
+      });
+    }));
+  };
 })();
 </script>

@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -154,6 +156,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="url-encoder" lang={lang} />
+<BatchPanel toolName="url-encoder" lang={lang} />
 <div class="ue">
   <div class="ue-bar">
     <div class="ue-modes">
@@ -167,7 +171,7 @@ const t = {
     <button class="ue-action" id="ueClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="ue-panels">
-    <textarea class="ue-in" id="ueIn" spellcheck="false" placeholder={t.phEncode}></textarea>
+    <textarea class="ue-in" id="ueIn" data-hist-main-input spellcheck="false" placeholder={t.phEncode}></textarea>
     <div class="ue-sep"></div>
     <pre class="ue-out" id="ueOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -213,7 +217,7 @@ const t = {
       }
       lastOutput      = result;
       outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
-      if (window.pushHistory) window.pushHistory('url encoder', statusEl.textContent);
+      if (window.pushHistory) window.pushHistory('url encoder', statusEl.textContent, inEl.value.trim());
       outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
     } catch (e) {
       lastOutput           = '';
@@ -273,6 +277,24 @@ const t = {
     if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
   });
+
+  window.toolBatchProcess = function(lines) {
+    return lines.map(function(line) {
+      try {
+        return mode === 'decode'
+          ? decodeURIComponent(line.replace(/\+/g, ' '))
+          : encodeURIComponent(line);
+      } catch(e) { return '// error: ' + e.message; }
+    });
+  };
+
+  window.toolGetPreset = function () {
+    return { input: inEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inEl.value = cfg.input ?? '';
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   try {
     var p = sessionStorage.getItem('url_payload') || sessionStorage.getItem('magic_box_payload');

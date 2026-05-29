@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -248,10 +249,11 @@ const isRu = lang === 'ru';
   }
 </style>
 
+<PresetsBar toolName="cron-parser" lang={lang} />
 <div class="cp">
   <div class="cp-top">
     <div class="cp-expr-wrap">
-      <input class="cp-expr" id="cpExpr" type="text" value="*/5 9-17 * * 1-5"
+      <input class="cp-expr" id="cpExpr" data-hist-main-input type="text" value="*/5 9-17 * * 1-5"
              spellcheck="false" autocomplete="off" autocorrect="off" />
       <div class="cp-expr-hint">
         {isRu ? 'минута · час · день · месяц · день-недели' : 'minute · hour · day-of-month · month · day-of-week'}
@@ -717,7 +719,7 @@ const isRu = lang === 'ru';
 
       summaryEl.textContent = isRuLang ? summarizeRu(f) : summarize(f);
       summaryEl.className   = 'cp-summary ok';
-      if (window.pushHistory) window.pushHistory('cron parser', summaryEl.textContent);
+      if (window.pushHistory) window.pushHistory('cron parser', summaryEl.textContent, exprEl.value.trim());
       summaryEl.classList.remove('flash-ok'); void summaryEl.offsetWidth; summaryEl.classList.add('flash-ok');
 
       fvMin.textContent   = f.min;   fdMin.textContent   = isRuLang ? descMinRu(f.min)   : descMin(f.min);
@@ -805,6 +807,14 @@ const isRu = lang === 'ru';
   });
 
   render();
+
+  window.toolGetPreset = function () {
+    return { expr: exprEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    exprEl.value = cfg.expr ?? '';
+    exprEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   var cpPreload = sessionStorage.getItem('cron_payload');
   if (cpPreload) { exprEl.value = cpPreload; sessionStorage.removeItem('cron_payload'); render(); }

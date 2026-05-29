@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -150,6 +152,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="slug-generator" lang={lang} />
+<BatchPanel toolName="slug-generator" lang={lang} />
 <div class="sg">
   <div class="sg-bar">
     <div class="sg-opt">
@@ -169,7 +173,7 @@ const t = {
     <button class="sg-action" id="sgClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="sg-panels">
-    <textarea class="sg-in" id="sgIn" spellcheck="false" placeholder={t.phIn}></textarea>
+    <textarea class="sg-in" id="sgIn" data-hist-main-input spellcheck="false" placeholder={t.phIn}></textarea>
     <div class="sg-sep-line"></div>
     <pre class="sg-out" id="sgOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -254,7 +258,7 @@ const t = {
     var maxNote = maxLen > 0 ? ' · max ' + maxLen : '';
     statusEl.textContent = result.length + t.charCount + maxNote;
     statusEl.className   = 'sg-status ok';
-    if (window.pushHistory) window.pushHistory('slug generator', result);
+    if (window.pushHistory) window.pushHistory('slug generator', result, inEl.value.trim());
     outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
   }
 
@@ -280,6 +284,14 @@ const t = {
     inEl.focus();
   });
 
+  window.toolGetPreset = function () {
+    return { input: inEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inEl.value = cfg.input ?? '';
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.sg');
     if (!toolEl || !toolEl.contains(document.activeElement)) return;
@@ -289,5 +301,13 @@ const t = {
     if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
   });
+
+  window.toolBatchProcess = function(lines) {
+    var sep    = sepEl.value;
+    var maxLen = parseInt(maxEl.value, 10) || 0;
+    return lines.map(function(line) {
+      return slugify(line, sep, maxLen) || '// (empty)';
+    });
+  };
 })();
 </script>

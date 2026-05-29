@@ -199,10 +199,7 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
         var pCount = (presetsData.presets || []).length;
         statPreEl.textContent = pCount + ' saved';
         descPreEl.textContent = pCount + ' preset' + (pCount === 1 ? '' : 's') + ' across all tools';
-        presetsArrowEl.textContent = 'view presets →';
-        presetsArrowEl.style.color = 'var(--accent)';
-        presetsArrowEl.style.fontFamily = "'JetBrains Mono', monospace";
-        presetsArrowEl.style.fontSize = '11.5px';
+        presetsArrowEl.innerHTML = '<a href="/tools/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">manage in tools →</a>';
       }
 
       loadingEl.style.display = 'none';

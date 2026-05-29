@@ -1,4 +1,4 @@
----
+﻿---
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -237,7 +237,7 @@ const t = {
   <div class="ml-bar">
     <div class="ml-search">
       <i class="ti ti-search"></i>
-      <input type="text" id="mlInput" spellcheck="false" placeholder={t.ph} autocomplete="off" />
+      <input type="text" id="mlInput" data-hist-main-input spellcheck="false" placeholder={t.ph} autocomplete="off" />
     </div>
     <span class="ml-count" id="mlCount"></span>
     <span class="local-badge">// client-only</span>
@@ -377,7 +377,7 @@ const t = {
 
   function copyText(text, btn) {
     navigator.clipboard.writeText(text).then(function () {
-      if (window.pushHistory) window.pushHistory('mime lookup', text);
+      if (window.pushHistory) window.pushHistory('mime lookup', text, inputEl.value.trim());
       btn.innerHTML = '<i class="ti ti-check"></i>';
       btn.classList.add('done');
       setTimeout(function () {

@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -141,6 +143,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="xml-json" lang={lang} />
+<FileLoader targetId="xjIn" lang={lang} />
 <div class="xj">
   <div class="xj-bar">
     <div class="xj-modes">
@@ -154,7 +158,7 @@ const t = {
     <button class="xj-action" id="xjClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="xj-panels">
-    <textarea class="xj-in" id="xjIn" spellcheck="false" placeholder={t.phXml}></textarea>
+    <textarea class="xj-in" id="xjIn" data-hist-main-input spellcheck="false" placeholder={t.phXml}></textarea>
     <div class="xj-sep"></div>
     <pre class="xj-out" id="xjOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -276,7 +280,7 @@ const t = {
       var lines = result.split('\n').length;
       statusEl.textContent = t.converted + ' · ' + lines + ' lines';
       statusEl.className   = 'xj-status ok';
-      if (window.pushHistory) window.pushHistory('xml ↔ json', statusEl.textContent);
+      if (window.pushHistory) window.pushHistory('xml ↔ json', statusEl.textContent, inEl.value.trim());
       outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
     } catch (e) {
       lastOutput           = '';
@@ -328,6 +332,14 @@ const t = {
     process();
     inEl.focus();
   });
+
+  window.toolGetPreset = function () {
+    return { input: inEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inEl.value = cfg.input ?? '';
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.xj');

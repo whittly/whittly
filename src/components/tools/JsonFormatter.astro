@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -44,7 +46,7 @@ const t = {
 
   .jf-mode {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
+    font-size: 13px;
     padding: 5px 10px;
     border: 0.5px solid var(--line);
     border-radius: 5px;
@@ -60,7 +62,7 @@ const t = {
   .jf-status {
     flex: 1;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
+    font-size: 13px;
     color: var(--ink-faint);
     text-align: center;
     min-width: 0;
@@ -74,7 +76,7 @@ const t = {
 
   .jf-action {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
+    font-size: 13px;
     padding: 5px 10px;
     border: 0.5px solid var(--line);
     border-radius: 5px;
@@ -100,7 +102,7 @@ const t = {
   .jf-in {
     padding: 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 14.5px;
     line-height: 1.65;
     color: var(--ink);
     background: transparent;
@@ -118,7 +120,7 @@ const t = {
   .jf-out {
     padding: 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 14.5px;
     line-height: 1.65;
     overflow: auto;
     margin: 0;
@@ -142,6 +144,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="json-formatter" lang={lang} />
+<FileLoader targetId="jfIn" lang={lang} />
 <div class="jf">
   <div class="jf-bar">
     <div class="jf-modes">
@@ -155,7 +159,7 @@ const t = {
     <button class="jf-action" id="jfClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="jf-panels">
-    <textarea class="jf-in" id="jfIn" spellcheck="false" placeholder={t.ph}></textarea>
+    <textarea class="jf-in" id="jfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}></textarea>
     <div class="jf-sep"></div>
     <pre class="jf-out" id="jfOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -239,7 +243,7 @@ const t = {
       const size = new Blob([formatted]).size;
       statusEl.textContent = t.valid + ' · ' + describeRoot(parsed) + ' · ' + formatSize(size);
       statusEl.className   = 'jf-status ok';
-      if (window.pushHistory) window.pushHistory('json formatter', statusEl.textContent);
+      if (window.pushHistory) window.pushHistory('json formatter', statusEl.textContent, inEl.value.trim());
       flashOutput(outEl);
     } catch (e) {
       lastOutput          = '';
@@ -289,6 +293,20 @@ const t = {
     void el.offsetWidth;
     el.classList.add('flash-ok');
   }
+
+  window.toolGetPreset = function () {
+    return { input: inEl.value, indent: indent };
+  };
+  window.toolSetPreset = function (cfg) {
+    if (cfg.input !== undefined) inEl.value = cfg.input;
+    if (cfg.indent !== undefined) {
+      indent = cfg.indent;
+      document.querySelectorAll('.jf-mode').forEach(function (b) {
+        b.classList.toggle('active', parseInt(b.dataset.indent, 10) === indent);
+      });
+    }
+    process();
+  };
 
   document.addEventListener('keydown', function(e) {
     var toolEl = document.querySelector('.jf');

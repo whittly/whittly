@@ -244,7 +244,7 @@ const t = {
     }
     render();
     var label = ver === 'nano' ? 'nanoid' : 'v' + ver;
-    if (window.pushHistory) window.pushHistory('uuid generator', uuids.length + ' · ' + label);
+    if (window.pushHistory) window.pushHistory('uuid generator', uuids.length + ' · ' + label, '');
     var listEl2 = document.getElementById('ugList');
     if (listEl2) { listEl2.classList.remove('flash-ok'); void listEl2.offsetWidth; listEl2.classList.add('flash-ok'); }
   }

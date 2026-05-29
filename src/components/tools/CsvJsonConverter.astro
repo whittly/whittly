@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -137,6 +139,8 @@ const t = {
 }
 </style>
 
+<PresetsBar toolName="csv-json" lang={lang} />
+<FileLoader targetId="cjInput" lang={lang} />
 <div class="cj" id="cj">
   <div class="cj-dir-row">
     <button class="cj-dir-btn active" id="cjCsvToJson">{t.csvToJson}</button>
@@ -164,7 +168,7 @@ const t = {
         <span class="cj-pane-label" id="cjInputLabel">CSV</span>
         <span class="cj-pane-meta" id="cjInputMeta"></span>
       </div>
-      <textarea class="cj-textarea" id="cjInput" placeholder={t.csvPh} spellcheck="false" autocomplete="off"></textarea>
+      <textarea class="cj-textarea" id="cjInput" data-hist-main-input placeholder={t.csvPh} spellcheck="false" autocomplete="off"></textarea>
       <div class="cj-btn-row">
         <button class="cj-convert-btn" id="cjConvertBtn">{t.convert}</button>
         <button class="cj-clear-btn"   id="cjClearBtn">{t.clear}</button>
@@ -337,7 +341,7 @@ const t = {
       outputTA.classList.remove('err');
       inputMeta.textContent  = result.rows + ' ' + t.rows + ' · ' + result.cols + ' ' + t.cols;
       outputMeta.textContent = result.rows + ' ' + t.rows;
-      if (window.pushHistory) window.pushHistory('csv ↔ json', result.rows + ' rows → json');
+      if (window.pushHistory) window.pushHistory('csv ↔ json', result.rows + ' rows → json', inputTA.value.trim());
     } else {
       const result = jsonToCsv(raw);
       if (result.err) {
@@ -351,7 +355,7 @@ const t = {
       outputTA.value = result.csv;
       inputMeta.textContent  = result.rows + ' ' + t.rows;
       outputMeta.textContent = result.rows + ' ' + t.rows + ' · ' + result.cols + ' ' + t.cols;
-      if (window.pushHistory) window.pushHistory('csv ↔ json', result.rows + ' rows → csv');
+      if (window.pushHistory) window.pushHistory('csv ↔ json', result.rows + ' rows → csv', inputTA.value.trim());
     }
   }
 
@@ -378,5 +382,13 @@ const t = {
       setTimeout(() => { this.textContent = orig; }, 1500);
     });
   });
+
+  window.toolGetPreset = function () {
+    return { input: inputTA.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inputTA.value = cfg.input ?? '';
+    inputTA.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 })();
 </script>

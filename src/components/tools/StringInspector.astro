@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -118,8 +119,9 @@ const t = {
 }
 </style>
 
+<PresetsBar toolName="string-inspector" lang={lang} />
 <div class="si" id="si">
-  <textarea class="si-input" id="siInput" placeholder={t.inputPh} spellcheck="false" autocomplete="off"></textarea>
+  <textarea class="si-input" id="siInput" data-hist-main-input placeholder={t.inputPh} spellcheck="false" autocomplete="off"></textarea>
 
   <div class="si-stats">
     <div class="si-stat">
@@ -216,7 +218,7 @@ const t = {
     linesEl.textContent   = fmt(lines);
     uniqueEl.textContent  = fmt(unique);
     entropyEl.textContent = entropy.toFixed(3);
-    if (window.pushHistory) window.pushHistory('string inspector', chars + ' chars · ' + bytes + ' bytes · ' + words + ' words');
+    if (window.pushHistory) window.pushHistory('string inspector', chars + ' chars · ' + bytes + ' bytes · ' + words + ' words', input.value.trim());
 
     const freq = {};
     for (const ch of text) freq[ch] = (freq[ch] || 0) + 1;
@@ -233,5 +235,13 @@ const t = {
   }
 
   input.addEventListener('input', analyze);
+
+  window.toolGetPreset = function () {
+    return { input: input.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    input.value = cfg.input ?? '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 })();
 </script>

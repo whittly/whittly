@@ -1,0 +1,273 @@
+---
+interface Props {
+  toolName: string;
+  lang?: 'en' | 'ru';
+  placeholder?: string;
+}
+const { toolName, lang = 'en', placeholder } = Astro.props;
+const isRu = lang === 'ru';
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+const MAX_ITEMS = 500;
+const ph = placeholder ?? (isRu ? 'один элемент на строку…' : 'one item per line…');
+---
+
+<div class="bp" id="bp">
+  <button class="bp-toggle" id="bpToggle" type="button">
+    <span class="bp-toggle-label">// {isRu ? 'пакетная обработка' : 'batch mode'}</span>
+    <span class="bp-pro-badge">Pro</span>
+    <i class="ti ti-chevron-down bp-toggle-icon"></i>
+  </button>
+
+  <div class="bp-body" id="bpBody">
+    <div class="bp-lock" id="bpLock" style="display:none">
+      <i class="ti ti-lock"></i>
+      <span>{isRu ? 'пакетная обработка — только для Pro' : 'batch processing — Pro only'}</span>
+      <a href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее →' : 'upgrade →'}</a>
+    </div>
+
+    <div class="bp-content" id="bpContent" style="display:none">
+      <div class="bp-split">
+        <div class="bp-col">
+          <div class="bp-col-head">
+            <span class="bp-col-label">{isRu ? '// ввод' : '// input'}</span>
+            <span class="bp-counter" id="bpCounter">0 / {MAX_ITEMS}</span>
+          </div>
+          <textarea class="bp-textarea" id="bpInput" spellcheck="false" placeholder={ph}></textarea>
+        </div>
+        <div class="bp-col">
+          <div class="bp-col-head">
+            <span class="bp-col-label">{isRu ? '// результаты' : '// results'}</span>
+            <button class="bp-copy-btn" id="bpCopy" style="display:none">
+              <i class="ti ti-copy"></i>{isRu ? 'копировать' : 'copy'}
+            </button>
+          </div>
+          <div class="bp-results" id="bpResults">
+            <span class="bp-results-ph">{isRu ? 'результаты появятся здесь' : 'results will appear here'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="bp-footer">
+        <span class="bp-status" id="bpStatus"></span>
+        <button class="bp-run" id="bpRun">{isRu ? 'обработать →' : 'process →'}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+.bp {
+  margin-top: 24px;
+  border: 0.5px solid var(--line);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+.bp-toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface-sunken, #f7f7f7);
+  border: none; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: left;
+  transition: background 0.12s;
+}
+.bp-toggle:hover { background: var(--accent-soft); }
+.bp-toggle-label { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.04em; flex: 1; }
+.bp-pro-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  background: linear-gradient(135deg, #C44520, #D4A030);
+  color: white; border-radius: 4px; padding: 1px 6px;
+  letter-spacing: 0.06em;
+}
+.bp-toggle-icon { font-size: 13px; color: var(--ink-faint); transition: transform 0.2s; }
+.bp.open .bp-toggle-icon { transform: rotate(180deg); }
+
+.bp-body { border-top: 0.5px solid var(--line); }
+
+.bp-lock {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-faint);
+}
+.bp-lock i { font-size: 15px; }
+.bp-lock a { color: var(--accent); text-decoration: none; margin-left: auto; }
+.bp-lock a:hover { text-decoration: underline; }
+
+.bp-content { padding: 16px; }
+
+.bp-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .bp-split { grid-template-columns: 1fr; } }
+
+.bp-col { display: flex; flex-direction: column; gap: 6px; }
+.bp-col-head { display: flex; align-items: center; justify-content: space-between; }
+.bp-col-label { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-faint); }
+
+.bp-counter {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
+}
+.bp-counter.over { color: var(--bad, #c0392b); }
+
+.bp-textarea {
+  width: 100%; height: 200px; resize: vertical;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink);
+  background: var(--surface); border: 0.5px solid var(--line);
+  border-radius: 6px; padding: 10px; outline: none;
+  transition: border-color 0.12s;
+  box-sizing: border-box;
+}
+.bp-textarea:focus { border-color: var(--accent); }
+
+.bp-results {
+  height: 200px; overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  background: var(--surface-sunken, #f7f7f7); border: 0.5px solid var(--line);
+  border-radius: 6px; padding: 10px;
+  white-space: pre-wrap; word-break: break-all; color: var(--ink);
+}
+.bp-results-ph { color: var(--ink-faint); font-size: 11px; }
+
+.bp-result-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 0.5px solid var(--line); }
+.bp-result-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.bp-result-in { color: var(--ink-faint); font-size: 10.5px; margin-bottom: 2px; }
+.bp-result-out { color: var(--ink); }
+.bp-result-out.error { color: var(--bad, #c0392b); }
+
+.bp-copy-btn {
+  background: none; border: 0.5px solid var(--line); border-radius: 5px;
+  padding: 2px 8px; cursor: pointer; font-size: 11px;
+  font-family: 'JetBrains Mono', monospace; color: var(--ink-faint);
+  display: flex; align-items: center; gap: 4px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.bp-copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.bp-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+}
+.bp-status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
+.bp-run {
+  background: var(--accent); color: white;
+  border: none; border-radius: 6px;
+  padding: 6px 16px; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  transition: opacity 0.12s;
+}
+.bp-run:hover { opacity: 0.85; }
+.bp-run:disabled { opacity: 0.4; cursor: default; }
+</style>
+
+<script is:inline define:vars={{ isRu, API, MAX_ITEMS }}>
+(function () {
+  var toggle    = document.getElementById('bpToggle');
+  var body      = document.getElementById('bpBody');
+  var lock      = document.getElementById('bpLock');
+  var content   = document.getElementById('bpContent');
+  var inputEl   = document.getElementById('bpInput');
+  var counterEl = document.getElementById('bpCounter');
+  var resultsEl = document.getElementById('bpResults');
+  var runBtn    = document.getElementById('bpRun');
+  var copyBtn   = document.getElementById('bpCopy');
+  var statusEl  = document.getElementById('bpStatus');
+  var bp        = document.getElementById('bp');
+
+  var isOpen = false;
+  var initialized = false;
+  var lastResults = [];
+
+  function getPlan() {
+    try {
+      var t = localStorage.getItem('wh_access'); if (!t) return null;
+      return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).plan || 'free';
+    } catch(e) { return null; }
+  }
+
+  function getLines() {
+    return inputEl.value.split('\n').map(function(l){ return l; }).filter(function(l){ return l.trim() !== ''; });
+  }
+
+  function updateCounter() {
+    var n = getLines().length;
+    counterEl.textContent = n + ' / ' + MAX_ITEMS;
+    counterEl.classList.toggle('over', n > MAX_ITEMS);
+    runBtn.disabled = n === 0 || n > MAX_ITEMS;
+  }
+
+  function renderResults(lines, results) {
+    copyBtn.style.display = '';
+    var isMultiLine = results.some(function(r){ return r.indexOf('\n') !== -1; });
+    if (isMultiLine) {
+      resultsEl.innerHTML = results.map(function(r, i) {
+        var isErr = r.startsWith('// error');
+        return '<div class="bp-result-item">'
+          + '<div class="bp-result-in">' + lines[i].replace(/&/g,'&amp;').replace(/</g,'&lt;').slice(0,60) + (lines[i].length > 60 ? '…' : '') + '</div>'
+          + '<div class="bp-result-out' + (isErr ? ' error' : '') + '">' + r.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>'
+          + '</div>';
+      }).join('');
+    } else {
+      resultsEl.innerHTML = '<div class="bp-result-out">' + results.map(function(r){
+        return r.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      }).join('\n') + '</div>';
+    }
+    statusEl.textContent = results.length + (isRu ? ' обработано' : ' processed');
+    lastResults = results;
+  }
+
+  function run() {
+    if (!window.toolBatchProcess) return;
+    var lines = getLines();
+    if (!lines.length || lines.length > MAX_ITEMS) return;
+    runBtn.disabled = true;
+    statusEl.textContent = isRu ? 'обрабатываю…' : 'processing…';
+    resultsEl.innerHTML = '<span class="bp-results-ph">' + (isRu ? 'обрабатываю…' : 'processing…') + '</span>';
+
+    var result = window.toolBatchProcess(lines);
+    var promise = result && typeof result.then === 'function' ? result : Promise.resolve(result);
+    promise.then(function(results) {
+      renderResults(lines, results);
+    }).catch(function(e) {
+      statusEl.textContent = '// error';
+      resultsEl.textContent = e.message;
+    }).finally(function() {
+      runBtn.disabled = false;
+    });
+  }
+
+  toggle.addEventListener('click', function () {
+    isOpen = !isOpen;
+    bp.classList.toggle('open', isOpen);
+    body.style.display = isOpen ? '' : 'none';
+    if (isOpen && !initialized) {
+      initialized = true;
+      var plan = getPlan();
+      if (plan === 'pro' || plan === 'api') {
+        content.style.display = '';
+      } else {
+        fetch(API + '/user/presets?tool=__plan_check', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('wh_access') || '') },
+        }).then(function(r) {
+          if (r.ok) { content.style.display = ''; }
+          else { lock.style.display = 'flex'; }
+        }).catch(function() { lock.style.display = 'flex'; });
+      }
+    }
+  });
+  body.style.display = 'none';
+
+  inputEl.addEventListener('input', updateCounter);
+  updateCounter();
+
+  runBtn.addEventListener('click', run);
+  inputEl.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run();
+  });
+
+  copyBtn.addEventListener('click', function() {
+    if (!lastResults.length) return;
+    navigator.clipboard.writeText(lastResults.join('\n')).then(function() {
+      var orig = copyBtn.textContent;
+      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + (isRu ? 'скопировано' : 'copied');
+      setTimeout(function(){ copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + (isRu ? 'копировать' : 'copy'); }, 1500);
+    }).catch(function(){});
+  });
+})();
+</script>

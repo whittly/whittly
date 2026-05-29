@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -176,6 +177,7 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="query-string" lang={lang} />
 <div class="qs">
   <div class="qs-bar">
     <div class="qs-modes">
@@ -190,7 +192,7 @@ const t = {
 
   <!-- parse mode -->
   <div class="qs-body" id="qsParseBody">
-    <input class="qs-input" id="qsParseInput" spellcheck="false" placeholder={t.phParse} />
+    <input class="qs-input" id="qsParseInput" data-hist-main-input spellcheck="false" placeholder={t.phParse} />
     <div id="qsTableWrap" style="display:none">
       <div class="qs-table" id="qsTable">
         <div class="qs-thead">
@@ -301,7 +303,7 @@ const t = {
     lastOutput = '?' + params.toString();
     statusEl.textContent = entries.length + t.params;
     statusEl.className   = 'qs-status ok';
-    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent);
+    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent, parseInput.value.trim());
     document.getElementById('qsTable').classList.remove('flash-ok');
     void document.getElementById('qsTable').offsetWidth;
     document.getElementById('qsTable').classList.add('flash-ok');
@@ -336,7 +338,7 @@ const t = {
     outEl.className   = 'qs-out';
     statusEl.textContent = t.built + ' · ' + count + t.params;
     statusEl.className   = 'qs-status ok';
-    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent);
+    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent, buildInput.value.trim());
     outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
   }
 
@@ -366,6 +368,14 @@ const t = {
       buildInput.focus();
     }
   });
+
+  window.toolGetPreset = function () {
+    return { input: parseInput.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    parseInput.value = cfg.input ?? '';
+    parseInput.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.qs');

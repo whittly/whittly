@@ -80,11 +80,11 @@ const catalog = CATALOG.map(t => ({
 
 /* ─── History Sidebar ───────────────────────────────── */
 .hist-sidebar {
-  position: fixed; right: 0; top: 0; height: 100vh; width: 268px;
-  background: var(--surface); border-left: 0.5px solid var(--line);
-  transform: translateX(100%); transition: transform 0.22s ease;
+  position: fixed; left: 0; top: 0; height: 100vh; width: 268px;
+  background: var(--surface); border-right: 0.5px solid var(--line);
+  transform: translateX(-100%); transition: transform 0.22s ease;
   z-index: 900; display: flex; flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.06);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.06);
 }
 .hist-sidebar.open { transform: translateX(0); }
 
@@ -120,23 +120,62 @@ const catalog = CATALOG.map(t => ({
 .hist-list { flex: 1; overflow-y: auto; }
 .hist-none { padding: 24px 18px; font-size: 12.5px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
 
-.hist-row { padding: 10px 18px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.hist-row { padding: 10px 18px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
 .hist-row:last-child { border-bottom: none; }
+.hist-row-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .hist-row-t { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
-.hist-row-s { font-size: 13px; color: var(--ink-soft); }
-.hist-row-ts { font-size: 11px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
+.hist-row-s { font-size: 12px; color: var(--ink-soft); }
+.hist-row-ts { font-size: 10px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.hist-row-link { cursor: pointer; }
+.hist-row-link:hover { background: var(--accent-soft); }
+.hist-row-restore { font-size: 11px; color: var(--ink-faint); opacity: 0; transition: opacity 0.12s; }
+.hist-row-link:hover .hist-row-restore { opacity: 1; color: var(--accent); }
+
+.hist-row-input {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint);
+  background: var(--surface-sunken); border-radius: 4px;
+  padding: 4px 6px; margin-top: 2px;
+  display: block; white-space: pre-wrap; word-break: break-all;
+  max-height: 56px; overflow: hidden;
+}
 
 .hist-btn {
-  position: fixed; right: 20px; bottom: 24px;
-  width: 40px; height: 40px;
-  background: var(--surface); border: 0.5px solid var(--line-strong);
-  border-radius: 50%; cursor: pointer;
+  position: fixed; left: 0; top: 0; height: 100vh;
+  width: 24px;
+  background: var(--surface);
+  border-right: 0.5px solid var(--line);
+  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: var(--ink-soft);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  transition: all 0.12s; z-index: 800;
+  color: var(--ink-soft);
+  transition: color 0.12s, left 0.22s ease; z-index: 950;
+  overflow: visible;
 }
-.hist-btn:hover { color: var(--accent); border-color: var(--accent); }
+.hist-btn:hover { color: var(--accent); }
+.hist-btn-tab {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 0;
+  width: 100%;
+  z-index: 1;
+}
+.hist-btn-tab::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0;
+  left: -1px; right: -10px;
+  background: var(--surface);
+  border: 0.5px solid var(--line); border-left: none;
+  border-radius: 0 9px 9px 0;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+  z-index: -1;
+  transition: background 0.12s;
+}
+.hist-btn:hover .hist-btn-tab::after { background: var(--accent-soft); border-color: var(--accent); }
+.hist-btn-label {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; color: inherit;
+}
+/* hist-btn moves with the sidebar — handled via JS */
 
 .nav-pro {
   font-family: 'JetBrains Mono', monospace;
@@ -297,14 +336,17 @@ const catalog = CATALOG.map(t => ({
       <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
       <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
     </div>
-    <div class="hist-pro">
+    <div class="hist-pro" id="histPro">
       <span class="hist-pro-tag">Pro</span>
       <span>{isRu ? 'Облачная синхронизация — ' : 'Cloud Sync — '}<a href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее' : 'upgrade'}</a></span>
     </div>
     <div class="hist-list" id="histList"><div class="hist-none">{isRu ? 'операций пока нет' : 'no operations yet'}</div></div>
   </div>
   <button class="hist-btn" id="histBtn" type="button" title={isRu ? 'история операций' : 'operation history'}>
-    <i class="ti ti-history"></i>
+    <div class="hist-btn-tab">
+      <i class="ti ti-chevron-right" style="font-size:11px"></i>
+      <span class="hist-btn-label">{isRu ? 'история' : 'history'}</span>
+    </div>
   </button>
 
   <!-- Catalog data for Cmd+K palette -->
@@ -325,6 +367,56 @@ const catalog = CATALOG.map(t => ({
         var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
         return payload.plan || 'free';
       } catch (e) { return null; }
+    }
+
+    /* ─── Auth token refresh ─── */
+    window.whRefreshAuth = function() {
+      var rt = localStorage.getItem('wh_refresh');
+      if (!rt) return Promise.resolve(null);
+      return fetch(API_URL + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      }).then(function(r) {
+        return r.ok ? r.json() : null;
+      }).then(function(data) {
+        if (!data) { localStorage.removeItem('wh_access'); localStorage.removeItem('wh_refresh'); return null; }
+        localStorage.setItem('wh_access',  data.accessToken);
+        localStorage.setItem('wh_refresh', data.refreshToken);
+        return data.accessToken;
+      }).catch(function() { return null; });
+    };
+
+    /* ─── IndexedDB for full history inputs ─── */
+    var _idb = null;
+    function openDB(cb) {
+      if (_idb) { cb(_idb); return; }
+      var req = indexedDB.open('whittly', 1);
+      req.onupgradeneeded = function (e) {
+        e.target.result.createObjectStore('hist_inputs', { keyPath: 'ts' });
+      };
+      req.onsuccess = function (e) { _idb = e.target.result; cb(_idb); };
+      req.onerror   = function ()  { cb(null); };
+    }
+    function dbSaveInput(ts, input) {
+      openDB(function (db) {
+        if (!db) return;
+        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').put({ ts: ts, input: input });
+      });
+    }
+    function dbGetInput(ts, cb) {
+      openDB(function (db) {
+        if (!db) { cb(null); return; }
+        var req = db.transaction('hist_inputs', 'readonly').objectStore('hist_inputs').get(ts);
+        req.onsuccess = function () { cb(req.result ? req.result.input : null); };
+        req.onerror   = function () { cb(null); };
+      });
+    }
+    function dbDeleteInput(ts) {
+      openDB(function (db) {
+        if (!db) return;
+        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').delete(ts);
+      });
     }
 
     /* ─── Palette ─── */
@@ -406,20 +498,31 @@ const catalog = CATALOG.map(t => ({
     var HIST_KEY = 'wh_hist';
     var HIST_MAX = 15;
 
-    window.pushHistory = function (tool, summary) {
+    window.pushHistory = function (tool, summary, input) {
       try {
-        var entry = { tool: tool, summary: summary, ts: Date.now() };
+        var ts = Date.now();
+        var inputStr = input || '';
+        var entry = {
+          tool: tool, summary: summary,
+          inputPreview: inputStr.slice(0, 300),
+          hasInput: inputStr.length > 0,
+          ts: ts, path: location.pathname,
+        };
         var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
         entries.unshift(entry);
-        if (entries.length > HIST_MAX) entries.pop();
+        var removed = entries.length > HIST_MAX ? entries.splice(HIST_MAX) : [];
         localStorage.setItem(HIST_KEY, JSON.stringify(entries));
         renderHistory();
+        if (inputStr) {
+          dbSaveInput(ts, inputStr);
+          removed.forEach(function (e) { if (e.hasInput) dbDeleteInput(e.ts); });
+        }
         var plan = getJwtPlan();
         if (plan === 'pro' || plan === 'api') {
           fetch(API_URL + '/user/history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('wh_access') },
-            body: JSON.stringify(entry),
+            body: JSON.stringify({ tool: tool, summary: summary, input: inputStr.slice(0, 2000), ts: ts }),
           }).catch(function () {});
         }
       } catch (err) {}
@@ -452,10 +555,25 @@ const catalog = CATALOG.map(t => ({
           return;
         }
         list.innerHTML = entries.map(function (e) {
-          return '<div class="hist-row">'
-            + '<span class="hist-row-t">' + e.tool + '</span>'
+          var preview = e.inputPreview || e.input || '';
+          var safePreview = preview.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          // derive path from catalog if not stored (e.g. server-synced entries)
+          var toolPath = e.path;
+          if (!toolPath) {
+            var hit = catalog.find(function (t) { return t.name.toLowerCase() === (e.tool || '').toLowerCase(); });
+            if (hit) toolPath = (isRu ? '/ru/tools/' : '/tools/') + hit.slug + '/';
+          }
+          var hasLink = !!(toolPath && (e.hasInput || e.input));
+          var inputHtml = safePreview
+            ? '<span class="hist-row-input">' + safePreview + '</span>'
+            : '';
+          return '<div class="hist-row' + (hasLink ? ' hist-row-link' : '') + '"'
+            + (hasLink ? ' data-path="' + toolPath + '" data-ts="' + e.ts + '"' : '') + '>'
+            + '<div class="hist-row-meta"><span class="hist-row-t">' + e.tool + '</span>'
+            + (hasLink ? '<span class="hist-row-restore"><i class="ti ti-corner-down-left"></i></span>' : '')
+            + '<span class="hist-row-ts">' + timeAgo(e.ts) + '</span></div>'
             + '<span class="hist-row-s">' + e.summary + '</span>'
-            + '<span class="hist-row-ts">' + timeAgo(e.ts) + '</span>'
+            + inputHtml
             + '</div>';
         }).join('');
       } catch (err) {
@@ -467,13 +585,32 @@ const catalog = CATALOG.map(t => ({
     var histBtn     = document.getElementById('histBtn');
     var histClose   = document.getElementById('histClose');
 
+    var histIcon = histBtn ? histBtn.querySelector('i') : null;
     histBtn && histBtn.addEventListener('click', function () {
-      histSidebar.classList.toggle('open');
-      if (histSidebar.classList.contains('open')) renderHistory();
+      var opening = !histSidebar.classList.contains('open');
+      histSidebar.classList.toggle('open', opening);
+      histBtn.style.left = opening ? '268px' : '0';
+      if (histIcon) {
+        histIcon.className = opening ? 'ti ti-chevron-left' : 'ti ti-chevron-right';
+      }
+      if (opening) renderHistory();
+    });
+
+    var histListEl = document.getElementById('histList');
+    histListEl && histListEl.addEventListener('click', function (ev) {
+      var row = ev.target.closest('.hist-row-link');
+      if (!row) return;
+      var path = row.dataset.path;
+      var ts   = row.dataset.ts;
+      if (!path) return;
+      if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+      window.location.href = path;
     });
 
     histClose && histClose.addEventListener('click', function () {
       histSidebar.classList.remove('open');
+      histBtn.style.left = '0';
+      if (histIcon) histIcon.className = 'ti ti-chevron-right';
     });
 
     /* ─── Account nav ─── */
@@ -487,17 +624,58 @@ const catalog = CATALOG.map(t => ({
 
     /* ─── History cloud sync for Pro users ─── */
     var _plan = getJwtPlan();
+    var histProEl = document.getElementById('histPro');
+    if (histProEl && (_plan === 'pro' || _plan === 'api')) {
+      histProEl.innerHTML = '<span class="hist-pro-tag">Pro</span><span>' + (isRu ? 'история синхронизируется' : 'history synced') + ' <i class="ti ti-cloud-check" style="font-size:12px;vertical-align:middle"></i></span>';
+    }
     if (_plan === 'pro' || _plan === 'api') {
-      fetch(API_URL + '/user/history', {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('wh_access') },
+      function doHistoryFetch(token) {
+        return fetch(API_URL + '/user/history', { headers: { 'Authorization': 'Bearer ' + token } });
+      }
+      doHistoryFetch(localStorage.getItem('wh_access') || '').then(function(r) {
+        if (r.status === 401 && window.whRefreshAuth) {
+          return window.whRefreshAuth().then(function(t) { return t ? doHistoryFetch(t) : null; });
+        }
+        return r;
       }).then(function (r) {
-        return r.ok ? r.json() : null;
+        return (r && r.ok) ? r.json() : null;
       }).then(function (data) {
         if (data && Array.isArray(data.entries) && data.entries.length) {
-          localStorage.setItem(HIST_KEY, JSON.stringify(data.entries));
+          var _existing = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+          var _pathByTs = {};
+          _existing.forEach(function (e) { if (e.path) _pathByTs[e.ts] = e.path; });
+          var localEntries = data.entries.map(function (e) {
+            return { tool: e.tool, summary: e.summary, inputPreview: (e.input || '').slice(0, 300), hasInput: !!(e.input), ts: e.ts, path: _pathByTs[e.ts] || null };
+          });
+          localStorage.setItem(HIST_KEY, JSON.stringify(localEntries));
+          // only write to IndexedDB if not already present — don't overwrite full local input with server-truncated version
+          data.entries.forEach(function (e) {
+            if (e.input) {
+              dbGetInput(e.ts, function(existing) {
+                if (!existing) dbSaveInput(e.ts, e.input);
+              });
+            }
+          });
           renderHistory();
         }
       }).catch(function () {});
+    }
+
+    /* ─── Restore input from history (IndexedDB) ─── */
+    var _restoreTs = sessionStorage.getItem('wh_restore_ts');
+    if (_restoreTs) {
+      sessionStorage.removeItem('wh_restore_ts');
+      setTimeout(function () {
+        dbGetInput(Number(_restoreTs), function (input) {
+          if (!input) return;
+          var el = document.querySelector('[data-hist-main-input]');
+          if (!el) return;
+          el.value = input;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }, 0);
     }
 
     /* ─── Language switcher — persist explicit choice ─── */

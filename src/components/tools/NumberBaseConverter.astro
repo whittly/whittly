@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -100,9 +101,10 @@ const t = {
 .nb-custom-result.dim { color: var(--ink-faint); }
 </style>
 
+<PresetsBar toolName="number-base" lang={lang} />
 <div class="nb" id="nb">
   <div class="nb-input-row">
-    <input class="nb-input" id="nbInput" type="text" placeholder={t.inputPh} spellcheck="false" autocomplete="off" />
+    <input class="nb-input" id="nbInput" data-hist-main-input type="text" placeholder={t.inputPh} spellcheck="false" autocomplete="off" />
     <div class="nb-bases">
       <button class="nb-base-btn" data-base="2">BIN 2</button>
       <button class="nb-base-btn" data-base="8">OCT 8</button>
@@ -196,7 +198,7 @@ const t = {
     setVal(decEl, n.toString(10), false);
     setVal(hexEl, n.toString(16).toUpperCase(), false);
     convertCustom(n);
-    if (window.pushHistory) window.pushHistory('number base converter', 'base ' + fromBase + ' → ' + n.toString(10) + ' (dec)');
+    if (window.pushHistory) window.pushHistory('number base converter', 'base ' + fromBase + ' → ' + n.toString(10) + ' (dec)', input.value.trim());
   }
 
   function convertCustom(n) {
@@ -225,5 +227,13 @@ const t = {
       });
     });
   });
+
+  window.toolGetPreset = function () {
+    return { input: input.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    input.value = cfg.input ?? '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 })();
 </script>

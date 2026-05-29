@@ -551,12 +551,14 @@ const catGroups = CAT_ORDER
 </Base>
 
 <script is:inline>
+(function () {
   /* ── Smart Demo Box ─────────────────────────────────── */
   const demoInEl    = document.getElementById('demoIn');
   const demoOutEl   = document.getElementById('demoOut');
   const demoFmtEl   = document.getElementById('demoFormatStatus');
   const demoFootEl  = document.getElementById('demoFoot');
   const demoGoBtnEl = document.getElementById('demoGoBtn');
+  if (!demoInEl) return;
   let   demoPloadKey = null;
 
   const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;'};
@@ -744,4 +746,5 @@ const catGroups = CAT_ORDER
       window.location.href = `/ru/tools/${magicSlug}/`;
     }
   });
+})();
 </script>

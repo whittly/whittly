@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -130,6 +132,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="curl-converter" lang={lang} />
+<FileLoader targetId="ccIn" lang={lang} />
 <div class="cc">
   <div class="cc-bar">
     <span class="cc-status" id="ccStatus">{t.paste}</span>
@@ -138,7 +142,7 @@ const t = {
     <button class="cc-action" id="ccClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="cc-input-wrap">
-    <textarea class="cc-in" id="ccIn" spellcheck="false" placeholder={t.phIn}></textarea>
+    <textarea class="cc-in" id="ccIn" data-hist-main-input spellcheck="false" placeholder={t.phIn}></textarea>
   </div>
   <div class="cc-out-wrap">
     <div class="cc-tabs" id="ccTabs">
@@ -398,7 +402,7 @@ const t = {
       statusEl.textContent = t.converted + ' · ' + p.method + ' ' + p.url.slice(0, 40) + (p.url.length > 40 ? '…' : '');
       statusEl.className   = 'cc-status ok';
       renderTab();
-      if (window.pushHistory) window.pushHistory('curl converter', p.method + ' ' + p.url);
+      if (window.pushHistory) window.pushHistory('curl converter', p.method + ' ' + p.url, inEl.value.trim());
     } catch (e) {
       snippets = {};
       outEl.innerHTML      = '<span class="er">// ' + esc(e.message) + '</span>';
@@ -442,6 +446,14 @@ const t = {
     process();
     inEl.focus();
   });
+
+  window.toolGetPreset = function () {
+    return { input: inEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inEl.value = cfg.input ?? '';
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.cc');

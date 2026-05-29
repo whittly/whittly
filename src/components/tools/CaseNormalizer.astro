@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -136,6 +138,8 @@ const CASES = [
   }
 </style>
 
+<PresetsBar toolName="case-normalizer" lang={lang} />
+<BatchPanel toolName="case-normalizer" lang={lang} />
 <div class="cn">
   <div class="cn-bar">
     <span class="cn-status" id="cnStatus">{t.paste}</span>
@@ -143,7 +147,7 @@ const CASES = [
     <button class="cn-action" id="cnClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="cn-body">
-    <input class="cn-input" id="cnInput" spellcheck="false" placeholder={t.ph} />
+    <input class="cn-input" id="cnInput" data-hist-main-input spellcheck="false" placeholder={t.ph} />
     <div class="cn-table" id="cnTable">
       {CASES.map(c => (
         <div class="cn-row" id={`cnRow-${c.key}`}>
@@ -235,7 +239,7 @@ const CASES = [
 
     var tableEl = document.getElementById('cnTable');
     if (tableEl) { tableEl.classList.remove('flash-ok'); void tableEl.offsetWidth; tableEl.classList.add('flash-ok'); }
-    if (window.pushHistory) window.pushHistory('case normalizer', words.length + t.words);
+    if (window.pushHistory) window.pushHistory('case normalizer', words.length + t.words, inputEl.value.trim());
   }
 
   inputEl.addEventListener('input', process);
@@ -246,6 +250,14 @@ const CASES = [
     inputEl.focus();
   });
 
+  window.toolGetPreset = function () {
+    return { input: inputEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inputEl.value = cfg.input ?? '';
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.cn');
     if (!toolEl || !toolEl.contains(document.activeElement)) return;
@@ -254,5 +266,14 @@ const CASES = [
     var mod = e.ctrlKey || e.metaKey;
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
   });
+
+  window.toolBatchProcess = function(lines) {
+    return lines.map(function(line) {
+      var words = splitWords(line);
+      return CASES.map(function(c) {
+        return c.key + ': ' + (CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '');
+      }).join('\n');
+    });
+  };
 })();
 </script>

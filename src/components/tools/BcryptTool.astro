@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 ---
@@ -207,6 +208,7 @@ const { lang = 'en' } = Astro.props;
   }
 </style>
 
+<PresetsBar toolName="bcrypt" lang={lang} />
 <div class="bc" data-lang={lang}>
   <div class="bc-bar">
     <div class="bc-modes">
@@ -223,7 +225,7 @@ const { lang = 'en' } = Astro.props;
   <div class="bc-body" id="bcHashBody">
     <div class="bc-field">
       <span class="bc-label" id="bcPasswordLabel">password</span>
-      <input class="bc-input" id="bcPassword" type="text" spellcheck="false" autocomplete="off" placeholder="enter password to hash…" />
+      <input class="bc-input" id="bcPassword" data-hist-main-input type="text" spellcheck="false" autocomplete="off" placeholder="enter password to hash…" />
     </div>
     <div class="bc-cost-row">
       <span class="bc-cost-label" id="bcCostLabel">cost factor</span>
@@ -405,7 +407,7 @@ const { lang = 'en' } = Astro.props;
       statusEl.textContent = `${T.hashDone} · cost ${cost} · ${ms}ms`;
       statusEl.className   = 'bc-status ok';
       outputEl.classList.remove('flash-ok'); void outputEl.offsetWidth; outputEl.classList.add('flash-ok');
-      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent);
+      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent, passwordEl.value.trim());
     } catch (err: any) {
       outputEl.textContent = '// ' + (err?.message ?? 'error');
       outputEl.className   = 'bc-output err';
@@ -457,7 +459,7 @@ const { lang = 'en' } = Astro.props;
         statusEl.className   = 'bc-status err';
       }
       resultEl.classList.remove('flash-ok'); void resultEl.offsetWidth; resultEl.classList.add('flash-ok');
-      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent);
+      if ((window as any).pushHistory) (window as any).pushHistory('bcrypt', statusEl.textContent, vPasswordEl.value.trim());
     } catch (err: any) {
       resultEl.className = 'bc-result mismatch';
       resultEl.innerHTML = `<i class="ti ti-alert-circle"></i><span>// ${err?.message ?? 'error'}</span>`;
@@ -526,4 +528,12 @@ const { lang = 'en' } = Astro.props;
       clearBtn.click();
     }
   });
+
+  (window as any).toolGetPreset = function () {
+    return { password: passwordEl.value };
+  };
+  (window as any).toolSetPreset = function (cfg: any) {
+    passwordEl.value = cfg.password ?? '';
+    passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 </script>

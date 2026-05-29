@@ -1,4 +1,7 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -175,6 +178,9 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="base64" lang={lang} />
+<BatchPanel toolName="base64" lang={lang} />
+<FileLoader targetId="b64In" lang={lang} />
 <div class="b64">
   <div class="b64-bar">
     <div class="b64-modes">
@@ -192,7 +198,7 @@ const t = {
     <button class="b64-action" id="b64Clear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="b64-panels">
-    <textarea class="b64-in" id="b64In" spellcheck="false" placeholder={t.phEncode}></textarea>
+    <textarea class="b64-in" id="b64In" data-hist-main-input spellcheck="false" placeholder={t.phEncode}></textarea>
     <div class="b64-sep"></div>
     <pre class="b64-out" id="b64Out"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -261,7 +267,7 @@ const t = {
         const outSize  = result.length;
         statusEl.textContent = t.encoded + ' · ' + formatSize(inSize) + ' → ' + outSize + ' chars';
         statusEl.className   = 'b64-status ok';
-        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent);
+        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent, inEl.value.trim());
         flashOutput(outEl);
       } else {
         const result   = decodeText(raw, safe);
@@ -270,7 +276,7 @@ const t = {
         const outSize  = new TextEncoder().encode(result).length;
         statusEl.textContent = t.decoded + ' · ' + raw.replace(/\s/g, '').length + ' chars → ' + formatSize(outSize);
         statusEl.className   = 'b64-status ok';
-        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent);
+        if (window.pushHistory) window.pushHistory('base64', statusEl.textContent, inEl.value.trim());
         flashOutput(outEl);
       }
     } catch (e) {
@@ -346,6 +352,21 @@ const t = {
     el.classList.add('flash-ok');
   }
 
+  window.toolGetPreset = function () {
+    return { input: inEl.value, mode: mode, urlSafe: urlSafe.checked };
+  };
+  window.toolSetPreset = function (cfg) {
+    if (cfg.input !== undefined) inEl.value = cfg.input;
+    if (cfg.mode !== undefined) {
+      mode = cfg.mode;
+      document.querySelectorAll('.b64-mode').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+    }
+    if (cfg.urlSafe !== undefined) urlSafe.checked = cfg.urlSafe;
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   document.addEventListener('keydown', function(e) {
     var toolEl = document.querySelector('.b64');
     if (!toolEl || !toolEl.contains(document.activeElement)) return;
@@ -356,5 +377,14 @@ const t = {
     if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
   });
+
+  window.toolBatchProcess = function(lines) {
+    var safe = urlSafe.checked;
+    return lines.map(function(line) {
+      try {
+        return mode === 'encode' ? encodeText(line, safe) : decodeText(line, safe);
+      } catch(e) { return '// error: ' + e.message; }
+    });
+  };
 })();
 </script>

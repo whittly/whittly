@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -338,10 +340,12 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="jwt-decoder" lang={lang} />
+<BatchPanel toolName="jwt-decoder" lang={lang} />
 <div class="jd">
   <div class="jd-input-wrap">
     <div style="padding-bottom:6px;"><span class="local-badge">// client-only · webcrypto api</span></div>
-    <textarea class="jd-token" id="jdToken" spellcheck="false"
+    <textarea class="jd-token" id="jdToken" data-hist-main-input spellcheck="false"
               placeholder="paste a JWT token here… eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZSJ9.XdaY8…"></textarea>
     <div class="jd-token-colored" id="jdColored"></div>
   </div>
@@ -590,7 +594,7 @@ const t = {
       '<span class="jd-status-msg ok">' + esc(typ) + ' · ' + t.validStruct + '</span>' +
       expHtml +
       '<button class="jd-copy-decoded" id="jdCopyBtn"><i class="ti ti-copy"></i>' + t.copyPayload + '</button>';
-    if (window.pushHistory) window.pushHistory('jwt decoder', alg + ' · ' + typ + ' · ' + t.validStruct);
+    if (window.pushHistory) window.pushHistory('jwt decoder', alg + ' · ' + typ + ' · ' + t.validStruct, raw);
     var jdBodyEl = document.getElementById('jdBody');
     if (jdBodyEl) { jdBodyEl.classList.remove('flash-ok'); void jdBodyEl.offsetWidth; jdBodyEl.classList.add('flash-ok'); }
 
@@ -654,9 +658,34 @@ const t = {
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { tokenEl.value = ''; process(); tokenEl.focus(); }
   });
 
+  window.toolGetPreset = function () {
+    return { token: tokenEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    tokenEl.value = cfg.token ?? '';
+    tokenEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   var jdPreload = sessionStorage.getItem('jwt_payload');
   if (jdPreload) { tokenEl.value = jdPreload; sessionStorage.removeItem('jwt_payload'); process(); }
   var jdMagic = sessionStorage.getItem('magic_box_payload');
   if (jdMagic && !tokenEl.value) { tokenEl.value = jdMagic; sessionStorage.removeItem('magic_box_payload'); process(); }
+
+  window.toolBatchProcess = function(lines) {
+    return lines.map(function(line) {
+      try {
+        var parts = line.trim().split('.');
+        if (parts.length < 2) return '// invalid jwt';
+        function b64d(s) {
+          s = s.replace(/-/g,'+').replace(/_/g,'/');
+          while (s.length % 4) s += '=';
+          return JSON.parse(decodeURIComponent(escape(atob(s))));
+        }
+        var header  = b64d(parts[0]);
+        var payload = b64d(parts[1]);
+        return 'header:  ' + JSON.stringify(header) + '\npayload: ' + JSON.stringify(payload);
+      } catch(e) { return '// error: ' + e.message; }
+    });
+  };
 })();
 </script>

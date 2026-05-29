@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -159,6 +161,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="html-entities" lang={lang} />
+<BatchPanel toolName="html-entities" lang={lang} />
 <div class="he">
   <div class="he-bar">
     <div class="he-modes">
@@ -176,7 +180,7 @@ const t = {
     <button class="he-action" id="heClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="he-panels">
-    <textarea class="he-in" id="heIn" spellcheck="false" placeholder={t.phEncode}></textarea>
+    <textarea class="he-in" id="heIn" data-hist-main-input spellcheck="false" placeholder={t.phEncode}></textarea>
     <div class="he-sep"></div>
     <pre class="he-out" id="heOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
@@ -248,7 +252,7 @@ const t = {
       lastOutput      = result;
       outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
       statusEl.className = 'he-status ok';
-      if (window.pushHistory) window.pushHistory('html entity encoder', statusEl.textContent);
+      if (window.pushHistory) window.pushHistory('html entity encoder', statusEl.textContent, inEl.value.trim());
       outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
     } catch (e) {
       lastOutput           = '';
@@ -299,6 +303,14 @@ const t = {
     inEl.focus();
   });
 
+  window.toolGetPreset = function () {
+    return { input: inEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inEl.value = cfg.input ?? '';
+    inEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.he');
     if (!toolEl || !toolEl.contains(document.activeElement)) return;
@@ -308,5 +320,16 @@ const t = {
     if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
   });
+
+  window.toolBatchProcess = function(lines) {
+    var encodeAll = allNonAscii.checked;
+    return lines.map(function(line) {
+      try {
+        return mode === 'decode'
+          ? decodeEntities(line)
+          : encodeEntities(line, encodeAll);
+      } catch(e) { return '// error: ' + e.message; }
+    });
+  };
 })();
 </script>

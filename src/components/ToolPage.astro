@@ -521,6 +521,18 @@ const jsonLd = {
 
   <script is:inline define:vars={{ copyLabel: isRu ? 'копировать' : 'copy', copiedLabel: isRu ? 'скопировано' : 'copied' }}>
   (function () {
+    // hide Pro upsell strip for Pro users
+    try {
+      var tok = localStorage.getItem('wh_access');
+      if (tok) {
+        var plan = JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).plan;
+        if (plan === 'pro' || plan === 'api') {
+          var strip = document.querySelector('.tool-pro-strip');
+          if (strip) strip.style.display = 'none';
+        }
+      }
+    } catch(e) {}
+
     var panel     = document.getElementById('toolApiPanel');
     var toggle    = document.getElementById('toolApiToggle');
     var copyBtn   = document.getElementById('toolApiCopy');

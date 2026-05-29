@@ -1,0 +1,243 @@
+---
+interface Props {
+  toolName: string;
+  lang?: 'en' | 'ru';
+}
+const { toolName, lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<div class="pb" id="pb" data-tool={toolName} style="display:none">
+  <span class="pb-label">{isRu ? '// пресеты' : '// presets'}</span>
+  <div class="pb-chips" id="pbChips"></div>
+  <div class="pb-save-wrap">
+    <button class="pb-add" id="pbAdd" title={isRu ? 'сохранить пресет' : 'save preset'}>
+      <i class="ti ti-bookmark-plus"></i>
+    </button>
+    <div class="pb-name-row" id="pbNameRow" style="display:none">
+      <input class="pb-name-in" id="pbNameIn" type="text"
+        placeholder={isRu ? 'имя пресета…' : 'preset name…'}
+        maxlength="64" spellcheck="false" autocomplete="off" />
+      <button class="pb-confirm" id="pbConfirm" title={isRu ? 'сохранить' : 'save'}><i class="ti ti-check"></i></button>
+      <button class="pb-cancel"  id="pbCancel"  title={isRu ? 'отмена' : 'cancel'}><i class="ti ti-x"></i></button>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+.pb {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 0 0 12px;
+}
+.pb-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--ink-faint); letter-spacing: 0.04em; white-space: nowrap;
+}
+.pb-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.pb-save-wrap { flex-shrink: 0; display: flex; align-items: center; }
+
+.pb-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  background: var(--surface-sunken, #f5f5f5); border: 0.5px solid var(--line-strong);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-soft);
+  cursor: pointer; transition: border-color 0.1s, color 0.1s;
+  user-select: none;
+}
+.pb-chip:not(.pb-chip-confirming):hover { border-color: var(--accent); color: var(--ink); }
+.pb-chip-confirming {
+  background: color-mix(in srgb, var(--bad, #c0392b) 8%, transparent);
+  border-color: color-mix(in srgb, var(--bad, #c0392b) 40%, transparent);
+  color: var(--bad, #c0392b);
+  cursor: default;
+}
+.pb-chip-yes, .pb-chip-no {
+  background: none; border: none; cursor: pointer;
+  color: inherit; padding: 0; margin-left: 2px;
+  font-size: 13px; display: inline-flex; align-items: center; line-height: 1;
+  opacity: 0.7; transition: opacity 0.1s;
+}
+.pb-chip-yes:hover, .pb-chip-no:hover { opacity: 1; }
+.pb-empty {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-faint);
+}
+.pb-chip-del {
+  background: none; border: none; cursor: pointer;
+  color: inherit; opacity: 0.45; padding: 0; margin-left: 2px;
+  font-size: 13px; display: flex; align-items: center; line-height: 1;
+  transition: opacity 0.1s;
+}
+.pb-chip-del:hover { opacity: 1; }
+
+.pb-add {
+  background: none; border: 0.5px solid var(--line); border-radius: 5px;
+  padding: 3px 8px; cursor: pointer; color: var(--ink-faint); font-size: 13px;
+  display: flex; align-items: center; transition: color 0.12s, border-color 0.12s;
+}
+.pb-add:hover { color: var(--accent); border-color: var(--accent); }
+
+.pb-name-row { display: flex; align-items: center; gap: 4px; }
+.pb-name-in {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  border: 0.5px solid var(--accent); border-radius: 5px;
+  padding: 3px 8px; background: var(--surface); color: var(--ink);
+  outline: none; width: 150px;
+}
+.pb-confirm, .pb-cancel {
+  background: none; border: 0.5px solid var(--line); border-radius: 5px;
+  padding: 3px 7px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; transition: color 0.12s, border-color 0.12s;
+}
+.pb-confirm { color: var(--accent); }
+.pb-confirm:hover { border-color: var(--accent); }
+.pb-cancel { color: var(--ink-faint); }
+.pb-cancel:hover { color: var(--ink); border-color: var(--line-strong); }
+</style>
+
+<script is:inline define:vars={{ toolName, isRu, API }}>
+(function () {
+  var bar        = document.getElementById('pb');
+  var chipsEl    = document.getElementById('pbChips');
+  var addBtn     = document.getElementById('pbAdd');
+  var nameRow    = document.getElementById('pbNameRow');
+  var nameIn     = document.getElementById('pbNameIn');
+  var confirmBtn = document.getElementById('pbConfirm');
+  var cancelBtn  = document.getElementById('pbCancel');
+  var API_URL    = API;
+
+  function getToken() { return localStorage.getItem('wh_access') || ''; }
+  if (!getToken()) return;
+
+  var presets = [];
+  var confirmingId = null;
+
+  function renderChips() {
+    if (!presets.length) {
+      chipsEl.innerHTML = '<span class="pb-empty">'
+        + (isRu ? 'нет сохранённых — нажмите + чтобы сохранить' : 'none saved — click + to save current state')
+        + '</span>';
+      return;
+    }
+    chipsEl.innerHTML = presets.map(function (p) {
+      var safeName = p.name.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      if (p.id === confirmingId) {
+        return '<div class="pb-chip pb-chip-confirming" data-id="' + p.id + '">'
+          + '<span class="pb-chip-name">' + (isRu ? 'удалить «' : 'delete "') + safeName + (isRu ? '»?' : '"?') + '</span>'
+          + '<button class="pb-chip-yes" data-id="' + p.id + '"><i class="ti ti-check"></i></button>'
+          + '<button class="pb-chip-no" data-id="' + p.id + '"><i class="ti ti-x"></i></button>'
+          + '</div>';
+      }
+      return '<div class="pb-chip" data-id="' + p.id + '">'
+        + '<span class="pb-chip-name">' + safeName + '</span>'
+        + '<button class="pb-chip-del" data-id="' + p.id + '"><i class="ti ti-x"></i></button>'
+        + '</div>';
+    }).join('');
+  }
+
+  function fetchPresets(token) {
+    return fetch(API_URL + '/user/presets?tool=' + encodeURIComponent(toolName), {
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+  }
+
+  function loadPresets() {
+    fetchPresets(getToken()).then(function(r) {
+      if (r.status === 401 && window.whRefreshAuth) {
+        return window.whRefreshAuth().then(function(newToken) {
+          return newToken ? fetchPresets(newToken) : null;
+        });
+      }
+      return r;
+    }).then(function(r) {
+      return (r && r.ok) ? r.json() : null;
+    }).then(function(data) {
+      if (data === null) return;
+      presets = data.presets || [];
+      renderChips();
+      bar.style.display = '';
+    }).catch(function() {});
+  }
+
+  loadPresets();
+
+  chipsEl.addEventListener('click', function (ev) {
+    var target = ev.target;
+
+    // ✓ confirm delete
+    if (target.closest('.pb-chip-yes')) {
+      var id = target.closest('.pb-chip-yes').dataset.id;
+      fetch(API_URL + '/user/presets/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + getToken() },
+      }).then(function (r) {
+        if (r.ok) {
+          presets = presets.filter(function (p) { return p.id !== id; });
+          confirmingId = null;
+          renderChips();
+        }
+      }).catch(function () {});
+      return;
+    }
+
+    // ✗ cancel delete
+    if (target.closest('.pb-chip-no')) {
+      confirmingId = null;
+      renderChips();
+      return;
+    }
+
+    // × show confirmation
+    if (target.closest('.pb-chip-del')) {
+      confirmingId = target.closest('.pb-chip-del').dataset.id;
+      renderChips();
+      return;
+    }
+
+    // chip click — load preset (not in confirming state)
+    var chip = target.closest('.pb-chip');
+    if (chip && chip.dataset.id !== confirmingId) {
+      var preset = presets.find(function (p) { return p.id === chip.dataset.id; });
+      if (preset && window.toolSetPreset) window.toolSetPreset(preset.config);
+    }
+  });
+
+  addBtn.addEventListener('click', function () {
+    nameRow.style.display = 'flex';
+    addBtn.style.display  = 'none';
+    nameIn.value = '';
+    nameIn.focus();
+  });
+
+  function cancelSave() {
+    nameRow.style.display = 'none';
+    addBtn.style.display  = '';
+  }
+  cancelBtn.addEventListener('click', cancelSave);
+
+  function doSave() {
+    var name = nameIn.value.trim();
+    if (!name || !window.toolGetPreset) return;
+    var config = window.toolGetPreset();
+    fetch(API_URL + '/user/presets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+      body: JSON.stringify({ tool: toolName, name: name, config: config }),
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.preset) return;
+        var idx = presets.findIndex(function (p) { return p.id === data.preset.id; });
+        if (idx >= 0) presets[idx] = data.preset; else presets.push(data.preset);
+        renderChips();
+        cancelSave();
+      }).catch(function () {});
+  }
+
+  confirmBtn.addEventListener('click', doSave);
+  nameIn.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doSave();
+    if (e.key === 'Escape') cancelSave();
+  });
+})();
+</script>

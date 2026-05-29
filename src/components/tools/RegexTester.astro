@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -320,6 +321,7 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="regex-tester" lang={lang} />
 <div class="rx">
   <div class="rx-bar">
     <div class="rx-pattern-wrap" id="rxWrap">
@@ -339,7 +341,7 @@ const t = {
   </div>
 
   <div class="rx-panels">
-    <textarea class="rx-in" id="rxText" spellcheck="false"
+    <textarea class="rx-in" id="rxText" data-hist-main-input spellcheck="false"
               placeholder="test string…">The quick brown fox jumps over the lazy dog.
 Pack my box with five dozen liquor jugs.</textarea>
     <div class="rx-sep"></div>
@@ -520,7 +522,7 @@ Pack my box with five dozen liquor jugs.</textarea>
       } else {
         statusEl.textContent = matches.length + (matches.length !== 1 ? t.matchesSuffix : t.matchSuffix);
         statusEl.className   = 'rx-status ok';
-        if (window.pushHistory) window.pushHistory('regex tester', statusEl.textContent + ' · /' + pattern.slice(0, 24) + (pattern.length > 24 ? '…' : '') + '/');
+        if (window.pushHistory) window.pushHistory('regex tester', statusEl.textContent + ' · /' + pattern.slice(0, 24) + (pattern.length > 24 ? '…' : '') + '/', textEl.value.trim());
         outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
       }
     } catch (e) {
@@ -575,6 +577,24 @@ Pack my box with five dozen liquor jugs.</textarea>
     inputEl.focus();
     process();
   });
+
+  window.toolGetPreset = function () {
+    return { pattern: inputEl.value, flags: activeFlags, testText: textEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    if (cfg.pattern !== undefined) inputEl.value = cfg.pattern;
+    if (cfg.testText !== undefined) textEl.value = cfg.testText;
+    if (cfg.flags) {
+      Object.keys(cfg.flags).forEach(function (f) {
+        activeFlags[f] = cfg.flags[f];
+        var btn = document.querySelector('.rx-flag[data-flag="' + f + '"]');
+        if (btn) btn.classList.toggle('active', !!cfg.flags[f]);
+      });
+    }
+    runMatch();
+  };
+
+  function runMatch() { process(); }
 
 })();
 </script>

@@ -1,4 +1,5 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -173,6 +174,7 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="timestamp" lang={lang} />
 <div class="tc">
   <div class="tc-bar">
     <button class="tc-now" id="tcNow"><i class="ti ti-clock"></i>{t.now}<span class="kbd-hint">⌘↵</span></button>
@@ -181,7 +183,7 @@ const t = {
     <button class="tc-action" id="tcClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
   </div>
   <div class="tc-body">
-    <input class="tc-input" id="tcInput" spellcheck="false" placeholder={t.ph} />
+    <input class="tc-input" id="tcInput" data-hist-main-input spellcheck="false" placeholder={t.ph} />
     <div class="tc-table">
       <div class="tc-row">
         <span class="tc-lbl">{t.lblSec}</span>
@@ -354,7 +356,7 @@ const t = {
 
     statusEl.textContent = t.parsed + ' · ' + d.toISOString();
     statusEl.className   = 'tc-status ok';
-    if (window.pushHistory) window.pushHistory('timestamp converter', d.toISOString());
+    if (window.pushHistory) window.pushHistory('timestamp converter', d.toISOString(), inputEl.value.trim());
     var tableEl = document.querySelector('.tc-table');
     if (tableEl) { tableEl.classList.remove('flash-ok'); void tableEl.offsetWidth; tableEl.classList.add('flash-ok'); }
   }
@@ -401,6 +403,14 @@ const t = {
     if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); document.getElementById('tcCopySec').click(); }
     if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
   });
+
+  window.toolGetPreset = function () {
+    return { input: inputEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    inputEl.value = cfg.input ?? '';
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   try {
     var p = sessionStorage.getItem('ts_payload') || sessionStorage.getItem('magic_box_payload');

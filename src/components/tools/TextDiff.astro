@@ -1,4 +1,6 @@
----
+﻿---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
 interface Props { lang?: 'en' | 'ru'; }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
@@ -136,6 +138,8 @@ const t = {
   }
 </style>
 
+<PresetsBar toolName="text-diff" lang={lang} />
+<FileLoader targetId="tdLeft" secondTargetId="tdRight" lang={lang} />
 <div class="tdiff">
   <div class="tdiff-bar">
     <span class="tdiff-status" id="tdStatus">{t.paste}</span>
@@ -146,7 +150,7 @@ const t = {
   <div class="tdiff-inputs">
     <div class="tdiff-label-wrap">
       <span class="tdiff-label">{t.original}</span>
-      <textarea class="tdiff-in" id="tdLeft"  spellcheck="false" placeholder={t.phLeft}></textarea>
+      <textarea class="tdiff-in" id="tdLeft" data-hist-main-input spellcheck="false" placeholder={t.phLeft}></textarea>
     </div>
     <div class="tdiff-vsep"></div>
     <div class="tdiff-label-wrap">
@@ -264,7 +268,7 @@ const t = {
     lastDiffText = plain;
     statusEl.textContent = '+' + added + t.added + t.lines + '  −' + removed + t.removed + t.lines;
     statusEl.className   = 'tdiff-status ok';
-    if (window.pushHistory) window.pushHistory('text diff', statusEl.textContent);
+    if (window.pushHistory) window.pushHistory('text diff', statusEl.textContent, leftEl.value.trim());
     outEl.closest('.tdiff-out-wrap').classList.remove('flash-ok');
     void outEl.closest('.tdiff-out-wrap').offsetWidth;
     outEl.closest('.tdiff-out-wrap').classList.add('flash-ok');
@@ -291,6 +295,15 @@ const t = {
     process();
     leftEl.focus();
   });
+
+  window.toolGetPreset = function () {
+    return { left: leftEl.value, right: rightEl.value };
+  };
+  window.toolSetPreset = function (cfg) {
+    leftEl.value  = cfg.left  ?? '';
+    rightEl.value = cfg.right ?? '';
+    leftEl.dispatchEvent(new Event('input', { bubbles: true }));
+  };
 
   document.addEventListener('keydown', function (e) {
     var toolEl = document.querySelector('.tdiff');
