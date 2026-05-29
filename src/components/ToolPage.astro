@@ -4,6 +4,8 @@ import { CAT_META, toolSlug, type Tool } from '../data/catalog';
 import { toolNameRu, toolDescRu, catLabelRu } from '../data/ru';
 import { TOOL_UI, PRO_HINTS, type Lang } from '../data/i18n';
 import { API_SNIPPETS } from '../data/apiSnippets';
+import { SEO_TITLE, SEO_DESC, SEO_DESC_RU } from '../data/seo';
+import { TOOL_CONTENT_EN, TOOL_CONTENT_RU } from '../data/toolContent';
 import JsonFormatter from './tools/JsonFormatter.astro';
 import Base64 from './tools/Base64.astro';
 import UuidGenerator from './tools/UuidGenerator.astro';
@@ -45,9 +47,154 @@ const toolsPath = isRu ? '/ru/tools/' : '/tools/';
 
 const hints = PRO_HINTS[lang][slug] ?? [];
 const snip  = API_SNIPPETS[slug] ?? null;
+
+const content = isRu
+  ? (TOOL_CONTENT_RU[slug] ?? null)
+  : (TOOL_CONTENT_EN[slug] ?? null);
+
+const SITE = 'https://whittly.dev';
+const toolUrl = `${SITE}${isRu ? '/ru' : ''}/tools/${slug}/`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: seoTitle.replace(' — whittly', ''),
+  description: seoDesc,
+  url: toolUrl,
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  provider: { '@type': 'Organization', name: 'whittly', url: SITE },
+};
+
+const related = CATALOG
+  .filter(t => t.cat === tool.cat && !t.soon && toolSlug(t) !== slug)
+  .slice(0, 3);
+
+const seoTitle = SEO_TITLE[slug]
+  ? `${SEO_TITLE[slug]} — whittly`
+  : `${name} — whittly`;
+const seoDesc = isRu
+  ? (SEO_DESC_RU[slug] ?? desc)
+  : (SEO_DESC[slug]    ?? desc);
 ---
 <style is:global>
   .tool-page { padding: 48px 0 64px; }
+
+  .tool-related {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 0.5px solid var(--line);
+  }
+
+  .tool-related-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    margin-bottom: 16px;
+  }
+
+  .tool-related-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .tool-related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.12s, transform 0.12s;
+  }
+
+  .tool-related-card:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+  .tool-related-card i { font-size: 18px; color: var(--ink-soft); }
+  .tool-related-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+  .tool-related-desc { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+
+  @media (max-width: 640px) {
+    .tool-related-grid { grid-template-columns: 1fr; }
+  }
+
+  .tool-info {
+    margin-top: 64px;
+    padding-top: 48px;
+    border-top: 0.5px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px 64px;
+  }
+
+  .tool-info-faq { grid-column: 1 / -1; }
+
+  .tool-info-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    margin-bottom: 16px;
+  }
+
+  .tool-info-about p,
+  .tool-info-uses ul,
+  .tool-info-uses li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .tool-info-uses ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tool-info-uses li::before {
+    content: '→';
+    color: var(--accent);
+    margin-right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .tool-faq-item {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 0.5px solid var(--line);
+  }
+
+  .tool-faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .tool-faq-q {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .tool-faq-a {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 760px) {
+    .tool-info { grid-template-columns: 1fr; gap: 36px; }
+    .tool-info-faq { grid-column: 1; }
+  }
 
   .tool-page-header { margin-bottom: 40px; max-width: 640px; }
 
@@ -282,7 +429,7 @@ const snip  = API_SNIPPETS[slug] ?? null;
   .tps-link:hover { opacity: 0.7; }
 </style>
 
-<Base title={`${name} — whittly`} description={desc}>
+<Base title={seoTitle} description={seoDesc} jsonLd={jsonLd}>
   <div class="tool-page">
     <div class="tool-breadcrumb">
       <a href={toolsPath}>{ui.breadcrumbTools}</a>
@@ -405,4 +552,52 @@ const snip  = API_SNIPPETS[slug] ?? null;
     });
   })();
   </script>
+
+{related.length > 0 && (
+  <div class="tool-related">
+    <h2 class="tool-related-head">{isRu ? '// похожие инструменты' : '// related tools'}</h2>
+    <div class="tool-related-grid">
+      {related.map(t => {
+        const rSlug = toolSlug(t);
+        const rName = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
+        const rDesc = isRu ? (toolDescRu[t.name] ?? t.desc) : t.desc;
+        return (
+          <a class="tool-related-card" href={`${isRu ? '/ru' : ''}/tools/${rSlug}/`}>
+            <i class={`ti ${t.icon}`}></i>
+            <span class="tool-related-name">{rName}</span>
+            <span class="tool-related-desc">{rDesc}</span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+{content && (
+  <div class="tool-info">
+    <section class="tool-info-about">
+      <h2 class="tool-info-head">{isRu ? '// о инструменте' : '// about this tool'}</h2>
+      <p>{content.about}</p>
+    </section>
+
+    <section class="tool-info-uses">
+      <h2 class="tool-info-head">{isRu ? '// когда использовать' : '// when to use'}</h2>
+      <ul>
+        {content.useCases.map(u => <li>{u}</li>)}
+      </ul>
+    </section>
+
+    {content.faq.length > 0 && (
+      <section class="tool-info-faq">
+        <h2 class="tool-info-head">// faq</h2>
+        {content.faq.map(item => (
+          <div class="tool-faq-item">
+            <div class="tool-faq-q">{item.q}</div>
+            <div class="tool-faq-a">{item.a}</div>
+          </div>
+        ))}
+      </section>
+    )}
+  </div>
+)}
 </Base>

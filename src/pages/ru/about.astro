@@ -37,7 +37,7 @@ import '../../styles/about.css';
 <span class="k">astro</span>         <span class="p">·</span> генератор статических сайтов, ноль js по умолчанию
 <span class="k">css</span>           <span class="p">·</span> ванильный, custom properties для тем
 <span class="k">typescript</span>    <span class="p">·</span> типы каталога и build-time логика
-<span class="k">fonts</span>         <span class="p">·</span> fraunces, inter tight, jetbrains mono
+<span class="k">fonts</span>         <span class="p">·</span> system ui + jetbrains mono (только моноширинный)
 <span class="k">icons</span>         <span class="p">·</span> tabler icons (open source, mit)
 <span class="k">hosting</span>       <span class="p">·</span> статика, деплоится куда угодно
 <span class="k">analytics</span>     <span class="p">·</span> cloudflare web analytics <span class="c"># без кукисов, только агрегат</span>
@@ -45,6 +45,32 @@ import '../../styles/about.css';
 <span class="c"># чего нет</span>
 <span class="p">×</span> react / vue / svelte
 <span class="p">×</span> трекинг-пиксели, ретаргетинг, реклама</pre>
+    </div>
+
+    <h2 class="h-section">// история изменений</h2>
+    <div class="stack">
+      <div class="stack-head">
+        <span class="prompt">$</span>
+        <span>git</span>
+        <span class="file">log --oneline</span>
+      </div>
+      <pre class="stack-body"><span class="c"># выпущено</span>
+<span class="k">v0.19-beta</span> <span class="p">·</span> 2026.05  <span class="p">·</span> 22 инструмента, политика, SEO, open source фронтенд
+<span class="k">v0.18</span>  <span class="p">·</span> 2026.05  <span class="p">·</span> 22 инструмента, CI/CD, защита API
+              <span class="p">+</span> csv ↔ json, xml ↔ json, конвертер систем счисления
+              <span class="p">+</span> инспектор строки, сравнение текстов, нормализатор регистра
+              <span class="p">+</span> bcrypt, html-символы, url-кодировщик, curl-конвертер
+              <span class="p">+</span> парсер query string, mime-справочник, генератор slug
+              <span class="p">+</span> ключи API в БД, rate limiting, cors
+<span class="k">v0.1</span>   <span class="p">·</span> 2026.04  <span class="p">·</span> запуск — 7 базовых инструментов
+              <span class="p">+</span> json-форматтер, jwt-декодер, base64
+              <span class="p">+</span> uuid-генератор, regex-тестер, cron-парсер, хэш
+
+<span class="c"># планы</span>
+<span class="k">скоро</span>  <span class="p">·</span> конвертер цветов, yaml ↔ json, markdown → html
+       <span class="p">·</span> lorem ipsum, qr-код, счётчик слов
+<span class="k">позже</span>  <span class="p">·</span> pro-план + оплата, облачная синхронизация истории
+       <span class="p">·</span> sql / html / css форматтеры, dns lookup, cidr</pre>
     </div>
 
     <h2 class="h-section">// вопросы</h2>
@@ -78,13 +104,9 @@ import '../../styles/about.css';
 
       <div class="faq-item">
         <div class="faq-q"><span class="marker">Q.</span><span class="text">сколько стоит pro?</span><span class="toggle">+</span></div>
-        <div class="faq-a"><strong>Pro</strong> — 390 ₽/мес или 2 900 ₽/год (~2 месяца бесплатно). <strong>API</strong> — 1 990 ₽/мес или 14 900 ₽/год. оба тарифа скоро будут доступны — <a href="/ru/premium/">оставь заявку на странице тарифов</a>. также доступны цены в USD для глобального рынка.</div>
+        <div class="faq-a"><strong>Pro</strong> — 390 ₽/мес или 2 900 ₽/год (~2 месяца бесплатно). <strong>API</strong> — 1 990 ₽/мес или 14 900 ₽/год. оба тарифа скоро — подробности на <a href="/ru/premium/">странице тарифов</a>. также доступны цены в USD.</div>
       </div>
 
-      <div class="faq-item">
-        <div class="faq-q"><span class="marker">Q.</span><span class="text">где хранится история pro-аккаунта?</span><span class="toggle">+</span></div>
-        <div class="faq-a">по умолчанию история хранится локально в браузере. если включить облачную синхронизацию в pro-аккаунте, она будет зашифрована и сохранена на серверах. экспортировать или удалить её можно в любой момент.</div>
-      </div>
     </div>
 
     <div class="faq-cluster">

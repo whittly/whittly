@@ -8,9 +8,10 @@ const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
 interface Props {
   title: string;
   description?: string;
+  jsonLd?: Record<string, unknown>;
 }
 
-const { title, description } = Astro.props;
+const { title, description, jsonLd } = Astro.props;
 
 const SITE = 'https://whittly.dev';
 const pathname = Astro.url.pathname;
@@ -187,6 +188,9 @@ const catalog = CATALOG.map(t => ({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>{title}</title>
   {description && <meta name="description" content={description} />}
   <link rel="canonical" href={canonical} />
@@ -196,10 +200,16 @@ const catalog = CATALOG.map(t => ({
   <meta property="og:title" content={title} />
   {description && <meta property="og:description" content={description} />}
   <meta property="og:site_name" content="whittly" />
+  <meta property="og:image" content={`${SITE}/og.png`} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
 
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   {description && <meta name="twitter:description" content={description} />}
+  <meta name="twitter:image" content={`${SITE}/og.png`} />
+
+  {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
   <link rel="alternate" hreflang="en" href={enUrl} />
   <link rel="alternate" hreflang="ru" href={ruUrl} />
@@ -207,7 +217,7 @@ const catalog = CATALOG.map(t => ({
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,1,400&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <slot name="head" />
   <script is:inline>
@@ -230,18 +240,21 @@ const catalog = CATALOG.map(t => ({
   <div class="container">
     <nav>
       <a class="logo" href={isRu ? '/ru/' : '/'}>
-        <span class="logo-mark"><img src="/whittly-logo.svg" alt="whittly" width="28" height="28" /></span>
+        <span class="logo-mark">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" fill="currentColor">
+            <text x="24" y="38" font-family="Georgia, serif" font-size="44" font-weight="400" text-anchor="middle">{'{}' }</text>
+          </svg>
+        </span>
         <span>whittly</span>
       </a>
 
       <button class="nav-search" id="navCmdK" type="button">
         <i class="ti ti-search"></i>
         <span class="nav-search-ph">{isRu ? 'поиск инструментов…' : 'search tools…'}</span>
-        <kbd class="nav-search-kbd">alt K</kbd>
+        <kbd class="nav-search-kbd" id="kbdHint">⌘K</kbd>
       </button>
 
       <div class="nav-util">
-        <a href={isRu ? '/ru/premium/' : '/premium/'} class="nav-pro">PRO</a>
         <a href={altUrl} class="nav-lang">{isRu ? 'EN' : 'RU'}</a>
         <a class="nav-account" id="navAccount" href={isRu ? '/ru/account/login/' : '/account/login/'}>
           <i class="ti ti-user-circle"></i>
@@ -254,6 +267,13 @@ const catalog = CATALOG.map(t => ({
 
     <footer>
       <span>{isRu ? 'сделано с заботой о разработчиках · ' : 'made with care for fellow developers · '}<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener">popelyshko.com</a></span>
+      <nav class="footer-nav">
+        <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
+        <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
+        <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
+        <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link">{isRu ? 'конфиденциальность' : 'privacy'}</a>
+        <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link">{isRu ? 'условия' : 'terms'}</a>
+      </nav>
       <span class="meta">v{version} · build {buildDate} · <a href="https://github.com/whittly" target="_blank" rel="noopener" class="meta-link">github ↗</a></span>
     </footer>
   </div>
@@ -320,6 +340,10 @@ const catalog = CATALOG.map(t => ({
       }).join('');
     }
 
+    var isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+    var kbdHint = document.getElementById('kbdHint');
+    if (kbdHint) kbdHint.textContent = isMac ? '⌘K' : 'Ctrl K';
+
     function openPalette() {
       palette.classList.add('active');
       pInput.value = '';
@@ -330,7 +354,7 @@ const catalog = CATALOG.map(t => ({
     function closePalette() { palette.classList.remove('active'); }
 
     document.addEventListener('keydown', function (e) {
-      if (e.altKey && e.key.toLowerCase() === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         palette.classList.contains('active') ? closePalette() : openPalette();
       }

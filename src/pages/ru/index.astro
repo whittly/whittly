@@ -1,14 +1,24 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { CATALOG, CAT_ORDER, CAT_META } from '../../data/catalog';
-import { catLabelRu, toolNameRu as nameRu } from '../../data/ru';
+import { CATALOG, CAT_ORDER, CAT_META, toolSlug } from '../../data/catalog';
+import { catLabelRu, toolNameRu } from '../../data/ru';
+import pkg from '../../../package.json';
 
-const totalTools = CATALOG.length;
+const totalTools = CATALOG.filter(t => !t.soon).length;
+const version = pkg.version;
+
+function pluralRu(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
+}
+const toolsLabel = pluralRu(totalTools, 'инструмент', 'инструмента', 'инструментов');
 
 const catGroups = CAT_ORDER
   .map(cat => ({
     cat,
-    label: catLabelRu[cat] ?? CAT_META[cat].label,
+    label: CAT_META[cat].label,
     tools: CATALOG.filter(t => t.cat === cat),
   }))
   .filter(g => g.tools.length > 0);
@@ -16,11 +26,32 @@ const catGroups = CAT_ORDER
 <style is:global>
     .hero {
       padding: 72px 0 56px;
-      display: grid;
-      grid-template-columns: 1.05fr 1fr;
-      gap: 64px;
-      align-items: center;
-      position: relative;
+      max-width: 780px;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 28px;
+    }
+
+    .hero-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+      background: var(--surface);
+      border: 0.5px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 10px;
+      text-decoration: none;
+      transition: color 0.12s, border-color 0.12s, background 0.12s;
+    }
+
+    .hero-tag:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-soft);
     }
 
     .demo {
@@ -232,7 +263,7 @@ const catGroups = CAT_ORDER
     }
 
     .premium-title {
-      font-family: 'Fraunces', serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 26px;
       letter-spacing: -0.02em;
       line-height: 1.15;
@@ -366,15 +397,12 @@ const catGroups = CAT_ORDER
     <div class="hero-copy">
       <div class="badge">
         <span class="badge-dot"></span>
-        <span>{totalTools} инструментов · v0.18.2</span>
+        <span>{`${totalTools} ${toolsLabel} · v${version}`}</span>
       </div>
       <h1>убери лишнее — оставь <em>главное</em>.</h1>
       <p class="subhead">утилиты для повседневной работы: конвертеры, форматтеры, валидаторы, генераторы. работают прямо в браузере — без установки, регистрации и рекламы.</p>
-      <div class="search">
-        <i class="ti ti-search"></i>
-        <input type="text" placeholder="найти инструмент — json, jwt, base64..." />
-        <span class="kbd">/</span>
-      </div>
+
+
       <div id="magicDetect" class="magic-detect">
         <span id="magicType" class="magic-type"></span>
         <span class="magic-sep">·</span>
@@ -382,24 +410,12 @@ const catGroups = CAT_ORDER
       </div>
     </div>
 
-    <div class="demo">
-      <div class="demo-head">
-        <div id="demoFormatStatus" class="demo-format-status">// автоопределение…</div>
-      </div>
-      <div class="demo-body">
-        <textarea class="demo-pane in" id="demoIn" spellcheck="false" placeholder="вставь JSON, JWT или cron-выражение…"></textarea>
-        <pre class="demo-pane out" id="demoOut"><span class="p">// результат будет здесь</span></pre>
-      </div>
-      <div class="demo-foot" id="demoFoot" style="display:none">
-        <a id="demoGoBtn" class="demo-link" href="#">открыть в полном инструменте →</a>
-      </div>
-    </div>
   </section>
 
   <section class="tools-section">
     <div class="section-head">
       <h2 class="section-title">// популярные инструменты</h2>
-      <a href="/ru/tools/" class="see-all">все {totalTools} инструментов →</a>
+      <a href="/ru/tools/" class="see-all">{`все ${totalTools} ${toolsLabel} →`}</a>
     </div>
     <div class="tools-grid">
 
@@ -494,7 +510,7 @@ const catGroups = CAT_ORDER
                 {visible.map((t, i) => (
                   <>
                     {i > 0 && <span class="sep">·</span>}
-                    {nameRu[t.name] ?? t.name}
+                    {toolNameRu[t.name] ?? t.name}
                   </>
                 ))}
                 {rest > 0 && <><span class="sep">·</span><span class="more">+{rest}</span></>}
@@ -693,17 +709,6 @@ const catGroups = CAT_ORDER
   /* ── Search bar / shortcut ──────────────────────────── */
   const searchInput = document.querySelector('.search input');
 
-  document.addEventListener('keydown', e => {
-    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      searchInput?.focus();
-    }
-  });
-
-  searchInput?.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.value.trim())
-      window.location.href = '/ru/tools/?q=' + encodeURIComponent(e.target.value.trim());
-  });
 
   /* ── Smart Magic Box (search input detection) ───────── */
   const MAGIC = [

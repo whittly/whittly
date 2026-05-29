@@ -1,0 +1,79 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/about.css';
+---
+
+<Base
+  title="terms of service — whittly"
+  description="whittly terms of service — rules for using the platform."
+>
+  <header class="about-hero">
+    <div class="badge"><span class="badge-dot"></span><span>terms of service</span></div>
+    <h1>simple, <em>honest</em> rules.</h1>
+    <p class="lede">by using whittly you agree to these terms. we've kept them short and written them in plain language.</p>
+  </header>
+
+  <div class="about-content">
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">using the service</div>
+      <div class="faq-item open">
+        <div class="faq-q"><span class="marker">§1</span><span class="text">what you can do</span><span class="toggle">+</span></div>
+        <div class="faq-a">You may use whittly for any lawful personal or commercial purpose. All browser-based tools are free to use without an account. You may self-host the open-source frontend for your own use.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">§2</span><span class="text">what you cannot do</span><span class="toggle">+</span></div>
+        <div class="faq-a">You may not: attempt to overload or attack the service; reverse-engineer the proprietary API backend; use the service to process data in violation of applicable law; resell access to the API without permission; create accounts by automated means (bots).</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">§3</span><span class="text">accounts</span><span class="toggle">+</span></div>
+        <div class="faq-a">You are responsible for maintaining the security of your account credentials and API keys. You must provide a valid email address. We reserve the right to suspend accounts that violate these terms.</div>
+      </div>
+    </div>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">pro plan</div>
+      <div class="faq-item open">
+        <div class="faq-q"><span class="marker">§4</span><span class="text">billing</span><span class="toggle">+</span></div>
+        <div class="faq-a">Pro plan subscriptions are billed monthly or annually. Prices are shown on the pricing page. We reserve the right to change pricing with 30 days notice to existing subscribers. Refunds are available within 7 days of payment for annual plans.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">§5</span><span class="text">cancellation</span><span class="toggle">+</span></div>
+        <div class="faq-a">You may cancel your Pro subscription at any time. Your plan remains active until the end of the current billing period. No partial refunds are issued for unused time on monthly plans.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">§6</span><span class="text">API rate limits</span><span class="toggle">+</span></div>
+        <div class="faq-a">API access is subject to rate limits as described on the pricing page. We reserve the right to throttle or suspend API access for accounts that significantly exceed stated limits or negatively impact service availability for other users.</div>
+      </div>
+    </div>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">liability & warranty</div>
+      <div class="faq-item open">
+        <div class="faq-q"><span class="marker">§7</span><span class="text">disclaimer</span><span class="toggle">+</span></div>
+        <div class="faq-a">whittly is provided "as is" without warranties of any kind. We do not guarantee uninterrupted availability. We are not liable for any loss of data or damages arising from your use of the service. The maximum liability is limited to the amount you paid in the 12 months prior to the claim.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="marker">§8</span><span class="text">changes to terms</span><span class="toggle">+</span></div>
+        <div class="faq-a">We may update these terms from time to time. Significant changes will be communicated via the GitHub repository or email for account holders. Continued use of the service after changes constitutes acceptance of the new terms.</div>
+      </div>
+    </div>
+
+    <div class="faq-cluster">
+      <div class="faq-cluster-head">contact</div>
+      <div class="faq-item open">
+        <div class="faq-q"><span class="marker">§9</span><span class="text">questions</span><span class="toggle">+</span></div>
+        <div class="faq-a">Questions about these terms? Email us at <a href="mailto:info@whittly.dev">info@whittly.dev</a>.</div>
+      </div>
+    </div>
+
+    <p style="margin-top:48px;font-size:13px;color:var(--ink-faint);">Last updated: May 2026</p>
+
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => q.parentElement?.classList.toggle('open'));
+  });
+</script>

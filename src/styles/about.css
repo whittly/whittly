@@ -95,7 +95,7 @@
   user-select: none;
 }
 .faq-q .marker { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 13px; flex-shrink: 0; }
-.faq-q .text   { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; flex: 1; }
+.faq-q .text   { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 18px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; flex: 1; }
 .faq-q .toggle { color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 13px; transition: transform 0.2s; }
 .faq-item.open .toggle { transform: rotate(45deg); }
 .faq-a { margin: 10px 0 0 32px; font-size: 15px; color: var(--ink-soft); line-height: 1.7; display: none; }

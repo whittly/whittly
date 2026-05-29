@@ -118,7 +118,7 @@ import '../../styles/premium.css';
   <h2 class="h-section">// пока можно</h2>
   <div class="free-grid">
 
-    <a class="free-card" href="https://github.com/whittly/issues" target="_blank" rel="noopener">
+    <a class="free-card" href="https://github.com/whittly/whittly/issues" target="_blank" rel="noopener">
       <i class="ti ti-bug"></i>
       <div>
         <div class="title">сообщить об ошибке</div>
@@ -171,17 +171,17 @@ import '../../styles/premium.css';
   // Share button
   document.getElementById('shareBtn')?.addEventListener('click', async (e) => {
     e.preventDefault();
+    const card = (e.currentTarget as HTMLElement);
+    const titleEl = card.querySelector('.title') as HTMLElement;
     const data = { title: 'whittly', text: 'инструменты разработчика прямо в браузере', url: 'https://whittly.dev/ru/' };
     if (navigator.share) {
       try { await navigator.share(data); } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(data.url);
-        const card = e.currentTarget as HTMLElement;
-        const title = card.querySelector('.title') as HTMLElement;
-        const original = title.textContent!;
-        title.textContent = 'ссылка скопирована!';
-        setTimeout(() => { title.textContent = original; }, 1600);
+        const original = titleEl.textContent!;
+        titleEl.textContent = 'ссылка скопирована!';
+        setTimeout(() => { titleEl.textContent = original; }, 1600);
       } catch {}
     }
   });

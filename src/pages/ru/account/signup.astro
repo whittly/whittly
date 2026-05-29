@@ -78,7 +78,7 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
       localStorage.setItem('wh_user',    JSON.stringify(data.user));
       location.replace('/ru/account/');
     } catch (e) {
-      showError('сервер недоступен — запущен ли whittly-api?');
+      showError('сервер недоступен — попробуй позже');
     } finally {
       submitEl.disabled = false;
       submitEl.textContent = 'создать аккаунт';

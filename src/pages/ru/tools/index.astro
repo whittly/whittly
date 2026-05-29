@@ -3,9 +3,11 @@ import Base from '../../../layouts/Base.astro';
 import { CATALOG, CAT_META, CAT_ORDER, toolSlug } from '../../../data/catalog';
 import { toolNameRu as nameRu, toolDescRu as descRu, catLabelRu, catDescRu } from '../../../data/ru';
 import '../../../styles/tools-index.css';
+import pkg from '../../../../package.json';
 
 const catalogWithSlugs = CATALOG.map(t => ({ ...t, slug: toolSlug(t) }));
-const totalTools = CATALOG.length;
+const totalTools = CATALOG.filter(t => !t.soon).length;
+const version = pkg.version;
 ---
 
 <Base
@@ -14,7 +16,7 @@ const totalTools = CATALOG.length;
 >
   <header class="tools-header">
     <div>
-      <div class="badge"><span class="badge-dot"></span><span>{totalTools} инструментов · v0.18.2</span></div>
+      <div class="badge"><span class="badge-dot"></span><span>{`${totalTools} инструментов · v${version}`}</span></div>
       <h1>все инструменты — <em>один клик</em>.</h1>
     </div>
     <p class="subhead">полный каталог. все инструменты работают прямо в браузере. нажми <span class="kbd">/</span> чтобы быстро перейти к нужному.</p>
@@ -29,8 +31,8 @@ const totalTools = CATALOG.length;
     <div class="filter-chips" id="filterChips">
       <div class="filter-chip active" data-cat="all">все<span class="count">{totalTools}</span></div>
       {CAT_ORDER.filter(cat => CATALOG.some(t => t.cat === cat)).map(cat => {
-        const count = CATALOG.filter(t => t.cat === cat).length;
-        const label = catLabelRu[cat] ?? CAT_META[cat].label;
+        const count = CATALOG.filter(t => t.cat === cat && !t.soon).length;
+        const label = CAT_META[cat].label;
         return <div class="filter-chip" data-cat={cat}>{label}<span class="count">{count}</span></div>;
       })}
     </div>
@@ -67,7 +69,7 @@ const totalTools = CATALOG.length;
 
   function getDisplayName(t) { return nameRu[t.name] || t.name; }
   function getDisplayDesc(t) { return descRu[t.name] || t.desc; }
-  function getCatLabel(cat)  { return catLabelRu[cat] || catMeta[cat].label; }
+  function getCatLabel(cat)  { return catMeta[cat].label; }
   function getCatDesc(cat)   { return catDescRu[cat] || catMeta[cat].desc; }
 
   function render() {
@@ -97,7 +99,15 @@ const totalTools = CATALOG.length;
 
     catalogEl.innerHTML = catOrder.filter(c => groups[c]).map(c => {
       const tools = groups[c];
-      const rows = tools.map(t => `
+      const rows = tools.map(t => t.soon ? `
+        <div class="tool-row soon">
+          <i class="ti ${t.icon} icon"></i>
+          <div class="body">
+            <div class="name">${getDisplayName(t)}<span class="soon-badge">скоро</span></div>
+            <div class="desc">${getDisplayDesc(t)}</div>
+          </div>
+        </div>
+      ` : `
         <a class="tool-row" href="/ru/tools/${t.slug}/">
           <i class="ti ${t.icon} icon"></i>
           <div class="body">

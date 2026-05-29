@@ -86,7 +86,7 @@
 .plan-card.featured .plan-tier { color: var(--accent); }
 
 .plan-name {
-  font-family: 'Fraunces', serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 22px;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -284,7 +284,7 @@
 }
 
 .thanks-body {
-  font-family: 'Fraunces', serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 17px;
   line-height: 1.5;
   color: var(--ink-soft);
