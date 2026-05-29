@@ -12,6 +12,7 @@ interface Props {
 }
 
 const { title, description, jsonLd } = Astro.props;
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const SITE = 'https://whittly.dev';
 const pathname = Astro.url.pathname;
@@ -308,12 +309,23 @@ const catalog = CATALOG.map(t => ({
 
   <!-- Catalog data for Cmd+K palette -->
   <div id="whCatalog" hidden>{JSON.stringify(catalog)}</div>
+  <div id="whApi" hidden>{API}</div>
 
   <script is:inline>
   (function () {
     var isRu = document.documentElement.lang === 'ru';
     var catalog = [];
     try { catalog = JSON.parse(document.getElementById('whCatalog').textContent || '[]'); } catch (e) {}
+    var API_URL = (document.getElementById('whApi') || {}).textContent || '';
+
+    function getJwtPlan() {
+      try {
+        var token = localStorage.getItem('wh_access');
+        if (!token) return null;
+        var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return payload.plan || 'free';
+      } catch (e) { return null; }
+    }
 
     /* ─── Palette ─── */
     var palette = document.getElementById('whPalette');
@@ -396,11 +408,20 @@ const catalog = CATALOG.map(t => ({
 
     window.pushHistory = function (tool, summary) {
       try {
+        var entry = { tool: tool, summary: summary, ts: Date.now() };
         var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-        entries.unshift({ tool: tool, summary: summary, ts: Date.now() });
+        entries.unshift(entry);
         if (entries.length > HIST_MAX) entries.pop();
         localStorage.setItem(HIST_KEY, JSON.stringify(entries));
         renderHistory();
+        var plan = getJwtPlan();
+        if (plan === 'pro' || plan === 'api') {
+          fetch(API_URL + '/user/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('wh_access') },
+            body: JSON.stringify(entry),
+          }).catch(function () {});
+        }
       } catch (err) {}
     };
 
@@ -462,6 +483,21 @@ const catalog = CATALOG.map(t => ({
       navAccount.href = isRu ? '/ru/account/' : '/account/';
       navAccount.classList.add('authed');
       navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
+    }
+
+    /* ─── History cloud sync for Pro users ─── */
+    var _plan = getJwtPlan();
+    if (_plan === 'pro' || _plan === 'api') {
+      fetch(API_URL + '/user/history', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('wh_access') },
+      }).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).then(function (data) {
+        if (data && Array.isArray(data.entries) && data.entries.length) {
+          localStorage.setItem(HIST_KEY, JSON.stringify(data.entries));
+          renderHistory();
+        }
+      }).catch(function () {});
     }
 
     /* ─── Language switcher — persist explicit choice ─── */
