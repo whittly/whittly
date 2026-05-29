@@ -14,9 +14,11 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
     <div id="acContent" style="display:none">
       <div class="ac-verify-banner" id="verifyBanner" style="display:none">
-        <i class="ti ti-mail"></i>
-        <span>пожалуйста, подтвердите адрес электронной почты.</span>
-        <button id="resendBtn" class="ac-verify-resend">отправить повторно →</button>
+        <div class="ac-verify-banner-left">
+          <i class="ti ti-mail"></i>
+          <span>пожалуйста, подтвердите адрес электронной почты.</span>
+        </div>
+        <button id="resendBtn" class="ac-verify-resend">отправить →</button>
       </div>
 
       <div class="ac-header">
