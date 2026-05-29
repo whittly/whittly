@@ -231,7 +231,7 @@ const catalog = CATALOG.map(t => ({
       var lang = (navigator.language || '').toLowerCase();
       var isCis = /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang);
       if (!isCis) return;
-      location.replace(path === '/' ? '/ru/' : '/ru' + path);
+      location.replace(path === '/' ? '/ru/' : '/ru' + path + location.search);
     } catch (e) {}
   })();
   </script>
