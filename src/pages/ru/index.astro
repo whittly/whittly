@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { CATALOG, CAT_ORDER, CAT_META, toolSlug } from '../../data/catalog';
-import { catLabelRu, toolNameRu } from '../../data/ru';
+import { CATALOG, CAT_ORDER, CAT_META } from '../../data/catalog';
+import { toolNameRu } from '../../data/ru';
 import pkg from '../../../package.json';
 
 const totalTools = CATALOG.filter((t) => !t.soon).length;

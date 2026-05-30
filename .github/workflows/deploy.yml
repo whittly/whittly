@@ -17,14 +17,42 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run check
-      - name: Build (smoke)
+      - name: Build
         run: npm run build
         env:
           PUBLIC_API_URL: https://api.whittly.dev
 
+  e2e:
+    name: E2E Smoke Tests
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+      - name: Build for preview
+        run: npm run build
+        env:
+          PUBLIC_API_URL: https://api.whittly.dev
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   deploy:
     name: Deploy to VPS
-    needs: ci
+    needs: [ci, e2e]
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:

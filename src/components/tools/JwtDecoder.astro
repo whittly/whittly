@@ -460,8 +460,6 @@ const t = {
     var barEl = document.getElementById('jdStatusBar');
     var bodyEl = document.getElementById('jdBody');
     var verifyEl = document.getElementById('jdVerify');
-    var msgEl = document.getElementById('jdMsg');
-
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -699,7 +697,6 @@ const t = {
 
       if (!raw) {
         barEl.innerHTML = '<span class="jd-status-msg" id="jdMsg">' + t.phToken + '</span>';
-        msgEl = document.getElementById('jdMsg');
         bodyEl.innerHTML = '<div class="jd-placeholder">' + t.phDecoded + '</div>';
         verifyEl.innerHTML = '';
         return;
@@ -709,7 +706,6 @@ const t = {
       if (parts.length !== 3) {
         tokenEl.classList.add('jd-err');
         barEl.innerHTML = '<span class="jd-status-msg err" id="jdMsg">' + t.invalidJwt + '</span>';
-        msgEl = document.getElementById('jdMsg');
         bodyEl.innerHTML =
           '<div class="jd-placeholder" style="color:var(--bad)">' + t.invalidFmt + '</div>';
         verifyEl.innerHTML = '';
@@ -724,7 +720,6 @@ const t = {
         tokenEl.classList.add('jd-err');
         barEl.innerHTML =
           '<span class="jd-status-msg err" id="jdMsg">// ' + esc(e.message) + '</span>';
-        msgEl = document.getElementById('jdMsg');
         bodyEl.innerHTML = '';
         verifyEl.innerHTML = '';
         return;
@@ -808,12 +803,12 @@ const t = {
         highlight(payload) +
         '</pre></div>' +
         '</div>' +
-        buildClaims(payload, parts[2], NAMES);
+        buildClaims(payload, NAMES);
 
       renderVerify(alg, raw);
     }
 
-    function buildClaims(payload, sig, NAMES) {
+    function buildClaims(payload, NAMES) {
       var claims = [];
       ['sub', 'iss', 'aud', 'jti'].forEach(function (k) {
         if (payload[k] === undefined) return;
@@ -898,7 +893,10 @@ const t = {
           function b64d(s) {
             s = s.replace(/-/g, '+').replace(/_/g, '/');
             while (s.length % 4) s += '=';
-            return JSON.parse(decodeURIComponent(escape(atob(s))));
+            var bin = atob(s);
+            var bytes = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return JSON.parse(new TextDecoder().decode(bytes));
           }
           var header = b64d(parts[0]);
           var payload = b64d(parts[1]);

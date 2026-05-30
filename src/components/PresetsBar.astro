@@ -5,7 +5,6 @@ interface Props {
 }
 const { toolName, lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
-const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 ---
 
 <div class="pb" id="pb" data-tool={toolName} style="display:none">

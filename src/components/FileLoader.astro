@@ -94,20 +94,8 @@ const uid = targetId; // used for element IDs
 
       if (!target) return;
 
-      function getPlan() {
-        try {
-          var t = localStorage.getItem('wh_access');
-          if (!t) return 'free';
-          return (
-            JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).plan || 'free'
-          );
-        } catch (e) {
-          return 'free';
-        }
-      }
-
       function maxBytes() {
-        var plan = getPlan();
+        var plan = (window.whApi && window.whApi.getPlan()) || 'free';
         return (plan === 'pro' || plan === 'api' ? PRO_MB : FREE_MB) * 1024 * 1024;
       }
 
@@ -156,7 +144,7 @@ const uid = targetId; // used for element IDs
       });
 
       // Drag & drop on target(s)
-      function addDrop(el, isSnd) {
+      function addDrop(el) {
         el.addEventListener('dragover', function (e) {
           e.preventDefault();
           el.classList.add('fl-drop-active');

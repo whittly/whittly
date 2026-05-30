@@ -414,7 +414,6 @@ const t = {
 
     function genFetch(p) {
       var lines = [];
-      var hasBody = p.data || p.isForm;
       lines.push('const res = await fetch(' + JSON.stringify(p.url) + ', {');
       lines.push('  method: ' + JSON.stringify(p.method) + ',');
       if (p.headers.length) {
