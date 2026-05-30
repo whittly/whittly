@@ -1,33 +1,40 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  now:         isRu ? 'сейчас' : 'now',
-  statusEmpty: isRu ? '— вставьте unix timestamp или дату' : '— paste a unix timestamp or date string',
-  clear:       isRu ? 'очистить' : 'clear',
-  ph:          isRu ? '1716000000  ·  2024-05-18T10:00:00Z  ·  18 мая 2024' : '1716000000  ·  2024-05-18T10:00:00Z  ·  May 18 2024',
+  now: isRu ? 'сейчас' : 'now',
+  statusEmpty: isRu
+    ? '— вставьте unix timestamp или дату'
+    : '— paste a unix timestamp or date string',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu
+    ? '1716000000  ·  2024-05-18T10:00:00Z  ·  18 мая 2024'
+    : '1716000000  ·  2024-05-18T10:00:00Z  ·  May 18 2024',
   invalidDate: isRu ? 'неверная дата или timestamp' : 'invalid date or timestamp',
-  parsed:      isRu ? 'обработано' : 'parsed',
-  lblSec:      'unix (sec)',
-  lblMs:       'unix (ms)',
-  lblIso:      'iso 8601',
-  lblUtc:      'utc string',
-  lblLocal:    isRu ? 'локальное' : 'local',
-  lblRuDate:   isRu ? 'по-русски' : '',
+  parsed: isRu ? 'обработано' : 'parsed',
+  lblSec: 'unix (sec)',
+  lblMs: 'unix (ms)',
+  lblIso: 'iso 8601',
+  lblUtc: 'utc string',
+  lblLocal: isRu ? 'локальное' : 'local',
+  lblRuDate: isRu ? 'по-русски' : '',
   lblRelative: isRu ? 'относительно' : 'relative',
-  lblDow:      isRu ? 'день недели' : 'day of week',
-  isRu:        isRu,
-  utcSuffix:   '(utc)',
-  justNow:     isRu ? 'только что' : 'just now',
-  ago:         isRu ? ' назад' : ' ago',
-  timeIn:      isRu ? 'через ' : 'in ',
+  lblDow: isRu ? 'день недели' : 'day of week',
+  isRu: isRu,
+  utcSuffix: '(utc)',
+  justNow: isRu ? 'только что' : 'just now',
+  ago: isRu ? ' назад' : ' ago',
+  timeIn: isRu ? 'через ' : 'in ',
   days: isRu
-    ? ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота']
-    : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    ? ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 };
 ---
+
 <style is:global>
   .tc {
     background: var(--surface);
@@ -60,7 +67,10 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .tc-now:hover { color: var(--accent); border-color: var(--accent); }
+  .tc-now:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
   .tc-status {
     flex: 1;
@@ -71,8 +81,12 @@ const t = {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .tc-status.ok  { color: var(--good); }
-  .tc-status.err { color: var(--bad); }
+  .tc-status.ok {
+    color: var(--good);
+  }
+  .tc-status.err {
+    color: var(--bad);
+  }
 
   .tc-action {
     font-family: 'JetBrains Mono', monospace;
@@ -88,7 +102,10 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .tc-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .tc-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
 
   .tc-body {
     padding: 20px 24px;
@@ -110,8 +127,12 @@ const t = {
     box-sizing: border-box;
     transition: border-color 0.12s;
   }
-  .tc-input:focus { border-color: var(--line-strong); }
-  .tc-input.err   { border-color: var(--bad); }
+  .tc-input:focus {
+    border-color: var(--line-strong);
+  }
+  .tc-input.err {
+    border-color: var(--bad);
+  }
 
   .tc-table {
     border: 0.5px solid var(--line);
@@ -128,8 +149,12 @@ const t = {
     background: var(--surface-sunken);
     border-bottom: 0.5px solid var(--line);
   }
-  .tc-row:last-child { border-bottom: none; }
-  .tc-row:nth-child(even) { background: var(--surface); }
+  .tc-row:last-child {
+    border-bottom: none;
+  }
+  .tc-row:nth-child(even) {
+    background: var(--surface);
+  }
 
   .tc-lbl {
     font-family: 'JetBrains Mono', monospace;
@@ -147,8 +172,12 @@ const t = {
     text-overflow: ellipsis;
     min-width: 0;
   }
-  .tc-val.ph  { color: var(--ink-faint); }
-  .tc-val.err { color: var(--bad); }
+  .tc-val.ph {
+    color: var(--ink-faint);
+  }
+  .tc-val.err {
+    color: var(--bad);
+  }
 
   .tc-copy-btn {
     width: 28px;
@@ -165,25 +194,45 @@ const t = {
     transition: all 0.12s;
     flex-shrink: 0;
   }
-  .tc-copy-btn:hover { color: var(--ink); border-color: var(--line-strong); }
-  .tc-copy-btn.done  { color: var(--good); border-color: var(--good); }
+  .tc-copy-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .tc-copy-btn.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   @media (max-width: 760px) {
-    .tc-body { padding: 16px; }
-    .tc-row  { grid-template-columns: 100px 1fr 28px; }
+    .tc-body {
+      padding: 16px;
+    }
+    .tc-row {
+      grid-template-columns: 100px 1fr 28px;
+    }
   }
 </style>
 
 <PresetsBar toolName="timestamp" lang={lang} />
 <div class="tc">
   <div class="tc-bar">
-    <button class="tc-now" id="tcNow"><i class="ti ti-clock"></i>{t.now}<span class="kbd-hint">⌘↵</span></button>
+    <button class="tc-now" id="tcNow"
+      ><i class="ti ti-clock"></i>{t.now}<span class="kbd-hint">⌘↵</span></button
+    >
     <span class="tc-status" id="tcStatus">{t.statusEmpty}</span>
     <span class="local-badge">// client-only</span>
-    <button class="tc-action" id="tcClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="tc-action" id="tcClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="tc-body">
-    <input class="tc-input" id="tcInput" data-hist-main-input spellcheck="false" placeholder={t.ph} />
+    <input
+      class="tc-input"
+      id="tcInput"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.ph}
+    />
     <div class="tc-table">
       <div class="tc-row">
         <span class="tc-lbl">{t.lblSec}</span>
@@ -208,15 +257,22 @@ const t = {
       <div class="tc-row">
         <span class="tc-lbl">{t.lblLocal}</span>
         <span class="tc-val ph" id="tcLocal">—</span>
-        <button class="tc-copy-btn" id="tcCopyLocal" title="copy"><i class="ti ti-copy"></i></button>
+        <button class="tc-copy-btn" id="tcCopyLocal" title="copy"><i class="ti ti-copy"></i></button
+        >
       </div>
-      {isRu && (
-      <div class="tc-row">
-        <span class="tc-lbl">{t.lblRuDate}</span>
-        <span class="tc-val ph" id="tcRuDate">—</span>
-        <button class="tc-copy-btn" id="tcCopyRuDate" title="copy"><i class="ti ti-copy"></i></button>
-      </div>
-      )}
+      {
+        isRu && (
+          <div class="tc-row">
+            <span class="tc-lbl">{t.lblRuDate}</span>
+            <span class="tc-val ph" id="tcRuDate">
+              —
+            </span>
+            <button class="tc-copy-btn" id="tcCopyRuDate" title="copy">
+              <i class="ti ti-copy" />
+            </button>
+          </div>
+        )
+      }
       <div class="tc-row">
         <span class="tc-lbl">{t.lblRelative}</span>
         <span class="tc-val ph" id="tcRel">—</span>
@@ -232,194 +288,251 @@ const t = {
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inputEl  = document.getElementById('tcInput');
-  var statusEl = document.getElementById('tcStatus');
-  var nowBtn   = document.getElementById('tcNow');
-  var clearBtn = document.getElementById('tcClear');
+  (function () {
+    var inputEl = document.getElementById('tcInput');
+    var statusEl = document.getElementById('tcStatus');
+    var nowBtn = document.getElementById('tcNow');
+    var clearBtn = document.getElementById('tcClear');
 
-  var fields = {
-    sec:   { el: document.getElementById('tcSec'),   btn: document.getElementById('tcCopySec')   },
-    ms:    { el: document.getElementById('tcMs'),    btn: document.getElementById('tcCopyMs')    },
-    iso:   { el: document.getElementById('tcIso'),   btn: document.getElementById('tcCopyIso')   },
-    utc:   { el: document.getElementById('tcUtc'),   btn: document.getElementById('tcCopyUtc')   },
-    local: { el: document.getElementById('tcLocal'), btn: document.getElementById('tcCopyLocal') },
-    rel:   { el: document.getElementById('tcRel'),   btn: document.getElementById('tcCopyRel')   },
-    dow:   { el: document.getElementById('tcDow'),   btn: document.getElementById('tcCopyDow')   },
-  };
-  if (t.isRu) {
-    fields.rudate = { el: document.getElementById('tcRuDate'), btn: document.getElementById('tcCopyRuDate') };
-  }
-
-  var DAYS = t.days;
-
-  function relative(d) {
-    var diff = Date.now() - d.getTime();
-    var abs  = Math.abs(diff);
-    var fut  = diff < 0;
-    if (abs < 60000) return t.justNow;
-    var mins = Math.floor(abs / 60000);
-    if (mins < 60) return fut ? t.timeIn + mins + 'm' : mins + 'm' + t.ago;
-    var hrs = Math.floor(abs / 3600000);
-    if (hrs < 24) return fut ? t.timeIn + hrs + 'h' : hrs + 'h' + t.ago;
-    var days = Math.floor(abs / 86400000);
-    if (days < 365) return fut ? t.timeIn + days + 'd' : days + 'd' + t.ago;
-    var yrs = Math.floor(days / 365);
-    return fut ? t.timeIn + yrs + 'y' : yrs + 'y' + t.ago;
-  }
-
-  var RU_MONTHS = {
-    'январь':1,'января':1,'янв':1,
-    'февраль':2,'февраля':2,'фев':2,
-    'март':3,'марта':3,'мар':3,
-    'апрель':4,'апреля':4,'апр':4,
-    'май':5,'мая':5,
-    'июнь':6,'июня':6,'июн':6,
-    'июль':7,'июля':7,'июл':7,
-    'август':8,'августа':8,'авг':8,
-    'сентябрь':9,'сентября':9,'сен':9,
-    'октябрь':10,'октября':10,'окт':10,
-    'ноябрь':11,'ноября':11,'ноя':11,
-    'декабрь':12,'декабря':12,'дек':12,
-  };
-
-  function parseRu(s) {
-    var m = s.match(/^(\d{1,2})\s+([а-яёА-ЯЁ]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-    if (!m) return null;
-    var mon = RU_MONTHS[m[2].toLowerCase()];
-    if (!mon) return null;
-    var day = parseInt(m[1], 10);
-    var yr  = parseInt(m[3], 10);
-    var h   = m[4] ? parseInt(m[4], 10) : 0;
-    var min = m[5] ? parseInt(m[5], 10) : 0;
-    var sec = m[6] ? parseInt(m[6], 10) : 0;
-    var d   = new Date(yr, mon - 1, day, h, min, sec);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  function parse(s) {
-    s = s.trim();
-    if (!s) return null;
-    if (/^-?\d+(\.\d+)?$/.test(s)) {
-      var n  = parseFloat(s);
-      var ms = Math.abs(n) >= 1e10 ? n : n * 1000;
-      var d  = new Date(ms);
-      if (!isNaN(d.getTime())) return d;
-    }
-    var ru = parseRu(s);
-    if (ru) return ru;
-    var d2 = new Date(s);
-    if (!isNaN(d2.getTime())) return d2;
-    return null;
-  }
-
-  function setField(key, value) {
-    var f = fields[key];
-    if (value === null) {
-      f.el.textContent = '—';
-      f.el.className   = 'tc-val ph';
-    } else {
-      f.el.textContent = value;
-      f.el.className   = 'tc-val';
-    }
-  }
-
-  function reset() {
-    Object.keys(fields).forEach(function (k) { setField(k, null); });
-    inputEl.classList.remove('err');
-    statusEl.textContent = t.statusEmpty;
-    statusEl.className   = 'tc-status';
-  }
-
-  function process() {
-    var raw = inputEl.value;
-    if (!raw.trim()) { reset(); return; }
-
-    var d = parse(raw);
-    if (!d) {
-      inputEl.classList.add('err');
-      statusEl.textContent = t.invalidDate;
-      statusEl.className   = 'tc-status err';
-      Object.keys(fields).forEach(function (k) { setField(k, null); });
-      return;
+    var fields = {
+      sec: { el: document.getElementById('tcSec'), btn: document.getElementById('tcCopySec') },
+      ms: { el: document.getElementById('tcMs'), btn: document.getElementById('tcCopyMs') },
+      iso: { el: document.getElementById('tcIso'), btn: document.getElementById('tcCopyIso') },
+      utc: { el: document.getElementById('tcUtc'), btn: document.getElementById('tcCopyUtc') },
+      local: {
+        el: document.getElementById('tcLocal'),
+        btn: document.getElementById('tcCopyLocal'),
+      },
+      rel: { el: document.getElementById('tcRel'), btn: document.getElementById('tcCopyRel') },
+      dow: { el: document.getElementById('tcDow'), btn: document.getElementById('tcCopyDow') },
+    };
+    if (t.isRu) {
+      fields.rudate = {
+        el: document.getElementById('tcRuDate'),
+        btn: document.getElementById('tcCopyRuDate'),
+      };
     }
 
-    inputEl.classList.remove('err');
-    setField('sec',   String(Math.floor(d.getTime() / 1000)));
-    setField('ms',    String(d.getTime()));
-    setField('iso',   d.toISOString());
-    setField('utc',   d.toUTCString());
-    setField('local', d.toLocaleString());
-    if (t.isRu) setField('rudate', d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }));
-    setField('rel',   relative(d));
-    setField('dow',   DAYS[d.getUTCDay()] + ' ' + t.utcSuffix);
+    var DAYS = t.days;
 
-    statusEl.textContent = t.parsed + ' · ' + d.toISOString();
-    statusEl.className   = 'tc-status ok';
-    if (window.pushHistory) window.pushHistory('timestamp converter', d.toISOString(), inputEl.value.trim());
-    var tableEl = document.querySelector('.tc-table');
-    if (tableEl) { tableEl.classList.remove('flash-ok'); void tableEl.offsetWidth; tableEl.classList.add('flash-ok'); }
-  }
+    function relative(d) {
+      var diff = Date.now() - d.getTime();
+      var abs = Math.abs(diff);
+      var fut = diff < 0;
+      if (abs < 60000) return t.justNow;
+      var mins = Math.floor(abs / 60000);
+      if (mins < 60) return fut ? t.timeIn + mins + 'm' : mins + 'm' + t.ago;
+      var hrs = Math.floor(abs / 3600000);
+      if (hrs < 24) return fut ? t.timeIn + hrs + 'h' : hrs + 'h' + t.ago;
+      var days = Math.floor(abs / 86400000);
+      if (days < 365) return fut ? t.timeIn + days + 'd' : days + 'd' + t.ago;
+      var yrs = Math.floor(days / 365);
+      return fut ? t.timeIn + yrs + 'y' : yrs + 'y' + t.ago;
+    }
 
-  function copyField(key) {
-    var val = fields[key].el.textContent;
-    if (!val || val === '—') return;
-    navigator.clipboard.writeText(val).then(function () {
-      var btn = fields[key].btn;
-      btn.innerHTML = '<i class="ti ti-check"></i>';
-      btn.classList.add('done');
-      setTimeout(function () {
-        btn.innerHTML = '<i class="ti ti-copy"></i>';
-        btn.classList.remove('done');
-      }, 1400);
+    var RU_MONTHS = {
+      январь: 1,
+      января: 1,
+      янв: 1,
+      февраль: 2,
+      февраля: 2,
+      фев: 2,
+      март: 3,
+      марта: 3,
+      мар: 3,
+      апрель: 4,
+      апреля: 4,
+      апр: 4,
+      май: 5,
+      мая: 5,
+      июнь: 6,
+      июня: 6,
+      июн: 6,
+      июль: 7,
+      июля: 7,
+      июл: 7,
+      август: 8,
+      августа: 8,
+      авг: 8,
+      сентябрь: 9,
+      сентября: 9,
+      сен: 9,
+      октябрь: 10,
+      октября: 10,
+      окт: 10,
+      ноябрь: 11,
+      ноября: 11,
+      ноя: 11,
+      декабрь: 12,
+      декабря: 12,
+      дек: 12,
+    };
+
+    function parseRu(s) {
+      var m = s.match(
+        /^(\d{1,2})\s+([а-яёА-ЯЁ]+)\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+      );
+      if (!m) return null;
+      var mon = RU_MONTHS[m[2].toLowerCase()];
+      if (!mon) return null;
+      var day = parseInt(m[1], 10);
+      var yr = parseInt(m[3], 10);
+      var h = m[4] ? parseInt(m[4], 10) : 0;
+      var min = m[5] ? parseInt(m[5], 10) : 0;
+      var sec = m[6] ? parseInt(m[6], 10) : 0;
+      var d = new Date(yr, mon - 1, day, h, min, sec);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function parse(s) {
+      s = s.trim();
+      if (!s) return null;
+      if (/^-?\d+(\.\d+)?$/.test(s)) {
+        var n = parseFloat(s);
+        var ms = Math.abs(n) >= 1e10 ? n : n * 1000;
+        var d = new Date(ms);
+        if (!isNaN(d.getTime())) return d;
+      }
+      var ru = parseRu(s);
+      if (ru) return ru;
+      var d2 = new Date(s);
+      if (!isNaN(d2.getTime())) return d2;
+      return null;
+    }
+
+    function setField(key, value) {
+      var f = fields[key];
+      if (value === null) {
+        f.el.textContent = '—';
+        f.el.className = 'tc-val ph';
+      } else {
+        f.el.textContent = value;
+        f.el.className = 'tc-val';
+      }
+    }
+
+    function reset() {
+      Object.keys(fields).forEach(function (k) {
+        setField(k, null);
+      });
+      inputEl.classList.remove('err');
+      statusEl.textContent = t.statusEmpty;
+      statusEl.className = 'tc-status';
+    }
+
+    function process() {
+      var raw = inputEl.value;
+      if (!raw.trim()) {
+        reset();
+        return;
+      }
+
+      var d = parse(raw);
+      if (!d) {
+        inputEl.classList.add('err');
+        statusEl.textContent = t.invalidDate;
+        statusEl.className = 'tc-status err';
+        Object.keys(fields).forEach(function (k) {
+          setField(k, null);
+        });
+        return;
+      }
+
+      inputEl.classList.remove('err');
+      setField('sec', String(Math.floor(d.getTime() / 1000)));
+      setField('ms', String(d.getTime()));
+      setField('iso', d.toISOString());
+      setField('utc', d.toUTCString());
+      setField('local', d.toLocaleString());
+      if (t.isRu)
+        setField(
+          'rudate',
+          d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+        );
+      setField('rel', relative(d));
+      setField('dow', DAYS[d.getUTCDay()] + ' ' + t.utcSuffix);
+
+      statusEl.textContent = t.parsed + ' · ' + d.toISOString();
+      statusEl.className = 'tc-status ok';
+      if (window.pushHistory)
+        window.pushHistory('timestamp converter', d.toISOString(), inputEl.value.trim());
+      var tableEl = document.querySelector('.tc-table');
+      if (tableEl) {
+        tableEl.classList.remove('flash-ok');
+        void tableEl.offsetWidth;
+        tableEl.classList.add('flash-ok');
+      }
+    }
+
+    function copyField(key) {
+      var val = fields[key].el.textContent;
+      if (!val || val === '—') return;
+      navigator.clipboard.writeText(val).then(function () {
+        var btn = fields[key].btn;
+        btn.innerHTML = '<i class="ti ti-check"></i>';
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.innerHTML = '<i class="ti ti-copy"></i>';
+          btn.classList.remove('done');
+        }, 1400);
+      });
+    }
+
+    Object.keys(fields).forEach(function (k) {
+      fields[k].btn.addEventListener('click', function () {
+        copyField(k);
+      });
     });
-  }
 
-  Object.keys(fields).forEach(function (k) {
-    fields[k].btn.addEventListener('click', function () { copyField(k); });
-  });
-
-  nowBtn.addEventListener('click', function () {
-    inputEl.value = String(Math.floor(Date.now() / 1000));
-    process();
-    inputEl.focus();
-  });
-
-  clearBtn.addEventListener('click', function () {
-    inputEl.value = '';
-    reset();
-    inputEl.focus();
-  });
-
-  inputEl.addEventListener('input', process);
-
-  document.addEventListener('keydown', function(e) {
-    var toolEl = document.querySelector('.tc');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); nowBtn.click(); }
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); document.getElementById('tcCopySec').click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
-  });
-
-  window.toolGetPreset = function () {
-    return { input: inputEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inputEl.value = cfg.input ?? '';
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
-  try {
-    var p = sessionStorage.getItem('ts_payload') || sessionStorage.getItem('magic_box_payload');
-    if (p) {
-      inputEl.value = p;
-      sessionStorage.removeItem('ts_payload');
-      sessionStorage.removeItem('magic_box_payload');
+    nowBtn.addEventListener('click', function () {
+      inputEl.value = String(Math.floor(Date.now() / 1000));
       process();
-    }
-  } catch (e) {}
-})();
+      inputEl.focus();
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      reset();
+      inputEl.focus();
+    });
+
+    inputEl.addEventListener('input', process);
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.tc');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        nowBtn.click();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        document.getElementById('tcCopySec').click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inputEl.value = cfg.input ?? '';
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    try {
+      var p = sessionStorage.getItem('ts_payload') || sessionStorage.getItem('magic_box_payload');
+      if (p) {
+        inputEl.value = p;
+        sessionStorage.removeItem('ts_payload');
+        sessionStorage.removeItem('magic_box_payload');
+        process();
+      }
+    } catch (e) {}
+  })();
 </script>

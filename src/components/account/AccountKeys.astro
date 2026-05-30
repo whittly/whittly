@@ -1,0 +1,312 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+
+interface Props {
+  lang: 'en' | 'ru';
+}
+const { lang } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<Base title={isRu ? 'api ключи — whittly' : 'api keys — whittly'}>
+  <div class="ac-page">
+    <div class="ac-loading" id="acLoading">
+      <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
+      {isRu ? 'загрузка…' : 'loading…'}
+    </div>
+
+    <div id="acContent" style="display:none">
+      <div class="ac-header">
+        <div>
+          <div class="ac-breadcrumb">
+            <a href={isRu ? '/ru/account/' : '/account/'}>{isRu ? 'аккаунт' : 'account'}</a>
+            <span class="sep">/</span>
+            <span>{isRu ? 'api ключи' : 'api keys'}</span>
+          </div>
+          <h1 style="font-size:24px; margin:0;">{isRu ? 'API ключи' : 'API keys'}</h1>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="ac-btn-ghost" id="signOutBtn">
+            <i class="ti ti-logout"></i>
+            {isRu ? 'выйти' : 'sign out'}
+          </button>
+          <button class="ac-btn-sm" id="genBtn">
+            <i class="ti ti-plus"></i>
+            {isRu ? 'создать ключ' : 'generate key'}
+          </button>
+        </div>
+      </div>
+
+      <!-- Reveal banner (shown once after generation) -->
+      <div class="ac-reveal" id="revealBanner">
+        <div class="ac-reveal-warn">
+          <i class="ti ti-alert-triangle"></i>
+          {
+            isRu
+              ? 'скопируйте ключ сейчас — он больше не будет показан'
+              : 'copy this key now — it will not be shown again'
+          }
+        </div>
+        <div class="ac-reveal-key" id="revealKey"></div>
+        <button class="ac-btn-sm" id="copyKeyBtn">
+          <i class="ti ti-copy"></i>
+          {isRu ? 'скопировать' : 'copy key'}
+        </button>
+      </div>
+
+      <!-- Keys list -->
+      <div class="ac-keys-list" id="keysList">
+        <div class="ac-keys-empty">
+          {isRu ? 'api ключей пока нет — создайте выше' : 'no api keys yet — generate one above'}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate key modal -->
+  <div class="ac-modal-overlay" id="genModal">
+    <div class="ac-modal">
+      <h3>{isRu ? '// новый api ключ' : '// new api key'}</h3>
+      <div class="ac-field">
+        <label for="keyName">
+          {isRu ? 'название' : 'name'}
+          <span style="color:var(--ink-faint);font-size:10px;"
+            >{isRu ? ' (необязательно)' : ' (optional)'}</span
+          >
+        </label>
+        <input
+          class="ac-input"
+          id="keyName"
+          type="text"
+          placeholder={isRu ? 'например: production, ci-cd' : 'e.g. production, ci-cd'}
+          maxlength="64"
+        />
+      </div>
+      <div class="ac-modal-footer">
+        <button class="ac-btn-outline" id="cancelGenBtn" style="width:auto; padding:8px 16px;">
+          {isRu ? 'отмена' : 'cancel'}
+        </button>
+        <button class="ac-btn-sm" id="confirmGenBtn">
+          <i class="ti ti-key"></i>
+          {isRu ? 'создать' : 'generate'}
+        </button>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ isRu }}>
+  (function () {
+    if (!localStorage.getItem('wh_access')) {
+      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      return;
+    }
+
+    var loadingEl = document.getElementById('acLoading');
+    var contentEl = document.getElementById('acContent');
+    var keysListEl = document.getElementById('keysList');
+    var revealEl = document.getElementById('revealBanner');
+    var revealKeyEl = document.getElementById('revealKey');
+    var copyKeyBtn = document.getElementById('copyKeyBtn');
+    var genBtn = document.getElementById('genBtn');
+    var genModal = document.getElementById('genModal');
+    var cancelBtn = document.getElementById('cancelGenBtn');
+    var confirmBtn = document.getElementById('confirmGenBtn');
+    var keyNameEl = document.getElementById('keyName');
+    var signOutBtn = document.getElementById('signOutBtn');
+
+    function logout() {
+      var rt = localStorage.getItem('wh_refresh');
+      if (rt)
+        window.whApi
+          .fetch('/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+          })
+          .catch(function () {});
+      localStorage.removeItem('wh_access');
+      localStorage.removeItem('wh_refresh');
+      localStorage.removeItem('wh_user');
+      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+    }
+    signOutBtn.addEventListener('click', logout);
+
+    async function authFetch(path, opts) {
+      var res = await window.whApi.fetch(path, opts);
+      if (res.status === 401) {
+        logout();
+        return null;
+      }
+      return res;
+    }
+
+    function formatDate(iso) {
+      return isRu
+        ? new Date(iso).toLocaleDateString('ru', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : new Date(iso).toLocaleDateString('en', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+    }
+
+    function renderKeys(keys) {
+      keysListEl.innerHTML = '';
+      if (!keys.length) {
+        var empty = document.createElement('div');
+        empty.className = 'ac-keys-empty';
+        empty.textContent = isRu
+          ? 'api ключей пока нет — создайте выше'
+          : 'no api keys yet — generate one above';
+        keysListEl.appendChild(empty);
+        return;
+      }
+      keys.forEach(function (k) {
+        var row = document.createElement('div');
+        row.className = 'ac-key-row' + (k.revokedAt ? ' revoked' : '');
+
+        var prefix = document.createElement('span');
+        prefix.className = 'ac-key-prefix';
+        prefix.textContent = k.keyPrefix + '…';
+
+        var info = document.createElement('div');
+        info.className = 'ac-key-info';
+
+        var nameEl = document.createElement('div');
+        nameEl.className = 'ac-key-name';
+        nameEl.textContent = k.name;
+
+        var meta = document.createElement('div');
+        meta.className = 'ac-key-meta';
+        var createdLabel = isRu ? 'создан ' : 'created ';
+        var lastUsedLabel = isRu ? ' · последнее использование: ' : ' · last used: ';
+        var neverLabel = isRu ? 'никогда' : 'never';
+        meta.textContent =
+          createdLabel +
+          formatDate(k.createdAt) +
+          lastUsedLabel +
+          (k.lastUsedAt ? formatDate(k.lastUsedAt) : neverLabel);
+
+        info.appendChild(nameEl);
+        info.appendChild(meta);
+
+        var status = document.createElement('span');
+        status.className = 'ac-key-status ' + (k.revokedAt ? 'revoked' : 'active');
+        status.textContent = k.revokedAt
+          ? isRu
+            ? 'отозван'
+            : 'revoked'
+          : isRu
+            ? 'активен'
+            : 'active';
+
+        row.appendChild(prefix);
+        row.appendChild(info);
+        row.appendChild(status);
+
+        if (!k.revokedAt) {
+          var revokeBtn = document.createElement('button');
+          revokeBtn.className = 'ac-btn-danger';
+          revokeBtn.textContent = isRu ? 'отозвать' : 'revoke';
+          revokeBtn.addEventListener('click', async function () {
+            var msg = isRu
+              ? 'Отозвать этот ключ? Он сразу перестанет работать.'
+              : 'Revoke this key? It will stop working immediately.';
+            if (!confirm(msg)) return;
+            var res = await authFetch('/user/keys/' + k.id, { method: 'DELETE' });
+            if (res && res.ok) loadKeys();
+          });
+          row.appendChild(revokeBtn);
+        }
+
+        keysListEl.appendChild(row);
+      });
+    }
+
+    async function loadKeys() {
+      var res = await authFetch('/user/keys');
+      if (!res) return;
+      var data = await res.json();
+      renderKeys(data.keys || []);
+    }
+
+    // Modal
+    genBtn.addEventListener('click', function () {
+      keyNameEl.value = '';
+      genModal.classList.add('active');
+      keyNameEl.focus();
+    });
+    cancelBtn.addEventListener('click', function () {
+      genModal.classList.remove('active');
+    });
+    genModal.addEventListener('click', function (e) {
+      if (e.target === genModal) genModal.classList.remove('active');
+    });
+
+    confirmBtn.addEventListener('click', async function () {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = isRu ? 'создаём…' : 'generating…';
+      try {
+        var res = await authFetch('/user/keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: keyNameEl.value.trim() || 'default' }),
+        });
+        if (!res) return;
+        var data = await res.json();
+        genModal.classList.remove('active');
+
+        revealKeyEl.textContent = data.key;
+        revealEl.classList.add('visible');
+        revealEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        await loadKeys();
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = isRu
+          ? '<i class="ti ti-key"></i> создать'
+          : '<i class="ti ti-key"></i> generate';
+      }
+    });
+
+    copyKeyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(revealKeyEl.textContent).then(function () {
+        copyKeyBtn.innerHTML = isRu
+          ? '<i class="ti ti-check"></i> скопировано'
+          : '<i class="ti ti-check"></i> copied';
+        setTimeout(function () {
+          copyKeyBtn.innerHTML = isRu
+            ? '<i class="ti ti-copy"></i> скопировать'
+            : '<i class="ti ti-copy"></i> copy key';
+        }, 2000);
+      });
+    });
+
+    // Init
+    (async function () {
+      try {
+        await loadKeys();
+        loadingEl.style.display = 'none';
+        contentEl.style.display = '';
+      } catch (e) {
+        loadingEl.innerHTML = isRu
+          ? '<span style="color:var(--bad)">// ошибка загрузки</span>'
+          : '<span style="color:var(--bad)">// failed to load</span>';
+      }
+    })();
+  })();
+</script>

@@ -10,7 +10,10 @@ import '../../styles/premium.css';
   <header class="premium-hero">
     <div class="badge"><span class="badge-dot"></span><span>pro-планы и цены</span></div>
     <h1>просто и <em>честно</em>.</h1>
-    <p class="lede">базовые инструменты бесплатны и без рекламы — навсегда. pro-функции появятся с честными ценами: платишь только за серверные расходы, без накруток.</p>
+    <p class="lede">
+      базовые инструменты бесплатны и без рекламы — навсегда. pro-функции появятся с честными
+      ценами: платишь только за серверные расходы, без накруток.
+    </p>
   </header>
 
   <h2 class="h-section">// планы</h2>
@@ -18,12 +21,13 @@ import '../../styles/premium.css';
   <div class="billing-row">
     <div class="bt-wrap" id="billingToggle">
       <button class="bt-opt active" data-period="mo">ежемесячно</button>
-      <button class="bt-opt" data-period="yr">ежегодно <span class="bt-save">2 мес. бесплатно</span></button>
+      <button class="bt-opt" data-period="yr"
+        >ежегодно <span class="bt-save">2 мес. бесплатно</span></button
+      >
     </div>
   </div>
 
   <div class="plans-grid">
-
     <div class="plan-card">
       <div>
         <div class="plan-tier">бесплатно · навсегда</div>
@@ -83,13 +87,14 @@ import '../../styles/premium.css';
       </ul>
       <span class="plan-cta ghost plan-cta-cs">скоро</span>
     </div>
-
   </div>
 
   <h2 class="h-section">// что работает где</h2>
   <div class="runs-grid">
     <div class="runs-col">
-      <div class="runs-col-head local"><i class="ti ti-device-laptop"></i>в вашем браузере — всегда бесплатно</div>
+      <div class="runs-col-head local">
+        <i class="ti ti-device-laptop"></i>в вашем браузере — всегда бесплатно
+      </div>
       <ul class="runs-list">
         <li>форматирование и валидация JSON</li>
         <li>Base64 кодирование / декодирование</li>
@@ -103,7 +108,9 @@ import '../../styles/premium.css';
       </ul>
     </div>
     <div class="runs-col">
-      <div class="runs-col-head cloud"><i class="ti ti-cloud"></i>на наших серверах — pro и api</div>
+      <div class="runs-col-head cloud">
+        <i class="ti ti-cloud"></i>на наших серверах — pro и api
+      </div>
       <ul class="runs-list">
         <li>пакетная обработка — сотни файлов сразу</li>
         <li>большие файлы (больше 5 МБ)</li>
@@ -117,12 +124,18 @@ import '../../styles/premium.css';
 
   <h2 class="h-section">// пока можно</h2>
   <div class="free-grid">
-
-    <a class="free-card" href="https://github.com/whittly/whittly/issues" target="_blank" rel="noopener">
+    <a
+      class="free-card"
+      href="https://github.com/whittly/whittly/issues"
+      target="_blank"
+      rel="noopener"
+    >
       <i class="ti ti-bug"></i>
       <div>
         <div class="title">сообщить об ошибке</div>
-        <div class="desc">нашёл что-то сломанное или непонятное? открой issue — это реально помогает.</div>
+        <div class="desc">
+          нашёл что-то сломанное или непонятное? открой issue — это реально помогает.
+        </div>
       </div>
     </a>
 
@@ -130,17 +143,20 @@ import '../../styles/premium.css';
       <i class="ti ti-share-2"></i>
       <div>
         <div class="title">поделиться с коллегой</div>
-        <div class="desc">тот самый, который всё ещё пользуется сомнительными json-сайтами. ты знаешь, о ком речь.</div>
+        <div class="desc">
+          тот самый, который всё ещё пользуется сомнительными json-сайтами. ты знаешь, о ком речь.
+        </div>
       </div>
     </a>
-
   </div>
 
   <div class="thanks">
     <span class="thanks-icon"><i class="ti ti-heart"></i></span>
-    <div class="thanks-body">если нашли баг, есть идея для фичи, или просто пользуетесь инструментами каждый день и делитесь с командой — <strong>спасибо</strong>. это значит больше, чем кажется.</div>
+    <div class="thanks-body">
+      если нашли баг, есть идея для фичи, или просто пользуетесь инструментами каждый день и
+      делитесь с командой — <strong>спасибо</strong>. это значит больше, чем кажется.
+    </div>
   </div>
-
 </Base>
 
 <script>
@@ -150,19 +166,19 @@ import '../../styles/premium.css';
     const btn = (e.target as HTMLElement).closest('.bt-opt') as HTMLElement | null;
     if (!btn) return;
     const period = btn.dataset.period!;
-    toggle.querySelectorAll('.bt-opt').forEach(b => b.classList.remove('active'));
+    toggle.querySelectorAll('.bt-opt').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     const isAnnual = period === 'yr';
 
-    document.querySelectorAll('.plan-price .amount[data-mo]').forEach(el => {
+    document.querySelectorAll('.plan-price .amount[data-mo]').forEach((el) => {
       const e = el as HTMLElement;
       e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
     });
-    document.querySelectorAll('.plan-price .period[data-mo]').forEach(el => {
+    document.querySelectorAll('.plan-price .period[data-mo]').forEach((el) => {
       const e = el as HTMLElement;
       e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
     });
-    ['proAnnualNote', 'apiAnnualNote'].forEach(id => {
+    ['proAnnualNote', 'apiAnnualNote'].forEach((id) => {
       const el = document.getElementById(id)!;
       el.style.display = isAnnual ? 'inline' : 'none';
     });
@@ -171,19 +187,26 @@ import '../../styles/premium.css';
   // Share button
   document.getElementById('shareBtn')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    const card = (e.currentTarget as HTMLElement);
+    const card = e.currentTarget as HTMLElement;
     const titleEl = card.querySelector('.title') as HTMLElement;
-    const data = { title: 'whittly', text: 'инструменты разработчика прямо в браузере', url: 'https://whittly.dev/ru/' };
+    const data = {
+      title: 'whittly',
+      text: 'инструменты разработчика прямо в браузере',
+      url: 'https://whittly.dev/ru/',
+    };
     if (navigator.share) {
-      try { await navigator.share(data); } catch {}
+      try {
+        await navigator.share(data);
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(data.url);
         const original = titleEl.textContent!;
         titleEl.textContent = 'ссылка скопирована!';
-        setTimeout(() => { titleEl.textContent = original; }, 1600);
+        setTimeout(() => {
+          titleEl.textContent = original;
+        }, 1600);
       } catch {}
     }
   });
-
 </script>

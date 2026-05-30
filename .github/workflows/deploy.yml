@@ -5,11 +5,30 @@ on:
     branches: [main, develop]
 
 jobs:
+  ci:
+    name: Lint & Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run check
+      - name: Build (smoke)
+        run: npm run build
+        env:
+          PUBLIC_API_URL: https://api.whittly.dev
+
   deploy:
+    name: Deploy to VPS
+    needs: ci
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:
-      - name: Deploy to VPS
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -22,5 +41,5 @@ jobs:
             cd /var/www/whittly/whittly
             git pull origin ${{ github.ref_name }}
             npm ci
-            npm run build
+            VITE_BUILD_DATE=$(date +%Y.%m.%d) npm run build
             echo "✓ frontend (${{ github.ref_name }}) deployed at $(date)"

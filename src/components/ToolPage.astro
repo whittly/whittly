@@ -29,39 +29,60 @@ import NumberBaseConverter from './tools/NumberBaseConverter.astro';
 import StringInspector from './tools/StringInspector.astro';
 import CsvJsonConverter from './tools/CsvJsonConverter.astro';
 
+const TOOL_MAP: Record<string, any> = {
+  'json-formatter': JsonFormatter,
+  base64: Base64,
+  'cron-parser': CronParser,
+  'uuid-generator': UuidGenerator,
+  'regex-tester': RegexTester,
+  'jwt-decoder': JwtDecoder,
+  'timestamp-converter': TimestampConverter,
+  'url-encoder': UrlEncoder,
+  'hash-generator': HashGenerator,
+  'slug-generator': SlugGenerator,
+  'password-generator': PasswordGenerator,
+  bcrypt: BcryptTool,
+  'text-diff': TextDiff,
+  'case-normalizer': CaseNormalizer,
+  'curl-converter': CurlConverter,
+  'query-string-parser': QueryStringParser,
+  'xml-json': XmlJsonConverter,
+  'html-entity-encoder': HtmlEntityEncoder,
+  'mime-lookup': MimeLookup,
+  'number-base-converter': NumberBaseConverter,
+  'string-inspector': StringInspector,
+  'csv-json': CsvJsonConverter,
+};
+
 interface Props {
   lang: Lang;
   tool: Tool;
 }
 
 const { lang, tool } = Astro.props;
-const isRu    = lang === 'ru';
+const isRu = lang === 'ru';
 const catMeta = CAT_META[tool.cat];
-const slug    = toolSlug(tool);
-const ui      = TOOL_UI[lang];
+const slug = toolSlug(tool);
+const ui = TOOL_UI[lang];
+const ToolComponent = TOOL_MAP[slug];
 
-const name      = isRu ? (toolNameRu[tool.name] || tool.name) : tool.name;
-const desc      = isRu ? (toolDescRu[tool.name] || tool.desc) : tool.desc;
-const catLabel  = isRu ? (catLabelRu[tool.cat]  || catMeta.label) : catMeta.label;
+const name = isRu ? toolNameRu[tool.name] || tool.name : tool.name;
+const desc = isRu ? toolDescRu[tool.name] || tool.desc : tool.desc;
+const catLabel = isRu ? catLabelRu[tool.cat] || catMeta.label : catMeta.label;
 const toolsPath = isRu ? '/ru/tools/' : '/tools/';
 
 const hints = PRO_HINTS[lang][slug] ?? [];
-const snip  = API_SNIPPETS[slug] ?? null;
+const snip = API_SNIPPETS[slug] ?? null;
 
-const content = isRu
-  ? (TOOL_CONTENT_RU[slug] ?? null)
-  : (TOOL_CONTENT_EN[slug] ?? null);
+const content = isRu ? (TOOL_CONTENT_RU[slug] ?? null) : (TOOL_CONTENT_EN[slug] ?? null);
 
-const related = CATALOG
-  .filter(t => t.cat === tool.cat && !t.soon && toolSlug(t) !== slug)
-  .slice(0, 3);
+const related = CATALOG.filter((t) => t.cat === tool.cat && !t.soon && toolSlug(t) !== slug).slice(
+  0,
+  3
+);
 
-const seoTitle = SEO_TITLE[slug]
-  ? `${SEO_TITLE[slug]} — whittly`
-  : `${name} — whittly`;
-const seoDesc = isRu
-  ? (SEO_DESC_RU[slug] ?? desc)
-  : (SEO_DESC[slug]    ?? desc);
+const seoTitle = SEO_TITLE[slug] ? `${SEO_TITLE[slug]} — whittly` : `${name} — whittly`;
+const seoDesc = isRu ? (SEO_DESC_RU[slug] ?? desc) : (SEO_DESC[slug] ?? desc);
 
 const SITE = 'https://whittly.dev';
 const toolUrl = `${SITE}${isRu ? '/ru' : ''}/tools/${slug}/`;
@@ -77,8 +98,11 @@ const jsonLd = {
   provider: { '@type': 'Organization', name: 'whittly', url: SITE },
 };
 ---
+
 <style is:global>
-  .tool-page { padding: 48px 0 64px; }
+  .tool-page {
+    padding: 48px 0 64px;
+  }
 
   .tool-related {
     margin-top: 56px;
@@ -112,16 +136,34 @@ const jsonLd = {
     border-radius: var(--radius-md);
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.12s, transform 0.12s;
+    transition:
+      border-color 0.12s,
+      transform 0.12s;
   }
 
-  .tool-related-card:hover { border-color: var(--line-strong); transform: translateY(-1px); }
-  .tool-related-card i { font-size: 18px; color: var(--ink-soft); }
-  .tool-related-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
-  .tool-related-desc { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+  .tool-related-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+  }
+  .tool-related-card i {
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+  .tool-related-name {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .tool-related-desc {
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
 
   @media (max-width: 640px) {
-    .tool-related-grid { grid-template-columns: 1fr; }
+    .tool-related-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .tool-info {
@@ -133,7 +175,9 @@ const jsonLd = {
     gap: 48px 64px;
   }
 
-  .tool-info-faq { grid-column: 1 / -1; }
+  .tool-info-faq {
+    grid-column: 1 / -1;
+  }
 
   .tool-info-head {
     font-family: 'JetBrains Mono', monospace;
@@ -176,7 +220,11 @@ const jsonLd = {
     border-bottom: 0.5px solid var(--line);
   }
 
-  .tool-faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .tool-faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
 
   .tool-faq-q {
     font-size: 14px;
@@ -192,11 +240,19 @@ const jsonLd = {
   }
 
   @media (max-width: 760px) {
-    .tool-info { grid-template-columns: 1fr; gap: 36px; }
-    .tool-info-faq { grid-column: 1; }
+    .tool-info {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .tool-info-faq {
+      grid-column: 1;
+    }
   }
 
-  .tool-page-header { margin-bottom: 40px; max-width: 640px; }
+  .tool-page-header {
+    margin-bottom: 40px;
+    max-width: 640px;
+  }
 
   .tool-breadcrumb {
     font-family: 'JetBrains Mono', monospace;
@@ -207,13 +263,28 @@ const jsonLd = {
     align-items: center;
     gap: 8px;
   }
-  .tool-breadcrumb a { color: var(--ink-faint); text-decoration: none; transition: color 0.12s; }
-  .tool-breadcrumb a:hover { color: var(--ink); }
-  .tool-breadcrumb .sep { color: var(--line-strong); }
+  .tool-breadcrumb a {
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.12s;
+  }
+  .tool-breadcrumb a:hover {
+    color: var(--ink);
+  }
+  .tool-breadcrumb .sep {
+    color: var(--line-strong);
+  }
 
-  .tool-page-header h1 { margin: 0 0 10px; }
+  .tool-page-header h1 {
+    margin: 0 0 10px;
+  }
 
-  .tool-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .tool-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
 
   .tool-cat-badge {
     font-family: 'JetBrains Mono', monospace;
@@ -250,7 +321,10 @@ const jsonLd = {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
   }
-  .tool-area i { font-size: 32px; color: var(--line-strong); }
+  .tool-area i {
+    font-size: 32px;
+    color: var(--line-strong);
+  }
 
   /* ── API panel ── */
   .tool-api {
@@ -276,7 +350,9 @@ const jsonLd = {
     text-align: left;
     transition: background 0.12s;
   }
-  .tool-api-toggle:hover { background: var(--accent-soft); }
+  .tool-api-toggle:hover {
+    background: var(--accent-soft);
+  }
 
   .tool-api-pro {
     font-family: 'JetBrains Mono', monospace;
@@ -297,13 +373,17 @@ const jsonLd = {
     color: var(--ink-faint);
     transition: transform 0.18s;
   }
-  .tool-api.open .tool-api-chevron { transform: rotate(180deg); }
+  .tool-api.open .tool-api-chevron {
+    transform: rotate(180deg);
+  }
 
   .tool-api-body {
     display: none;
     border-top: 0.5px solid var(--line);
   }
-  .tool-api.open .tool-api-body { display: block; }
+  .tool-api.open .tool-api-body {
+    display: block;
+  }
 
   .tool-api-tabs {
     display: flex;
@@ -324,8 +404,13 @@ const jsonLd = {
     transition: color 0.12s;
     margin-bottom: -0.5px;
   }
-  .tool-api-tab:hover { color: var(--ink); }
-  .tool-api-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tool-api-tab:hover {
+    color: var(--ink);
+  }
+  .tool-api-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
 
   .tool-api-snip {
     display: none;
@@ -339,7 +424,9 @@ const jsonLd = {
     overflow-x: auto;
     white-space: pre;
   }
-  .tool-api-snip.active { display: block; }
+  .tool-api-snip.active {
+    display: block;
+  }
 
   .tool-api-footer {
     display: flex;
@@ -353,8 +440,13 @@ const jsonLd = {
     color: var(--ink-faint);
     gap: 10px;
   }
-  .tool-api-footer a { color: var(--accent); text-decoration: none; }
-  .tool-api-footer a:hover { text-decoration: underline; }
+  .tool-api-footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .tool-api-footer a:hover {
+    text-decoration: underline;
+  }
 
   .tool-api-copy {
     font-family: 'JetBrains Mono', monospace;
@@ -368,7 +460,10 @@ const jsonLd = {
     transition: all 0.12s;
     flex-shrink: 0;
   }
-  .tool-api-copy:hover { color: var(--accent); border-color: var(--accent); }
+  .tool-api-copy:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
   /* ── Pro hint strip ── */
   .tool-pro-strip {
@@ -415,7 +510,10 @@ const jsonLd = {
     flex-shrink: 0;
   }
 
-  .tps-sep { color: var(--line-strong); font-size: 11px; }
+  .tps-sep {
+    color: var(--line-strong);
+    font-size: 11px;
+  }
 
   .tps-link {
     margin-left: auto;
@@ -426,7 +524,9 @@ const jsonLd = {
     flex-shrink: 0;
     transition: opacity 0.12s;
   }
-  .tps-link:hover { opacity: 0.7; }
+  .tps-link:hover {
+    opacity: 0.7;
+  }
 </style>
 
 <Base title={seoTitle} description={seoDesc} jsonLd={jsonLd}>
@@ -445,171 +545,205 @@ const jsonLd = {
         {tool.new && <span class="tool-new-badge">new</span>}
       </div>
       <h1>
-        <i class={`ti ${tool.icon}`} style="font-size: 0.75em; vertical-align: middle; margin-right: 12px; color: var(--ink-soft);"></i>
+        <i
+          class={`ti ${tool.icon}`}
+          style="font-size: 0.75em; vertical-align: middle; margin-right: 12px; color: var(--ink-soft);"
+        ></i>
         {name}
       </h1>
       <p class="subhead">{desc}</p>
     </header>
 
-    {slug === 'json-formatter'      ? <JsonFormatter lang={lang} />
-    : slug === 'base64'             ? <Base64 lang={lang} />
-    : slug === 'cron-parser'        ? <CronParser lang={lang} />
-    : slug === 'uuid-generator'     ? <UuidGenerator lang={lang} />
-    : slug === 'regex-tester'       ? <RegexTester lang={lang} />
-    : slug === 'jwt-decoder'        ? <JwtDecoder lang={lang} />
-    : slug === 'timestamp-converter'? <TimestampConverter lang={lang} />
-    : slug === 'url-encoder'        ? <UrlEncoder lang={lang} />
-    : slug === 'hash-generator'     ? <HashGenerator lang={lang} />
-    : slug === 'slug-generator'     ? <SlugGenerator lang={lang} />
-    : slug === 'password-generator' ? <PasswordGenerator lang={lang} />
-    : slug === 'bcrypt'             ? <BcryptTool lang={lang} />
-    : slug === 'text-diff'          ? <TextDiff lang={lang} />
-    : slug === 'case-normalizer'    ? <CaseNormalizer lang={lang} />
-    : slug === 'curl-converter'     ? <CurlConverter lang={lang} />
-    : slug === 'query-string-parser'? <QueryStringParser lang={lang} />
-    : slug === 'xml-json'           ? <XmlJsonConverter lang={lang} />
-    : slug === 'html-entity-encoder'? <HtmlEntityEncoder lang={lang} />
-    : slug === 'mime-lookup'              ? <MimeLookup lang={lang} />
-    : slug === 'number-base-converter'   ? <NumberBaseConverter lang={lang} />
-    : slug === 'string-inspector'        ? <StringInspector lang={lang} />
-    : slug === 'csv-json'                ? <CsvJsonConverter lang={lang} />
-    : (
-      <div class="tool-area">
-        <i class={`ti ${tool.icon}`}></i>
-        <span>{ui.toolComingSoon}</span>
-      </div>
-    )}
+    {
+      ToolComponent ? (
+        <ToolComponent lang={lang} />
+      ) : (
+        <div class="tool-area">
+          <i class={`ti ${tool.icon}`} />
+          <span>{ui.toolComingSoon}</span>
+        </div>
+      )
+    }
 
-    {snip && (
-      <div class="tool-api" id="toolApiPanel">
-        <button class="tool-api-toggle" id="toolApiToggle" type="button">
-          <i class="ti ti-code"></i>
-          {ui.apiToggleLabel}
-          <span class="tool-api-pro">pro</span>
-          <i class="ti ti-chevron-down tool-api-chevron"></i>
-        </button>
-        <div class="tool-api-body">
-          <div class="tool-api-tabs">
-            <button class="tool-api-tab active" data-tab="curl">curl</button>
-            <button class="tool-api-tab"        data-tab="fetch">fetch</button>
-            <button class="tool-api-tab"        data-tab="axios">axios</button>
-          </div>
-          <pre class="tool-api-snip active" id="taSnipCurl">{snip.curl}</pre>
-          <pre class="tool-api-snip"        id="taSnipFetch">{snip.fetch}</pre>
-          <pre class="tool-api-snip"        id="taSnipAxios">{snip.axios}</pre>
-          <div class="tool-api-footer">
-            <span>{isRu ? 'API доступен на' : 'API access on'} <a href={ui.proUpgradePath}>Pro</a></span>
-            <button class="tool-api-copy" id="toolApiCopy">{isRu ? 'копировать' : 'copy'}</button>
+    {
+      snip && (
+        <div class="tool-api" id="toolApiPanel">
+          <button class="tool-api-toggle" id="toolApiToggle" type="button">
+            <i class="ti ti-code" />
+            {ui.apiToggleLabel}
+            <span class="tool-api-pro">pro</span>
+            <i class="ti ti-chevron-down tool-api-chevron" />
+          </button>
+          <div class="tool-api-body">
+            <div class="tool-api-tabs">
+              <button class="tool-api-tab active" data-tab="curl">
+                curl
+              </button>
+              <button class="tool-api-tab" data-tab="fetch">
+                fetch
+              </button>
+              <button class="tool-api-tab" data-tab="axios">
+                axios
+              </button>
+            </div>
+            <pre class="tool-api-snip active" id="taSnipCurl">
+              {snip.curl}
+            </pre>
+            <pre class="tool-api-snip" id="taSnipFetch">
+              {snip.fetch}
+            </pre>
+            <pre class="tool-api-snip" id="taSnipAxios">
+              {snip.axios}
+            </pre>
+            <div class="tool-api-footer">
+              <span>
+                {isRu ? 'API доступен на' : 'API access on'} <a href={ui.proUpgradePath}>Pro</a>
+              </span>
+              <button class="tool-api-copy" id="toolApiCopy">
+                {isRu ? 'копировать' : 'copy'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )
+    }
 
-    {hints.length > 0 && (
-      <div class="tool-pro-strip">
-        <span class="tps-label">// pro</span>
-        {hints.map((h, i) => (
-          <>
-            {i > 0 && <span class="tps-sep">·</span>}
-            <span class="tps-hint">{h} <span class="tps-pro">pro</span></span>
-          </>
-        ))}
-        <a href={ui.proUpgradePath} class="tps-link">{ui.proUpgradeLabel}</a>
-      </div>
-    )}
+    {
+      hints.length > 0 && (
+        <div class="tool-pro-strip">
+          <span class="tps-label">// pro</span>
+          {hints.map((h, i) => (
+            <>
+              {i > 0 && <span class="tps-sep">·</span>}
+              <span class="tps-hint">
+                {h} <span class="tps-pro">pro</span>
+              </span>
+            </>
+          ))}
+          <a href={ui.proUpgradePath} class="tps-link">
+            {ui.proUpgradeLabel}
+          </a>
+        </div>
+      )
+    }
   </div>
 
-  <script is:inline define:vars={{ copyLabel: isRu ? 'копировать' : 'copy', copiedLabel: isRu ? 'скопировано' : 'copied' }}>
-  (function () {
-    // hide Pro upsell strip for Pro users
-    try {
-      var tok = localStorage.getItem('wh_access');
-      if (tok) {
-        var plan = JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).plan;
-        if (plan === 'pro' || plan === 'api') {
-          var strip = document.querySelector('.tool-pro-strip');
-          if (strip) strip.style.display = 'none';
+  <script
+    is:inline
+    define:vars={{
+      copyLabel: isRu ? 'копировать' : 'copy',
+      copiedLabel: isRu ? 'скопировано' : 'copied',
+    }}
+  >
+    (function () {
+      // hide Pro upsell strip for Pro users
+      try {
+        var tok = localStorage.getItem('wh_access');
+        if (tok) {
+          var plan = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).plan;
+          if (plan === 'pro' || plan === 'api') {
+            var strip = document.querySelector('.tool-pro-strip');
+            if (strip) strip.style.display = 'none';
+          }
         }
-      }
-    } catch(e) {}
+      } catch (e) {}
 
-    var panel     = document.getElementById('toolApiPanel');
-    var toggle    = document.getElementById('toolApiToggle');
-    var copyBtn   = document.getElementById('toolApiCopy');
-    if (!toggle) return;
+      var panel = document.getElementById('toolApiPanel');
+      var toggle = document.getElementById('toolApiToggle');
+      var copyBtn = document.getElementById('toolApiCopy');
+      if (!toggle) return;
 
-    var tabs  = document.querySelectorAll('.tool-api-tab');
-    var snips = { curl: document.getElementById('taSnipCurl'), fetch: document.getElementById('taSnipFetch'), axios: document.getElementById('taSnipAxios') };
-    var activeTab = 'curl';
+      var tabs = document.querySelectorAll('.tool-api-tab');
+      var snips = {
+        curl: document.getElementById('taSnipCurl'),
+        fetch: document.getElementById('taSnipFetch'),
+        axios: document.getElementById('taSnipAxios'),
+      };
+      var activeTab = 'curl';
 
-    toggle.addEventListener('click', function () { panel.classList.toggle('open'); });
-
-    tabs.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        tabs.forEach(function (b) { b.classList.remove('active'); });
-        Object.values(snips).forEach(function (s) { if (s) s.classList.remove('active'); });
-        btn.classList.add('active');
-        activeTab = btn.dataset.tab;
-        if (snips[activeTab]) snips[activeTab].classList.add('active');
+      toggle.addEventListener('click', function () {
+        panel.classList.toggle('open');
       });
-    });
 
-    copyBtn && copyBtn.addEventListener('click', function () {
-      var el = snips[activeTab];
-      if (!el) return;
-      navigator.clipboard.writeText(el.textContent || '').then(function () {
-        copyBtn.textContent = copiedLabel;
-        setTimeout(function () { copyBtn.textContent = copyLabel; }, 1500);
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          tabs.forEach(function (b) {
+            b.classList.remove('active');
+          });
+          Object.values(snips).forEach(function (s) {
+            if (s) s.classList.remove('active');
+          });
+          btn.classList.add('active');
+          activeTab = btn.dataset.tab;
+          if (snips[activeTab]) snips[activeTab].classList.add('active');
+        });
       });
-    });
-  })();
+
+      copyBtn &&
+        copyBtn.addEventListener('click', function () {
+          var el = snips[activeTab];
+          if (!el) return;
+          navigator.clipboard.writeText(el.textContent || '').then(function () {
+            copyBtn.textContent = copiedLabel;
+            setTimeout(function () {
+              copyBtn.textContent = copyLabel;
+            }, 1500);
+          });
+        });
+    })();
   </script>
 
-{related.length > 0 && (
-  <div class="tool-related">
-    <h2 class="tool-related-head">{isRu ? '// похожие инструменты' : '// related tools'}</h2>
-    <div class="tool-related-grid">
-      {related.map(t => {
-        const rSlug = toolSlug(t);
-        const rName = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
-        const rDesc = isRu ? (toolDescRu[t.name] ?? t.desc) : t.desc;
-        return (
-          <a class="tool-related-card" href={`${isRu ? '/ru' : ''}/tools/${rSlug}/`}>
-            <i class={`ti ${t.icon}`}></i>
-            <span class="tool-related-name">{rName}</span>
-            <span class="tool-related-desc">{rDesc}</span>
-          </a>
-        );
-      })}
-    </div>
-  </div>
-)}
+  {
+    related.length > 0 && (
+      <div class="tool-related">
+        <h2 class="tool-related-head">{isRu ? '// похожие инструменты' : '// related tools'}</h2>
+        <div class="tool-related-grid">
+          {related.map((t) => {
+            const rSlug = toolSlug(t);
+            const rName = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
+            const rDesc = isRu ? (toolDescRu[t.name] ?? t.desc) : t.desc;
+            return (
+              <a class="tool-related-card" href={`${isRu ? '/ru' : ''}/tools/${rSlug}/`}>
+                <i class={`ti ${t.icon}`} />
+                <span class="tool-related-name">{rName}</span>
+                <span class="tool-related-desc">{rDesc}</span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    )
+  }
 
-{content && (
-  <div class="tool-info">
-    <section class="tool-info-about">
-      <h2 class="tool-info-head">{isRu ? '// о инструменте' : '// about this tool'}</h2>
-      <p>{content.about}</p>
-    </section>
+  {
+    content && (
+      <div class="tool-info">
+        <section class="tool-info-about">
+          <h2 class="tool-info-head">{isRu ? '// о инструменте' : '// about this tool'}</h2>
+          <p>{content.about}</p>
+        </section>
 
-    <section class="tool-info-uses">
-      <h2 class="tool-info-head">{isRu ? '// когда использовать' : '// when to use'}</h2>
-      <ul>
-        {content.useCases.map(u => <li>{u}</li>)}
-      </ul>
-    </section>
+        <section class="tool-info-uses">
+          <h2 class="tool-info-head">{isRu ? '// когда использовать' : '// when to use'}</h2>
+          <ul>
+            {content.useCases.map((u) => (
+              <li>{u}</li>
+            ))}
+          </ul>
+        </section>
 
-    {content.faq.length > 0 && (
-      <section class="tool-info-faq">
-        <h2 class="tool-info-head">// faq</h2>
-        {content.faq.map(item => (
-          <div class="tool-faq-item">
-            <div class="tool-faq-q">{item.q}</div>
-            <div class="tool-faq-a">{item.a}</div>
-          </div>
-        ))}
-      </section>
-    )}
-  </div>
-)}
+        {content.faq.length > 0 && (
+          <section class="tool-info-faq">
+            <h2 class="tool-info-head">// faq</h2>
+            {content.faq.map((item) => (
+              <div class="tool-faq-item">
+                <div class="tool-faq-q">{item.q}</div>
+                <div class="tool-faq-a">{item.a}</div>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+    )
+  }
 </Base>

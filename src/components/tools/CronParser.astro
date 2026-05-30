@@ -1,9 +1,12 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 ---
+
 <style is:global>
   .cp {
     background: var(--surface);
@@ -21,7 +24,10 @@ const isRu = lang === 'ru';
     background: var(--surface-sunken);
   }
 
-  .cp-expr-wrap { flex: 1; min-width: 0; }
+  .cp-expr-wrap {
+    flex: 1;
+    min-width: 0;
+  }
 
   .cp-expr {
     width: 100%;
@@ -39,8 +45,12 @@ const isRu = lang === 'ru';
     transition: border-color 0.15s;
   }
 
-  .cp-expr:focus { border-color: var(--accent); }
-  .cp-expr.cp-err { border-color: var(--bad); }
+  .cp-expr:focus {
+    border-color: var(--accent);
+  }
+  .cp-expr.cp-err {
+    border-color: var(--bad);
+  }
 
   .cp-expr-hint {
     padding: 4px 13px 0;
@@ -50,7 +60,10 @@ const isRu = lang === 'ru';
     letter-spacing: 0.04em;
   }
 
-  .cp-presets-wrap { position: relative; flex-shrink: 0; }
+  .cp-presets-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
 
   .cp-presets-btn {
     font-family: 'JetBrains Mono', monospace;
@@ -68,7 +81,10 @@ const isRu = lang === 'ru';
     white-space: nowrap;
   }
 
-  .cp-presets-btn:hover { color: var(--ink); border-color: var(--line-strong); }
+  .cp-presets-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
 
   .cp-presets-menu {
     position: absolute;
@@ -77,7 +93,7 @@ const isRu = lang === 'ru';
     background: var(--surface);
     border: 0.5px solid var(--line-strong);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     z-index: 50;
     min-width: 260px;
     overflow: hidden;
@@ -94,10 +110,21 @@ const isRu = lang === 'ru';
     transition: background 0.1s;
   }
 
-  .cp-preset:last-child { border-bottom: none; }
-  .cp-preset:hover { background: var(--accent-soft); }
-  .cp-preset-lbl  { font-size: 14.5px; color: var(--ink); }
-  .cp-preset-expr { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
+  .cp-preset:last-child {
+    border-bottom: none;
+  }
+  .cp-preset:hover {
+    background: var(--accent-soft);
+  }
+  .cp-preset-lbl {
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .cp-preset-expr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
 
   .cp-summary {
     padding: 15px 18px;
@@ -112,8 +139,15 @@ const isRu = lang === 'ru';
     align-items: center;
   }
 
-  .cp-summary.ok  { color: var(--ink); }
-  .cp-summary.err { color: var(--bad); font-family: 'JetBrains Mono', monospace; font-size: 14.5px; font-weight: 400; }
+  .cp-summary.ok {
+    color: var(--ink);
+  }
+  .cp-summary.err {
+    color: var(--bad);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    font-weight: 400;
+  }
 
   .cp-fields {
     display: grid;
@@ -126,7 +160,9 @@ const isRu = lang === 'ru';
     border-right: 0.5px solid var(--line);
   }
 
-  .cp-field:last-child { border-right: none; }
+  .cp-field:last-child {
+    border-right: none;
+  }
 
   .cp-fval {
     font-family: 'JetBrains Mono', monospace;
@@ -224,28 +260,63 @@ const isRu = lang === 'ru';
     border: 0.5px solid var(--line);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: border-color 0.12s, background 0.12s;
+    transition:
+      border-color 0.12s,
+      background 0.12s;
   }
 
-  .cp-preset-card:hover { border-color: var(--accent); background: var(--accent-soft); }
-  .cp-preset-card .cp-preset-lbl  { font-size: 14.5px; color: var(--ink); }
-  .cp-preset-card .cp-preset-expr { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); flex-shrink: 0; }
+  .cp-preset-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .cp-preset-card .cp-preset-lbl {
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .cp-preset-card .cp-preset-expr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
 
   @media (max-width: 900px) {
-    .cp-fields { grid-template-columns: repeat(3, 1fr); }
-    .cp-field:nth-child(3) { border-right: none; }
-    .cp-field:nth-child(4) { border-top: 0.5px solid var(--line); }
-    .cp-field:nth-child(5) { border-top: 0.5px solid var(--line); }
-    .cp-runs { grid-template-columns: repeat(2, 1fr); }
+    .cp-fields {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .cp-field:nth-child(3) {
+      border-right: none;
+    }
+    .cp-field:nth-child(4) {
+      border-top: 0.5px solid var(--line);
+    }
+    .cp-field:nth-child(5) {
+      border-top: 0.5px solid var(--line);
+    }
+    .cp-runs {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 560px) {
-    .cp-fields { grid-template-columns: repeat(2, 1fr); }
-    .cp-field:nth-child(2n) { border-right: none; }
-    .cp-field:nth-child(n+3) { border-top: 0.5px solid var(--line); }
-    .cp-runs { grid-template-columns: 1fr; }
-    .cp-top { flex-wrap: wrap; }
-    .cp-presets-grid { grid-template-columns: 1fr; }
+    .cp-fields {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .cp-field:nth-child(2n) {
+      border-right: none;
+    }
+    .cp-field:nth-child(n + 3) {
+      border-top: 0.5px solid var(--line);
+    }
+    .cp-runs {
+      grid-template-columns: 1fr;
+    }
+    .cp-top {
+      flex-wrap: wrap;
+    }
+    .cp-presets-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
@@ -253,46 +324,61 @@ const isRu = lang === 'ru';
 <div class="cp">
   <div class="cp-top">
     <div class="cp-expr-wrap">
-      <input class="cp-expr" id="cpExpr" data-hist-main-input type="text" value="*/5 9-17 * * 1-5"
-             spellcheck="false" autocomplete="off" autocorrect="off" />
+      <input
+        class="cp-expr"
+        id="cpExpr"
+        data-hist-main-input
+        type="text"
+        value="*/5 9-17 * * 1-5"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+      />
       <div class="cp-expr-hint">
-        {isRu ? 'минута · час · день · месяц · день-недели' : 'minute · hour · day-of-month · month · day-of-week'}
+        {
+          isRu
+            ? 'минута · час · день · месяц · день-недели'
+            : 'minute · hour · day-of-month · month · day-of-week'
+        }
         <span class="local-badge" style="margin-left:10px;">// client-only</span>
       </div>
     </div>
     <div class="cp-presets-wrap">
       <button class="cp-presets-btn" id="cpPresetsBtn">
-        {isRu ? 'шаблоны' : 'presets'} <i class="ti ti-chevron-down"></i>
+        {isRu ? 'шаблоны' : 'presets'}
+        <i class="ti ti-chevron-down"></i>
       </button>
       <div class="cp-presets-menu" id="cpPresetsMenu" style="display:none"></div>
     </div>
   </div>
 
-  <div class="cp-summary" id="cpSummary">{isRu ? '— введите cron-выражение' : '— enter a cron expression'}</div>
+  <div class="cp-summary" id="cpSummary">
+    {isRu ? '— введите cron-выражение' : '— enter a cron expression'}
+  </div>
 
   <div class="cp-fields">
     <div class="cp-field">
-      <div class="cp-fval"  id="cpFvMin">*</div>
+      <div class="cp-fval" id="cpFvMin">*</div>
       <div class="cp-fname">{isRu ? 'минута' : 'minute'}</div>
       <div class="cp-fdesc" id="cpFdMin"></div>
     </div>
     <div class="cp-field">
-      <div class="cp-fval"  id="cpFvHour">*</div>
+      <div class="cp-fval" id="cpFvHour">*</div>
       <div class="cp-fname">{isRu ? 'час' : 'hour'}</div>
       <div class="cp-fdesc" id="cpFdHour"></div>
     </div>
     <div class="cp-field">
-      <div class="cp-fval"  id="cpFvDom">*</div>
+      <div class="cp-fval" id="cpFvDom">*</div>
       <div class="cp-fname">{isRu ? 'день' : 'day'}</div>
       <div class="cp-fdesc" id="cpFdDom"></div>
     </div>
     <div class="cp-field">
-      <div class="cp-fval"  id="cpFvMonth">*</div>
+      <div class="cp-fval" id="cpFvMonth">*</div>
       <div class="cp-fname">{isRu ? 'месяц' : 'month'}</div>
       <div class="cp-fdesc" id="cpFdMonth"></div>
     </div>
     <div class="cp-field">
-      <div class="cp-fval"  id="cpFvDow">*</div>
+      <div class="cp-fval" id="cpFvDow">*</div>
       <div class="cp-fname">{isRu ? 'день нед.' : 'weekday'}</div>
       <div class="cp-fdesc" id="cpFdDow"></div>
     </div>
@@ -300,7 +386,9 @@ const isRu = lang === 'ru';
 
   <div class="cp-runs-head">{isRu ? '// следующие 8 запусков' : '// next 8 runs'}</div>
   <div class="cp-runs" id="cpRuns">
-    <span class="cp-no-runs">{isRu ? '— сначала введите выражение' : '— parse a valid expression first'}</span>
+    <span class="cp-no-runs"
+      >{isRu ? '— сначала введите выражение' : '— parse a valid expression first'}</span
+    >
   </div>
 
   <div class="cp-presets-section">
@@ -310,515 +398,754 @@ const isRu = lang === 'ru';
 </div>
 
 <script is:inline define:vars={{ isRuLang: isRu }}>
-(function () {
-  var DOW_A = { SUN:0, MON:1, TUE:2, WED:3, THU:4, FRI:5, SAT:6 };
-  var MON_A = { JAN:1, FEB:2, MAR:3, APR:4, MAY:5, JUN:6, JUL:7, AUG:8, SEP:9, OCT:10, NOV:11, DEC:12 };
-  var DOW_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var MON_S = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var MON_L = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  (function () {
+    var DOW_A = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+    var MON_A = {
+      JAN: 1,
+      FEB: 2,
+      MAR: 3,
+      APR: 4,
+      MAY: 5,
+      JUN: 6,
+      JUL: 7,
+      AUG: 8,
+      SEP: 9,
+      OCT: 10,
+      NOV: 11,
+      DEC: 12,
+    };
+    var DOW_S = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var MON_S = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    var MON_L = [
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
 
-  var DOW_S_RU = ['вс','пн','вт','ср','чт','пт','сб'];
-  var MON_S_RU = ['','янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  var MON_L_RU = ['','января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    var DOW_S_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    var MON_S_RU = [
+      '',
+      'янв',
+      'фев',
+      'мар',
+      'апр',
+      'май',
+      'июн',
+      'июл',
+      'авг',
+      'сен',
+      'окт',
+      'ноя',
+      'дек',
+    ];
+    var MON_L_RU = [
+      '',
+      'января',
+      'февраля',
+      'марта',
+      'апреля',
+      'мая',
+      'июня',
+      'июля',
+      'августа',
+      'сентября',
+      'октября',
+      'ноября',
+      'декабря',
+    ];
 
-  var PRESETS = [
-    { lbl: 'every minute',            expr: '* * * * *' },
-    { lbl: 'every hour (on the :00)', expr: '0 * * * *' },
-    { lbl: 'daily at midnight',       expr: '0 0 * * *' },
-    { lbl: 'daily at noon',           expr: '0 12 * * *' },
-    { lbl: 'every 5 minutes',         expr: '*/5 * * * *' },
-    { lbl: 'every 15 minutes',        expr: '*/15 * * * *' },
-    { lbl: 'weekdays at 9 AM',        expr: '0 9 * * 1-5' },
-    { lbl: 'weekdays 9–5, every 5m',  expr: '*/5 9-17 * * 1-5' },
-    { lbl: '1st of every month',      expr: '0 0 1 * *' },
-    { lbl: 'every Sunday at midnight',expr: '0 0 * * 0' },
-  ];
+    var PRESETS = [
+      { lbl: 'every minute', expr: '* * * * *' },
+      { lbl: 'every hour (on the :00)', expr: '0 * * * *' },
+      { lbl: 'daily at midnight', expr: '0 0 * * *' },
+      { lbl: 'daily at noon', expr: '0 12 * * *' },
+      { lbl: 'every 5 minutes', expr: '*/5 * * * *' },
+      { lbl: 'every 15 minutes', expr: '*/15 * * * *' },
+      { lbl: 'weekdays at 9 AM', expr: '0 9 * * 1-5' },
+      { lbl: 'weekdays 9–5, every 5m', expr: '*/5 9-17 * * 1-5' },
+      { lbl: '1st of every month', expr: '0 0 1 * *' },
+      { lbl: 'every Sunday at midnight', expr: '0 0 * * 0' },
+    ];
 
-  var PRESETS_RU = [
-    { lbl: 'каждую минуту',                 expr: '* * * * *' },
-    { lbl: 'каждый час (в :00)',            expr: '0 * * * *' },
-    { lbl: 'ежедневно в полночь',           expr: '0 0 * * *' },
-    { lbl: 'ежедневно в полдень',           expr: '0 12 * * *' },
-    { lbl: 'каждые 5 минут',               expr: '*/5 * * * *' },
-    { lbl: 'каждые 15 минут',              expr: '*/15 * * * *' },
-    { lbl: 'будни в 9:00',                 expr: '0 9 * * 1-5' },
-    { lbl: 'будни 9–17, каждые 5 мин',     expr: '*/5 9-17 * * 1-5' },
-    { lbl: '1-го числа каждого месяца',    expr: '0 0 1 * *' },
-    { lbl: 'каждое воскресенье в полночь', expr: '0 0 * * 0' },
-  ];
+    var PRESETS_RU = [
+      { lbl: 'каждую минуту', expr: '* * * * *' },
+      { lbl: 'каждый час (в :00)', expr: '0 * * * *' },
+      { lbl: 'ежедневно в полночь', expr: '0 0 * * *' },
+      { lbl: 'ежедневно в полдень', expr: '0 12 * * *' },
+      { lbl: 'каждые 5 минут', expr: '*/5 * * * *' },
+      { lbl: 'каждые 15 минут', expr: '*/15 * * * *' },
+      { lbl: 'будни в 9:00', expr: '0 9 * * 1-5' },
+      { lbl: 'будни 9–17, каждые 5 мин', expr: '*/5 9-17 * * 1-5' },
+      { lbl: '1-го числа каждого месяца', expr: '0 0 1 * *' },
+      { lbl: 'каждое воскресенье в полночь', expr: '0 0 * * 0' },
+    ];
 
-  var ACTIVE_PRESETS = isRuLang ? PRESETS_RU : PRESETS;
+    var ACTIVE_PRESETS = isRuLang ? PRESETS_RU : PRESETS;
 
-  function pad2(n) { return String(n).padStart(2, '0'); }
+    function pad2(n) {
+      return String(n).padStart(2, '0');
+    }
 
-  function ordinal(n) {
-    var s = n % 100;
-    if (s >= 11 && s <= 13) return n + 'th';
-    switch (n % 10) { case 1: return n+'st'; case 2: return n+'nd'; case 3: return n+'rd'; }
-    return n + 'th';
-  }
+    function ordinal(n) {
+      var s = n % 100;
+      if (s >= 11 && s <= 13) return n + 'th';
+      switch (n % 10) {
+        case 1:
+          return n + 'st';
+        case 2:
+          return n + 'nd';
+        case 3:
+          return n + 'rd';
+      }
+      return n + 'th';
+    }
 
-  function ru_pl(n, one, few, many) {
-    var m10 = n % 10, m100 = n % 100;
-    if (m100 >= 11 && m100 <= 19) return n + ' ' + many;
-    if (m10 === 1) return n + ' ' + one;
-    if (m10 >= 2 && m10 <= 4) return n + ' ' + few;
-    return n + ' ' + many;
-  }
+    function ru_pl(n, one, few, many) {
+      var m10 = n % 10,
+        m100 = n % 100;
+      if (m100 >= 11 && m100 <= 19) return n + ' ' + many;
+      if (m10 === 1) return n + ' ' + one;
+      if (m10 >= 2 && m10 <= 4) return n + ' ' + few;
+      return n + ' ' + many;
+    }
 
-  function fmtHour(h) {
-    if (h === 0)  return '12 AM';
-    if (h === 12) return '12 PM';
-    return (h < 12 ? h : h - 12) + (h < 12 ? ' AM' : ' PM');
-  }
+    function fmtHour(h) {
+      if (h === 0) return '12 AM';
+      if (h === 12) return '12 PM';
+      return (h < 12 ? h : h - 12) + (h < 12 ? ' AM' : ' PM');
+    }
 
-  function fmtTime(h, m) {
-    return (h % 12 || 12) + ':' + pad2(m) + (h < 12 ? ' AM' : ' PM');
-  }
+    function fmtTime(h, m) {
+      return (h % 12 || 12) + ':' + pad2(m) + (h < 12 ? ' AM' : ' PM');
+    }
 
-  function fmtHourRu(h) { return pad2(h) + ':00'; }
-  function fmtTimeRu(h, m) { return pad2(h) + ':' + pad2(m); }
+    function fmtHourRu(h) {
+      return pad2(h) + ':00';
+    }
+    function fmtTimeRu(h, m) {
+      return pad2(h) + ':' + pad2(m);
+    }
 
-  function resolveAlias(s, aliases) {
-    var up = s.toUpperCase();
-    if (aliases && up in aliases) return aliases[up];
-    var n = parseInt(s, 10);
-    if (isNaN(n)) throw new Error('invalid value "' + s + '"');
-    return n;
-  }
+    function resolveAlias(s, aliases) {
+      var up = s.toUpperCase();
+      if (aliases && up in aliases) return aliases[up];
+      var n = parseInt(s, 10);
+      if (isNaN(n)) throw new Error('invalid value "' + s + '"');
+      return n;
+    }
 
-  function expand(field, lo, hi, aliases) {
-    if (field === '*') return null;
-    var result = [];
-    var seen   = {};
-    var segs   = field.split(',');
-    for (var si = 0; si < segs.length; si++) {
-      var seg      = segs[si];
-      var slash    = seg.indexOf('/');
-      var rangePart = slash >= 0 ? seg.slice(0, slash) : seg;
-      var step     = slash >= 0 ? parseInt(seg.slice(slash + 1), 10) : 1;
-      if (!step || step < 1) throw new Error('step must be ≥ 1');
-      var a, b;
-      if (rangePart === '*') { a = lo; b = hi; }
-      else {
-        var dash = rangePart.indexOf('-');
-        if (dash > 0) {
-          a = resolveAlias(rangePart.slice(0, dash), aliases);
-          b = resolveAlias(rangePart.slice(dash + 1), aliases);
+    function expand(field, lo, hi, aliases) {
+      if (field === '*') return null;
+      var result = [];
+      var seen = {};
+      var segs = field.split(',');
+      for (var si = 0; si < segs.length; si++) {
+        var seg = segs[si];
+        var slash = seg.indexOf('/');
+        var rangePart = slash >= 0 ? seg.slice(0, slash) : seg;
+        var step = slash >= 0 ? parseInt(seg.slice(slash + 1), 10) : 1;
+        if (!step || step < 1) throw new Error('step must be ≥ 1');
+        var a, b;
+        if (rangePart === '*') {
+          a = lo;
+          b = hi;
         } else {
-          a = b = resolveAlias(rangePart, aliases);
+          var dash = rangePart.indexOf('-');
+          if (dash > 0) {
+            a = resolveAlias(rangePart.slice(0, dash), aliases);
+            b = resolveAlias(rangePart.slice(dash + 1), aliases);
+          } else {
+            a = b = resolveAlias(rangePart, aliases);
+          }
+        }
+        for (var v = a; v <= b; v += step) {
+          if (!seen[v]) {
+            seen[v] = true;
+            result.push(v);
+          }
         }
       }
-      for (var v = a; v <= b; v += step) {
-        if (!seen[v]) { seen[v] = true; result.push(v); }
+      result.sort(function (a, b) {
+        return a - b;
+      });
+      return result;
+    }
+
+    function validate(field, lo, hi, aliases, name) {
+      if (field === '*') return;
+      var vals = expand(field, lo, hi, aliases);
+      for (var i = 0; i < vals.length; i++) {
+        if (vals[i] < lo || vals[i] > hi)
+          throw new Error(name + ' value ' + vals[i] + ' out of range ' + lo + '–' + hi);
       }
     }
-    result.sort(function (a, b) { return a - b; });
-    return result;
-  }
 
-  function validate(field, lo, hi, aliases, name) {
-    if (field === '*') return;
-    var vals = expand(field, lo, hi, aliases);
-    for (var i = 0; i < vals.length; i++) {
-      if (vals[i] < lo || vals[i] > hi)
-        throw new Error(name + ' value ' + vals[i] + ' out of range ' + lo + '–' + hi);
+    function parseCron(expr) {
+      var parts = expr.trim().split(/\s+/);
+      if (parts.length !== 5) throw new Error('expected 5 fields: min hour dom month dow');
+      return { min: parts[0], hour: parts[1], dom: parts[2], month: parts[3], dow: parts[4] };
     }
-  }
 
-  function parseCron(expr) {
-    var parts = expr.trim().split(/\s+/);
-    if (parts.length !== 5) throw new Error('expected 5 fields: min hour dom month dow');
-    return { min: parts[0], hour: parts[1], dom: parts[2], month: parts[3], dow: parts[4] };
-  }
+    /* ── English field descriptions ─────────────────────── */
 
-  /* ── English field descriptions ─────────────────────── */
-
-  function descMin(f) {
-    if (f === '*') return 'every minute';
-    var m = f.match(/^\*\/(\d+)$/);
-    if (m) return 'every ' + m[1] + ' min';
-    var vals = expand(f, 0, 59);
-    if (vals.length === 1) return 'at :' + pad2(vals[0]);
-    if (vals.length <= 4)  return ':' + vals.map(pad2).join(', :');
-    return vals.length + '× per hour';
-  }
-
-  function descHour(f) {
-    if (f === '*') return 'every hour';
-    var m = f.match(/^\*\/(\d+)$/);
-    if (m) return 'every ' + m[1] + 'h';
-    var rm = f.match(/^(\d+)-(\d+)$/);
-    if (rm) return fmtHour(+rm[1]) + ' – ' + fmtHour(+rm[2]);
-    var vals = expand(f, 0, 23);
-    if (vals.length === 1) return fmtHour(vals[0]);
-    if (vals.length <= 3)  return vals.map(fmtHour).join(', ');
-    return vals.length + '× per day';
-  }
-
-  function descDom(f) {
-    if (f === '*') return 'any date';
-    var vals = expand(f, 1, 31);
-    if (vals.length === 1) return ordinal(vals[0]);
-    if (vals.length <= 4)  return vals.map(ordinal).join(', ');
-    return vals.length + ' dates';
-  }
-
-  function descMonth(f) {
-    if (f === '*') return 'any month';
-    var vals = expand(f, 1, 12, MON_A);
-    if (vals.length === 1) return MON_L[vals[0]];
-    if (vals.length <= 4)  return vals.map(function (v) { return MON_S[v]; }).join(', ');
-    return vals.length + ' months';
-  }
-
-  function descDow(f) {
-    if (f === '*') return 'any day';
-    if (f === '1-5') return 'Mon – Fri';
-    if (f === '0,6' || f === '6,0') return 'weekends';
-    var norm = f.replace(/\b7\b/g, '0');
-    var raw  = expand(norm, 0, 6, DOW_A) || [];
-    var vals = []; var seen = {};
-    for (var i = 0; i < raw.length; i++) {
-      if (!seen[raw[i]]) { seen[raw[i]] = true; vals.push(raw[i]); }
+    function descMin(f) {
+      if (f === '*') return 'every minute';
+      var m = f.match(/^\*\/(\d+)$/);
+      if (m) return 'every ' + m[1] + ' min';
+      var vals = expand(f, 0, 59);
+      if (vals.length === 1) return 'at :' + pad2(vals[0]);
+      if (vals.length <= 4) return ':' + vals.map(pad2).join(', :');
+      return vals.length + '× per hour';
     }
-    vals.sort(function (a, b) { return a - b; });
-    if (vals.length === 1) return DOW_S[vals[0]];
-    var isRange = vals.length > 1 && (vals[vals.length-1] - vals[0] === vals.length - 1);
-    if (isRange) return DOW_S[vals[0]] + ' – ' + DOW_S[vals[vals.length-1]];
-    if (vals.length <= 3) return vals.map(function (v) { return DOW_S[v]; }).join(', ');
-    return vals.length + ' days/week';
-  }
 
-  function summarize(f) {
-    var parts = [];
-    if (f.min === '*' && f.hour === '*') {
-      parts.push('every minute');
-    } else if (f.min === '0' && f.hour === '*') {
-      parts.push('at the top of every hour');
-    } else if (f.hour === '*') {
-      var sm = f.min.match(/^\*\/(\d+)$/);
-      parts.push(sm ? 'every ' + sm[1] + ' minutes' : descMin(f.min) + ' past every hour');
-    } else {
-      var sm2  = f.min.match(/^\*\/(\d+)$/);
-      var minV = f.min === '*'  ? null : expand(f.min,  0, 59);
-      var hrV  = f.hour === '*' ? null : expand(f.hour, 0, 23);
-      if (sm2) {
-        var rm = f.hour.match(/^(\d+)-(\d+)$/);
-        parts.push('every ' + sm2[1] + ' minutes' +
-          (rm ? ', ' + fmtHour(+rm[1]) + ' to ' + fmtHour(+rm[2]) : ''));
-      } else if (minV && minV.length === 1 && hrV && hrV.length === 1) {
-        parts.push('at ' + fmtTime(hrV[0], minV[0]));
-      } else if (f.min === '0' && hrV) {
-        parts.push('at ' + hrV.map(fmtHour).join(', '));
+    function descHour(f) {
+      if (f === '*') return 'every hour';
+      var m = f.match(/^\*\/(\d+)$/);
+      if (m) return 'every ' + m[1] + 'h';
+      var rm = f.match(/^(\d+)-(\d+)$/);
+      if (rm) return fmtHour(+rm[1]) + ' – ' + fmtHour(+rm[2]);
+      var vals = expand(f, 0, 23);
+      if (vals.length === 1) return fmtHour(vals[0]);
+      if (vals.length <= 3) return vals.map(fmtHour).join(', ');
+      return vals.length + '× per day';
+    }
+
+    function descDom(f) {
+      if (f === '*') return 'any date';
+      var vals = expand(f, 1, 31);
+      if (vals.length === 1) return ordinal(vals[0]);
+      if (vals.length <= 4) return vals.map(ordinal).join(', ');
+      return vals.length + ' dates';
+    }
+
+    function descMonth(f) {
+      if (f === '*') return 'any month';
+      var vals = expand(f, 1, 12, MON_A);
+      if (vals.length === 1) return MON_L[vals[0]];
+      if (vals.length <= 4)
+        return vals
+          .map(function (v) {
+            return MON_S[v];
+          })
+          .join(', ');
+      return vals.length + ' months';
+    }
+
+    function descDow(f) {
+      if (f === '*') return 'any day';
+      if (f === '1-5') return 'Mon – Fri';
+      if (f === '0,6' || f === '6,0') return 'weekends';
+      var norm = f.replace(/\b7\b/g, '0');
+      var raw = expand(norm, 0, 6, DOW_A) || [];
+      var vals = [];
+      var seen = {};
+      for (var i = 0; i < raw.length; i++) {
+        if (!seen[raw[i]]) {
+          seen[raw[i]] = true;
+          vals.push(raw[i]);
+        }
+      }
+      vals.sort(function (a, b) {
+        return a - b;
+      });
+      if (vals.length === 1) return DOW_S[vals[0]];
+      var isRange = vals.length > 1 && vals[vals.length - 1] - vals[0] === vals.length - 1;
+      if (isRange) return DOW_S[vals[0]] + ' – ' + DOW_S[vals[vals.length - 1]];
+      if (vals.length <= 3)
+        return vals
+          .map(function (v) {
+            return DOW_S[v];
+          })
+          .join(', ');
+      return vals.length + ' days/week';
+    }
+
+    function summarize(f) {
+      var parts = [];
+      if (f.min === '*' && f.hour === '*') {
+        parts.push('every minute');
+      } else if (f.min === '0' && f.hour === '*') {
+        parts.push('at the top of every hour');
+      } else if (f.hour === '*') {
+        var sm = f.min.match(/^\*\/(\d+)$/);
+        parts.push(sm ? 'every ' + sm[1] + ' minutes' : descMin(f.min) + ' past every hour');
       } else {
-        parts.push(descMin(f.min) + ' past ' + descHour(f.hour));
+        var sm2 = f.min.match(/^\*\/(\d+)$/);
+        var minV = f.min === '*' ? null : expand(f.min, 0, 59);
+        var hrV = f.hour === '*' ? null : expand(f.hour, 0, 23);
+        if (sm2) {
+          var rm = f.hour.match(/^(\d+)-(\d+)$/);
+          parts.push(
+            'every ' +
+              sm2[1] +
+              ' minutes' +
+              (rm ? ', ' + fmtHour(+rm[1]) + ' to ' + fmtHour(+rm[2]) : '')
+          );
+        } else if (minV && minV.length === 1 && hrV && hrV.length === 1) {
+          parts.push('at ' + fmtTime(hrV[0], minV[0]));
+        } else if (f.min === '0' && hrV) {
+          parts.push('at ' + hrV.map(fmtHour).join(', '));
+        } else {
+          parts.push(descMin(f.min) + ' past ' + descHour(f.hour));
+        }
       }
+      var hasDom = f.dom !== '*',
+        hasDow = f.dow !== '*';
+      if (hasDom && hasDow) {
+        parts.push('on the ' + descDom(f.dom) + ' (if ' + descDow(f.dow) + ')');
+      } else if (hasDom) {
+        parts.push('on the ' + descDom(f.dom));
+      } else if (hasDow) {
+        parts.push(descDow(f.dow));
+      }
+      if (f.month !== '*') parts.push('in ' + descMonth(f.month));
+      return parts.join(', ');
     }
-    var hasDom = f.dom !== '*', hasDow = f.dow !== '*';
-    if (hasDom && hasDow) {
-      parts.push('on the ' + descDom(f.dom) + ' (if ' + descDow(f.dow) + ')');
-    } else if (hasDom) {
-      parts.push('on the ' + descDom(f.dom));
-    } else if (hasDow) {
-      parts.push(descDow(f.dow));
+
+    function fmtRun(d) {
+      var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      var mons = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return (
+        days[d.getDay()] +
+        ' ' +
+        mons[d.getMonth()] +
+        ' ' +
+        d.getDate() +
+        ' · ' +
+        pad2(d.getHours()) +
+        ':' +
+        pad2(d.getMinutes())
+      );
     }
-    if (f.month !== '*') parts.push('in ' + descMonth(f.month));
-    return parts.join(', ');
-  }
 
-  function fmtRun(d) {
-    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    var mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return days[d.getDay()] + ' ' + mons[d.getMonth()] + ' ' + d.getDate() +
-           ' · ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-  }
+    /* ── Russian field descriptions ─────────────────────── */
 
-  /* ── Russian field descriptions ─────────────────────── */
-
-  function descMinRu(f) {
-    if (f === '*') return 'каждую минуту';
-    var m = f.match(/^\*\/(\d+)$/);
-    if (m) return 'каждые ' + ru_pl(+m[1], 'минуту', 'минуты', 'минут');
-    var vals = expand(f, 0, 59);
-    if (vals.length === 1) return 'в :' + pad2(vals[0]);
-    if (vals.length <= 4)  return ':' + vals.map(pad2).join(', :');
-    return vals.length + '× в час';
-  }
-
-  function descHourRu(f) {
-    if (f === '*') return 'каждый час';
-    var m = f.match(/^\*\/(\d+)$/);
-    if (m) return 'каждые ' + ru_pl(+m[1], 'час', 'часа', 'часов');
-    var rm = f.match(/^(\d+)-(\d+)$/);
-    if (rm) return fmtHourRu(+rm[1]) + ' – ' + fmtHourRu(+rm[2]);
-    var vals = expand(f, 0, 23);
-    if (vals.length === 1) return 'в ' + fmtHourRu(vals[0]);
-    if (vals.length <= 3)  return 'в ' + vals.map(fmtHourRu).join(', ');
-    return vals.length + '× в день';
-  }
-
-  function descDomRu(f) {
-    if (f === '*') return 'любая дата';
-    var vals = expand(f, 1, 31);
-    if (vals.length === 1) return vals[0] + '-го числа';
-    if (vals.length <= 4)  return vals.map(function(v) { return v + '-го'; }).join(', ');
-    return vals.length + ' дат';
-  }
-
-  function descMonthRu(f) {
-    if (f === '*') return 'любой месяц';
-    var vals = expand(f, 1, 12, MON_A);
-    if (vals.length === 1) return MON_L_RU[vals[0]];
-    if (vals.length <= 4)  return vals.map(function(v) { return MON_S_RU[v]; }).join(', ');
-    return vals.length + ' месяцев';
-  }
-
-  function descDowRu(f) {
-    if (f === '*') return 'любой день';
-    if (f === '1-5') return 'пн – пт';
-    if (f === '0,6' || f === '6,0') return 'выходные';
-    var norm = f.replace(/\b7\b/g, '0');
-    var raw  = expand(norm, 0, 6, DOW_A) || [];
-    var vals = []; var seen = {};
-    for (var i = 0; i < raw.length; i++) {
-      if (!seen[raw[i]]) { seen[raw[i]] = true; vals.push(raw[i]); }
+    function descMinRu(f) {
+      if (f === '*') return 'каждую минуту';
+      var m = f.match(/^\*\/(\d+)$/);
+      if (m) return 'каждые ' + ru_pl(+m[1], 'минуту', 'минуты', 'минут');
+      var vals = expand(f, 0, 59);
+      if (vals.length === 1) return 'в :' + pad2(vals[0]);
+      if (vals.length <= 4) return ':' + vals.map(pad2).join(', :');
+      return vals.length + '× в час';
     }
-    vals.sort(function (a, b) { return a - b; });
-    if (vals.length === 1) return DOW_S_RU[vals[0]];
-    var isRange = vals.length > 1 && (vals[vals.length-1] - vals[0] === vals.length - 1);
-    if (isRange) return DOW_S_RU[vals[0]] + ' – ' + DOW_S_RU[vals[vals.length-1]];
-    if (vals.length <= 3) return vals.map(function(v) { return DOW_S_RU[v]; }).join(', ');
-    return vals.length + ' дней/нед.';
-  }
 
-  function summarizeRu(f) {
-    var parts = [];
-    if (f.min === '*' && f.hour === '*') {
-      parts.push('каждую минуту');
-    } else if (f.min === '0' && f.hour === '*') {
-      parts.push('в начале каждого часа');
-    } else if (f.hour === '*') {
-      var sm = f.min.match(/^\*\/(\d+)$/);
-      parts.push(sm ? 'каждые ' + ru_pl(+sm[1], 'минуту', 'минуты', 'минут') : descMinRu(f.min) + ' каждого часа');
-    } else {
-      var sm2  = f.min.match(/^\*\/(\d+)$/);
-      var minV = f.min === '*'  ? null : expand(f.min,  0, 59);
-      var hrV  = f.hour === '*' ? null : expand(f.hour, 0, 23);
-      if (sm2) {
-        var rm = f.hour.match(/^(\d+)-(\d+)$/);
-        parts.push('каждые ' + ru_pl(+sm2[1], 'минуту', 'минуты', 'минут') +
-          (rm ? ', с ' + fmtHourRu(+rm[1]) + ' по ' + fmtHourRu(+rm[2]) : ''));
-      } else if (minV && minV.length === 1 && hrV && hrV.length === 1) {
-        parts.push('в ' + fmtTimeRu(hrV[0], minV[0]));
-      } else if (f.min === '0' && hrV) {
-        parts.push('в ' + hrV.map(fmtHourRu).join(', '));
+    function descHourRu(f) {
+      if (f === '*') return 'каждый час';
+      var m = f.match(/^\*\/(\d+)$/);
+      if (m) return 'каждые ' + ru_pl(+m[1], 'час', 'часа', 'часов');
+      var rm = f.match(/^(\d+)-(\d+)$/);
+      if (rm) return fmtHourRu(+rm[1]) + ' – ' + fmtHourRu(+rm[2]);
+      var vals = expand(f, 0, 23);
+      if (vals.length === 1) return 'в ' + fmtHourRu(vals[0]);
+      if (vals.length <= 3) return 'в ' + vals.map(fmtHourRu).join(', ');
+      return vals.length + '× в день';
+    }
+
+    function descDomRu(f) {
+      if (f === '*') return 'любая дата';
+      var vals = expand(f, 1, 31);
+      if (vals.length === 1) return vals[0] + '-го числа';
+      if (vals.length <= 4)
+        return vals
+          .map(function (v) {
+            return v + '-го';
+          })
+          .join(', ');
+      return vals.length + ' дат';
+    }
+
+    function descMonthRu(f) {
+      if (f === '*') return 'любой месяц';
+      var vals = expand(f, 1, 12, MON_A);
+      if (vals.length === 1) return MON_L_RU[vals[0]];
+      if (vals.length <= 4)
+        return vals
+          .map(function (v) {
+            return MON_S_RU[v];
+          })
+          .join(', ');
+      return vals.length + ' месяцев';
+    }
+
+    function descDowRu(f) {
+      if (f === '*') return 'любой день';
+      if (f === '1-5') return 'пн – пт';
+      if (f === '0,6' || f === '6,0') return 'выходные';
+      var norm = f.replace(/\b7\b/g, '0');
+      var raw = expand(norm, 0, 6, DOW_A) || [];
+      var vals = [];
+      var seen = {};
+      for (var i = 0; i < raw.length; i++) {
+        if (!seen[raw[i]]) {
+          seen[raw[i]] = true;
+          vals.push(raw[i]);
+        }
+      }
+      vals.sort(function (a, b) {
+        return a - b;
+      });
+      if (vals.length === 1) return DOW_S_RU[vals[0]];
+      var isRange = vals.length > 1 && vals[vals.length - 1] - vals[0] === vals.length - 1;
+      if (isRange) return DOW_S_RU[vals[0]] + ' – ' + DOW_S_RU[vals[vals.length - 1]];
+      if (vals.length <= 3)
+        return vals
+          .map(function (v) {
+            return DOW_S_RU[v];
+          })
+          .join(', ');
+      return vals.length + ' дней/нед.';
+    }
+
+    function summarizeRu(f) {
+      var parts = [];
+      if (f.min === '*' && f.hour === '*') {
+        parts.push('каждую минуту');
+      } else if (f.min === '0' && f.hour === '*') {
+        parts.push('в начале каждого часа');
+      } else if (f.hour === '*') {
+        var sm = f.min.match(/^\*\/(\d+)$/);
+        parts.push(
+          sm
+            ? 'каждые ' + ru_pl(+sm[1], 'минуту', 'минуты', 'минут')
+            : descMinRu(f.min) + ' каждого часа'
+        );
       } else {
-        parts.push(descMinRu(f.min) + ' ' + descHourRu(f.hour));
+        var sm2 = f.min.match(/^\*\/(\d+)$/);
+        var minV = f.min === '*' ? null : expand(f.min, 0, 59);
+        var hrV = f.hour === '*' ? null : expand(f.hour, 0, 23);
+        if (sm2) {
+          var rm = f.hour.match(/^(\d+)-(\d+)$/);
+          parts.push(
+            'каждые ' +
+              ru_pl(+sm2[1], 'минуту', 'минуты', 'минут') +
+              (rm ? ', с ' + fmtHourRu(+rm[1]) + ' по ' + fmtHourRu(+rm[2]) : '')
+          );
+        } else if (minV && minV.length === 1 && hrV && hrV.length === 1) {
+          parts.push('в ' + fmtTimeRu(hrV[0], minV[0]));
+        } else if (f.min === '0' && hrV) {
+          parts.push('в ' + hrV.map(fmtHourRu).join(', '));
+        } else {
+          parts.push(descMinRu(f.min) + ' ' + descHourRu(f.hour));
+        }
       }
-    }
-    var hasDom = f.dom !== '*', hasDow = f.dow !== '*';
-    if (hasDom && hasDow) {
-      parts.push(descDomRu(f.dom) + ' (если ' + descDowRu(f.dow) + ')');
-    } else if (hasDom) {
-      parts.push(descDomRu(f.dom));
-    } else if (hasDow) {
-      parts.push(descDowRu(f.dow));
-    }
-    if (f.month !== '*') parts.push('в ' + descMonthRu(f.month));
-    return parts.join(', ');
-  }
-
-  function fmtRunRu(d) {
-    var days = ['вс','пн','вт','ср','чт','пт','сб'];
-    var mons = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    return days[d.getDay()] + ' ' + mons[d.getMonth()] + ' ' + d.getDate() +
-           ' · ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-  }
-
-  /* ── Next runs ──────────────────────────────────────── */
-
-  function getNextRuns(f, count) {
-    var minV   = f.min   === '*' ? null : expand(f.min,   0, 59);
-    var hrV    = f.hour  === '*' ? null : expand(f.hour,  0, 23);
-    var domV   = f.dom   === '*' ? null : expand(f.dom,   1, 31);
-    var monV   = f.month === '*' ? null : expand(f.month, 1, 12, MON_A);
-    var rawDow = f.dow   === '*' ? null : f.dow.replace(/\b7\b/g, '0');
-    var dowArr = rawDow ? expand(rawDow, 0, 6, DOW_A) : null;
-    var dowSet = null;
-    if (dowArr) {
-      dowSet = {};
-      for (var i = 0; i < dowArr.length; i++) dowSet[dowArr[i]] = true;
-    }
-
-    var now    = new Date();
-    var d      = new Date(now);
-    d.setSeconds(0, 0);
-    d.setMinutes(d.getMinutes() + 1);
-
-    var runs  = [];
-    var limit = new Date(now.getTime() + 366 * 24 * 60 * 60 * 1000);
-
-    while (runs.length < count && d < limit) {
-      var mn = d.getMinutes(), hr = d.getHours(), dt = d.getDate(), mo = d.getMonth() + 1, dw = d.getDay();
-      if (
-        (!minV || minV.indexOf(mn) >= 0) &&
-        (!hrV  || hrV.indexOf(hr)  >= 0) &&
-        (!domV || domV.indexOf(dt) >= 0) &&
-        (!monV || monV.indexOf(mo) >= 0) &&
-        (!dowSet || dowSet[dw])
-      ) {
-        runs.push(new Date(d));
+      var hasDom = f.dom !== '*',
+        hasDow = f.dow !== '*';
+      if (hasDom && hasDow) {
+        parts.push(descDomRu(f.dom) + ' (если ' + descDowRu(f.dow) + ')');
+      } else if (hasDom) {
+        parts.push(descDomRu(f.dom));
+      } else if (hasDow) {
+        parts.push(descDowRu(f.dow));
       }
+      if (f.month !== '*') parts.push('в ' + descMonthRu(f.month));
+      return parts.join(', ');
+    }
+
+    function fmtRunRu(d) {
+      var days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+      var mons = [
+        'янв',
+        'фев',
+        'мар',
+        'апр',
+        'май',
+        'июн',
+        'июл',
+        'авг',
+        'сен',
+        'окт',
+        'ноя',
+        'дек',
+      ];
+      return (
+        days[d.getDay()] +
+        ' ' +
+        mons[d.getMonth()] +
+        ' ' +
+        d.getDate() +
+        ' · ' +
+        pad2(d.getHours()) +
+        ':' +
+        pad2(d.getMinutes())
+      );
+    }
+
+    /* ── Next runs ──────────────────────────────────────── */
+
+    function getNextRuns(f, count) {
+      var minV = f.min === '*' ? null : expand(f.min, 0, 59);
+      var hrV = f.hour === '*' ? null : expand(f.hour, 0, 23);
+      var domV = f.dom === '*' ? null : expand(f.dom, 1, 31);
+      var monV = f.month === '*' ? null : expand(f.month, 1, 12, MON_A);
+      var rawDow = f.dow === '*' ? null : f.dow.replace(/\b7\b/g, '0');
+      var dowArr = rawDow ? expand(rawDow, 0, 6, DOW_A) : null;
+      var dowSet = null;
+      if (dowArr) {
+        dowSet = {};
+        for (var i = 0; i < dowArr.length; i++) dowSet[dowArr[i]] = true;
+      }
+
+      var now = new Date();
+      var d = new Date(now);
+      d.setSeconds(0, 0);
       d.setMinutes(d.getMinutes() + 1);
-    }
-    return runs;
-  }
 
-  /* ── DOM refs ───────────────────────────────────────── */
+      var runs = [];
+      var limit = new Date(now.getTime() + 366 * 24 * 60 * 60 * 1000);
 
-  var exprEl    = document.getElementById('cpExpr');
-  var summaryEl = document.getElementById('cpSummary');
-  var fvMin     = document.getElementById('cpFvMin');
-  var fvHour    = document.getElementById('cpFvHour');
-  var fvDom     = document.getElementById('cpFvDom');
-  var fvMonth   = document.getElementById('cpFvMonth');
-  var fvDow     = document.getElementById('cpFvDow');
-  var fdMin     = document.getElementById('cpFdMin');
-  var fdHour    = document.getElementById('cpFdHour');
-  var fdDom     = document.getElementById('cpFdDom');
-  var fdMonth   = document.getElementById('cpFdMonth');
-  var fdDow     = document.getElementById('cpFdDow');
-  var runsEl    = document.getElementById('cpRuns');
-
-  var NO_RUNS_MSG  = isRuLang ? '— сначала введите выражение' : '— parse a valid expression first';
-  var NO_OCCUR_MSG = isRuLang ? 'нет запусков в ближайший год' : 'no occurrences found in the next year';
-  var ERR_FIX_MSG  = isRuLang ? '— исправьте выражение выше' : '— fix the expression above';
-  var EMPTY_MSG    = isRuLang ? '— введите cron-выражение' : '— enter a cron expression';
-
-  /* ── Render ─────────────────────────────────────────── */
-
-  function render() {
-    var raw = exprEl.value.trim();
-    if (!raw) {
-      summaryEl.textContent = EMPTY_MSG;
-      summaryEl.className   = 'cp-summary';
-      runsEl.innerHTML      = '<span class="cp-no-runs">' + NO_RUNS_MSG + '</span>';
-      return;
+      while (runs.length < count && d < limit) {
+        var mn = d.getMinutes(),
+          hr = d.getHours(),
+          dt = d.getDate(),
+          mo = d.getMonth() + 1,
+          dw = d.getDay();
+        if (
+          (!minV || minV.indexOf(mn) >= 0) &&
+          (!hrV || hrV.indexOf(hr) >= 0) &&
+          (!domV || domV.indexOf(dt) >= 0) &&
+          (!monV || monV.indexOf(mo) >= 0) &&
+          (!dowSet || dowSet[dw])
+        ) {
+          runs.push(new Date(d));
+        }
+        d.setMinutes(d.getMinutes() + 1);
+      }
+      return runs;
     }
 
-    try {
-      var f = parseCron(raw);
-      validate(f.min,   0, 59, null,  'minute');
-      validate(f.hour,  0, 23, null,  'hour');
-      validate(f.dom,   1, 31, null,  'day');
-      validate(f.month, 1, 12, MON_A, 'month');
-      validate(f.dow,   0,  7, DOW_A, 'weekday');
+    /* ── DOM refs ───────────────────────────────────────── */
 
-      exprEl.classList.remove('cp-err');
+    var exprEl = document.getElementById('cpExpr');
+    var summaryEl = document.getElementById('cpSummary');
+    var fvMin = document.getElementById('cpFvMin');
+    var fvHour = document.getElementById('cpFvHour');
+    var fvDom = document.getElementById('cpFvDom');
+    var fvMonth = document.getElementById('cpFvMonth');
+    var fvDow = document.getElementById('cpFvDow');
+    var fdMin = document.getElementById('cpFdMin');
+    var fdHour = document.getElementById('cpFdHour');
+    var fdDom = document.getElementById('cpFdDom');
+    var fdMonth = document.getElementById('cpFdMonth');
+    var fdDow = document.getElementById('cpFdDow');
+    var runsEl = document.getElementById('cpRuns');
 
-      summaryEl.textContent = isRuLang ? summarizeRu(f) : summarize(f);
-      summaryEl.className   = 'cp-summary ok';
-      if (window.pushHistory) window.pushHistory('cron parser', summaryEl.textContent, exprEl.value.trim());
-      summaryEl.classList.remove('flash-ok'); void summaryEl.offsetWidth; summaryEl.classList.add('flash-ok');
+    var NO_RUNS_MSG = isRuLang ? '— сначала введите выражение' : '— parse a valid expression first';
+    var NO_OCCUR_MSG = isRuLang
+      ? 'нет запусков в ближайший год'
+      : 'no occurrences found in the next year';
+    var ERR_FIX_MSG = isRuLang ? '— исправьте выражение выше' : '— fix the expression above';
+    var EMPTY_MSG = isRuLang ? '— введите cron-выражение' : '— enter a cron expression';
 
-      fvMin.textContent   = f.min;   fdMin.textContent   = isRuLang ? descMinRu(f.min)   : descMin(f.min);
-      fvHour.textContent  = f.hour;  fdHour.textContent  = isRuLang ? descHourRu(f.hour) : descHour(f.hour);
-      fvDom.textContent   = f.dom;   fdDom.textContent   = isRuLang ? descDomRu(f.dom)   : descDom(f.dom);
-      fvMonth.textContent = f.month; fdMonth.textContent = isRuLang ? descMonthRu(f.month): descMonth(f.month);
-      fvDow.textContent   = f.dow;   fdDow.textContent   = isRuLang ? descDowRu(f.dow)   : descDow(f.dow);
+    /* ── Render ─────────────────────────────────────────── */
 
-      var runs = getNextRuns(f, 8);
-      runsEl.innerHTML = runs.length === 0
-        ? '<span class="cp-no-runs">' + NO_OCCUR_MSG + '</span>'
-        : runs.map(function (d, i) {
-            return '<span class="cp-run"><span class="cp-run-n">' + (i + 1) + '</span>' +
-              (isRuLang ? fmtRunRu(d) : fmtRun(d)) + '</span>';
-          }).join('');
-    } catch (e) {
-      exprEl.classList.add('cp-err');
-      summaryEl.textContent = '// ' + e.message;
-      summaryEl.className   = 'cp-summary err';
-      runsEl.innerHTML      = '<span class="cp-no-runs">' + ERR_FIX_MSG + '</span>';
+    function render() {
+      var raw = exprEl.value.trim();
+      if (!raw) {
+        summaryEl.textContent = EMPTY_MSG;
+        summaryEl.className = 'cp-summary';
+        runsEl.innerHTML = '<span class="cp-no-runs">' + NO_RUNS_MSG + '</span>';
+        return;
+      }
+
+      try {
+        var f = parseCron(raw);
+        validate(f.min, 0, 59, null, 'minute');
+        validate(f.hour, 0, 23, null, 'hour');
+        validate(f.dom, 1, 31, null, 'day');
+        validate(f.month, 1, 12, MON_A, 'month');
+        validate(f.dow, 0, 7, DOW_A, 'weekday');
+
+        exprEl.classList.remove('cp-err');
+
+        summaryEl.textContent = isRuLang ? summarizeRu(f) : summarize(f);
+        summaryEl.className = 'cp-summary ok';
+        if (window.pushHistory)
+          window.pushHistory('cron parser', summaryEl.textContent, exprEl.value.trim());
+        summaryEl.classList.remove('flash-ok');
+        void summaryEl.offsetWidth;
+        summaryEl.classList.add('flash-ok');
+
+        fvMin.textContent = f.min;
+        fdMin.textContent = isRuLang ? descMinRu(f.min) : descMin(f.min);
+        fvHour.textContent = f.hour;
+        fdHour.textContent = isRuLang ? descHourRu(f.hour) : descHour(f.hour);
+        fvDom.textContent = f.dom;
+        fdDom.textContent = isRuLang ? descDomRu(f.dom) : descDom(f.dom);
+        fvMonth.textContent = f.month;
+        fdMonth.textContent = isRuLang ? descMonthRu(f.month) : descMonth(f.month);
+        fvDow.textContent = f.dow;
+        fdDow.textContent = isRuLang ? descDowRu(f.dow) : descDow(f.dow);
+
+        var runs = getNextRuns(f, 8);
+        runsEl.innerHTML =
+          runs.length === 0
+            ? '<span class="cp-no-runs">' + NO_OCCUR_MSG + '</span>'
+            : runs
+                .map(function (d, i) {
+                  return (
+                    '<span class="cp-run"><span class="cp-run-n">' +
+                    (i + 1) +
+                    '</span>' +
+                    (isRuLang ? fmtRunRu(d) : fmtRun(d)) +
+                    '</span>'
+                  );
+                })
+                .join('');
+      } catch (e) {
+        exprEl.classList.add('cp-err');
+        summaryEl.textContent = '// ' + e.message;
+        summaryEl.className = 'cp-summary err';
+        runsEl.innerHTML = '<span class="cp-no-runs">' + ERR_FIX_MSG + '</span>';
+      }
     }
-  }
 
-  /* ── Presets dropdown ───────────────────────────────── */
+    /* ── Presets dropdown ───────────────────────────────── */
 
-  var menuEl = document.getElementById('cpPresetsMenu');
-  menuEl.innerHTML = ACTIVE_PRESETS.map(function (p) {
-    return '<div class="cp-preset" data-expr="' + p.expr + '">' +
-           '<span class="cp-preset-lbl">' + p.lbl + '</span>' +
-           '<span class="cp-preset-expr">' + p.expr + '</span>' +
-           '</div>';
-  }).join('');
+    var menuEl = document.getElementById('cpPresetsMenu');
+    menuEl.innerHTML = ACTIVE_PRESETS.map(function (p) {
+      return (
+        '<div class="cp-preset" data-expr="' +
+        p.expr +
+        '">' +
+        '<span class="cp-preset-lbl">' +
+        p.lbl +
+        '</span>' +
+        '<span class="cp-preset-expr">' +
+        p.expr +
+        '</span>' +
+        '</div>'
+      );
+    }).join('');
 
-  document.getElementById('cpPresetsBtn').addEventListener('click', function (e) {
-    e.stopPropagation();
-    menuEl.style.display = menuEl.style.display === 'none' ? 'block' : 'none';
-  });
+    document.getElementById('cpPresetsBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      menuEl.style.display = menuEl.style.display === 'none' ? 'block' : 'none';
+    });
 
-  menuEl.addEventListener('click', function (e) {
-    var item = e.target.closest('.cp-preset');
-    if (!item) return;
-    exprEl.value = item.dataset.expr;
-    menuEl.style.display = 'none';
+    menuEl.addEventListener('click', function (e) {
+      var item = e.target.closest('.cp-preset');
+      if (!item) return;
+      exprEl.value = item.dataset.expr;
+      menuEl.style.display = 'none';
+      render();
+    });
+
+    document.addEventListener('click', function () {
+      menuEl.style.display = 'none';
+    });
+
+    /* ── Presets grid ───────────────────────────────────── */
+
+    var gridEl = document.getElementById('cpPresetsGrid');
+    gridEl.innerHTML = ACTIVE_PRESETS.map(function (p) {
+      return (
+        '<div class="cp-preset-card" data-expr="' +
+        p.expr +
+        '">' +
+        '<span class="cp-preset-lbl">' +
+        p.lbl +
+        '</span>' +
+        '<span class="cp-preset-expr">' +
+        p.expr +
+        '</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    gridEl.addEventListener('click', function (e) {
+      var item = e.target.closest('.cp-preset-card');
+      if (!item) return;
+      exprEl.value = item.dataset.expr;
+      render();
+      exprEl.focus();
+      exprEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    exprEl.addEventListener('input', render);
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.cp');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        render();
+        exprEl.focus();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        var firstRun = runsEl.querySelector('.cp-run');
+        if (firstRun)
+          navigator.clipboard.writeText(firstRun.textContent.replace(/^\d+/, '').trim());
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        exprEl.value = '';
+        render();
+        exprEl.focus();
+      }
+    });
+
     render();
-  });
 
-  document.addEventListener('click', function () {
-    menuEl.style.display = 'none';
-  });
+    window.toolGetPreset = function () {
+      return { expr: exprEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      exprEl.value = cfg.expr ?? '';
+      exprEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
 
-  /* ── Presets grid ───────────────────────────────────── */
-
-  var gridEl = document.getElementById('cpPresetsGrid');
-  gridEl.innerHTML = ACTIVE_PRESETS.map(function (p) {
-    return '<div class="cp-preset-card" data-expr="' + p.expr + '">' +
-           '<span class="cp-preset-lbl">' + p.lbl + '</span>' +
-           '<span class="cp-preset-expr">' + p.expr + '</span>' +
-           '</div>';
-  }).join('');
-
-  gridEl.addEventListener('click', function (e) {
-    var item = e.target.closest('.cp-preset-card');
-    if (!item) return;
-    exprEl.value = item.dataset.expr;
-    render();
-    exprEl.focus();
-    exprEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  });
-
-  exprEl.addEventListener('input', render);
-
-  document.addEventListener('keydown', function(e) {
-    var toolEl = document.querySelector('.cp');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); render(); exprEl.focus(); }
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
-      e.preventDefault();
-      var firstRun = runsEl.querySelector('.cp-run');
-      if (firstRun) navigator.clipboard.writeText(firstRun.textContent.replace(/^\d+/, '').trim());
+    var cpPreload = sessionStorage.getItem('cron_payload');
+    if (cpPreload) {
+      exprEl.value = cpPreload;
+      sessionStorage.removeItem('cron_payload');
+      render();
     }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { exprEl.value = ''; render(); exprEl.focus(); }
-  });
-
-  render();
-
-  window.toolGetPreset = function () {
-    return { expr: exprEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    exprEl.value = cfg.expr ?? '';
-    exprEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
-  var cpPreload = sessionStorage.getItem('cron_payload');
-  if (cpPreload) { exprEl.value = cpPreload; sessionStorage.removeItem('cron_payload'); render(); }
-  var cpMagic = sessionStorage.getItem('magic_box_payload');
-  if (cpMagic && !exprEl.value) { exprEl.value = cpMagic; sessionStorage.removeItem('magic_box_payload'); render(); }
-})();
+    var cpMagic = sessionStorage.getItem('magic_box_payload');
+    if (cpMagic && !exprEl.value) {
+      exprEl.value = cpMagic;
+      sessionStorage.removeItem('magic_box_payload');
+      render();
+    }
+  })();
 </script>

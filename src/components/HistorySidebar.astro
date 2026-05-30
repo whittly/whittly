@@ -1,0 +1,607 @@
+---
+interface Props {
+  isRu: boolean;
+  catalog: any[];
+}
+const { isRu, catalog } = Astro.props;
+---
+
+<style is:global>
+  /* ─── History Sidebar ───────────────────────────────── */
+  .hist-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 268px;
+    background: var(--surface);
+    border-right: 0.5px solid var(--line);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+  }
+  .hist-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .hist-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .hist-head-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+  }
+  .hist-x {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition:
+      color 0.12s,
+      background 0.12s;
+  }
+  .hist-x:hover {
+    color: var(--ink);
+    background: var(--surface-sunken);
+  }
+
+  .hist-pro {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .hist-pro a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .hist-pro a:hover {
+    text-decoration: underline;
+  }
+  .hist-pro-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 0.5px solid var(--accent);
+    border-radius: 4px;
+    padding: 1px 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .hist-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .hist-none {
+    padding: 24px 18px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hist-row {
+    padding: 10px 18px;
+    border-bottom: 0.5px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .hist-row:last-child {
+    border-bottom: none;
+  }
+  .hist-row-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .hist-row-t {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .hist-row-s {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .hist-row-ts {
+    font-size: 10px;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+  .hist-row-link {
+    cursor: pointer;
+  }
+  .hist-row-link:hover {
+    background: var(--accent-soft);
+  }
+  .hist-row-restore {
+    font-size: 11px;
+    color: var(--ink-faint);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .hist-row-link:hover .hist-row-restore {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  .hist-row-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-top: 2px;
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 56px;
+    overflow: hidden;
+  }
+
+  .hist-btn {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 24px;
+    background: var(--surface);
+    border-right: 0.5px solid var(--line);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    transition:
+      color 0.12s,
+      left 0.22s ease;
+    z-index: 950;
+    overflow: visible;
+  }
+  .hist-btn:hover {
+    color: var(--accent);
+  }
+  .hist-btn-tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 0;
+    width: 100%;
+    z-index: 1;
+  }
+  .hist-btn-tab::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    right: -10px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-left: none;
+    border-radius: 0 9px 9px 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+    z-index: -1;
+    transition: background 0.12s;
+  }
+  .hist-btn:hover .hist-btn-tab::after {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .hist-btn-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: inherit;
+  }
+  /* hist-btn moves with the sidebar — handled via JS */
+
+  .hist-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.28);
+    z-index: 850;
+    cursor: pointer;
+  }
+  .hist-overlay.active {
+    display: block;
+  }
+
+  .hist-fab {
+    display: none;
+    position: fixed;
+    left: 16px;
+    bottom: 24px;
+    z-index: 950;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--line-strong);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+      box-shadow 0.15s,
+      color 0.12s;
+  }
+  .hist-fab:hover {
+    color: var(--accent);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+  .hist-fab i {
+    font-size: 16px;
+  }
+  .hist-fab-label {
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 640px) {
+    .hist-btn {
+      display: none;
+    }
+    .hist-fab {
+      display: flex;
+    }
+  }
+</style>
+
+<!-- History floating button (mobile only) -->
+<button class="hist-fab" id="navHistBtn" type="button" title={isRu ? 'история' : 'history'}>
+  <i class="ti ti-history"></i>
+  <span class="hist-fab-label">{isRu ? 'история' : 'history'}</span>
+</button>
+
+<!-- History Sidebar -->
+<div id="histOverlay" class="hist-overlay"></div>
+<div id="whHist" class="hist-sidebar">
+  <div class="hist-head">
+    <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
+    <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="hist-pro" id="histPro">
+    <span class="hist-pro-tag">Pro</span>
+    <span
+      >{isRu ? 'Облачная синхронизация — ' : 'Cloud Sync — '}<a
+        href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее' : 'upgrade'}</a
+      ></span
+    >
+  </div>
+  <div class="hist-list" id="histList">
+    <div class="hist-none">{isRu ? 'операций пока нет' : 'no operations yet'}</div>
+  </div>
+</div>
+<button
+  class="hist-btn"
+  id="histBtn"
+  type="button"
+  title={isRu ? 'история операций' : 'operation history'}
+>
+  <div class="hist-btn-tab">
+    <i class="ti ti-chevron-right" style="font-size:11px"></i>
+    <span class="hist-btn-label">{isRu ? 'история' : 'history'}</span>
+  </div>
+</button>
+
+<script is:inline define:vars={{ isRu, catalog }}>
+  (function () {
+    /* ─── IndexedDB for full history inputs ─── */
+    var _idb = null;
+    function openDB(cb) {
+      if (_idb) {
+        cb(_idb);
+        return;
+      }
+      var req = indexedDB.open('whittly', 1);
+      req.onupgradeneeded = function (e) {
+        e.target.result.createObjectStore('hist_inputs', { keyPath: 'ts' });
+      };
+      req.onsuccess = function (e) {
+        _idb = e.target.result;
+        cb(_idb);
+      };
+      req.onerror = function () {
+        cb(null);
+      };
+    }
+    function dbSaveInput(ts, input) {
+      openDB(function (db) {
+        if (!db) return;
+        db.transaction('hist_inputs', 'readwrite')
+          .objectStore('hist_inputs')
+          .put({ ts: ts, input: input });
+      });
+    }
+    function dbGetInput(ts, cb) {
+      openDB(function (db) {
+        if (!db) {
+          cb(null);
+          return;
+        }
+        var req = db.transaction('hist_inputs', 'readonly').objectStore('hist_inputs').get(ts);
+        req.onsuccess = function () {
+          cb(req.result ? req.result.input : null);
+        };
+        req.onerror = function () {
+          cb(null);
+        };
+      });
+    }
+    function dbDeleteInput(ts) {
+      openDB(function (db) {
+        if (!db) return;
+        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').delete(ts);
+      });
+    }
+
+    /* ─── History ─── */
+    var HIST_KEY = 'wh_hist';
+    var HIST_MAX = 15;
+
+    window.pushHistory = function (tool, summary, input) {
+      try {
+        var ts = Date.now();
+        var inputStr = input || '';
+        var entry = {
+          tool: tool,
+          summary: summary,
+          inputPreview: inputStr.slice(0, 300),
+          hasInput: inputStr.length > 0,
+          ts: ts,
+          path: location.pathname,
+        };
+        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+        entries.unshift(entry);
+        var removed = entries.length > HIST_MAX ? entries.splice(HIST_MAX) : [];
+        localStorage.setItem(HIST_KEY, JSON.stringify(entries));
+        renderHistory();
+        if (inputStr) {
+          dbSaveInput(ts, inputStr);
+          removed.forEach(function (e) {
+            if (e.hasInput) dbDeleteInput(e.ts);
+          });
+        }
+        var plan = window.whApi.getPlan();
+        if (plan === 'pro' || plan === 'api') {
+          window.whApi
+            .fetch('/user/history', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                tool: tool,
+                summary: summary,
+                input: inputStr.slice(0, 2000),
+                ts: ts,
+              }),
+            })
+            .catch(function () {});
+        }
+      } catch (err) {}
+    };
+
+    function timeAgo(ts) {
+      var diff = Date.now() - ts;
+      var m = Math.floor(diff / 60000);
+      if (isRu) {
+        if (m < 1) return 'только что';
+        if (m < 60) return m + 'м назад';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'ч назад';
+        return Math.floor(h / 24) + 'д назад';
+      }
+      if (m < 1) return 'just now';
+      if (m < 60) return m + 'm ago';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    function renderHistory() {
+      var list = document.getElementById('histList');
+      if (!list) return;
+      try {
+        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+        if (!entries.length) {
+          list.innerHTML =
+            '<div class="hist-none">' +
+            (isRu ? 'операций пока нет' : 'no operations yet') +
+            '</div>';
+          return;
+        }
+        function esc(s) {
+          return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+        list.innerHTML = entries
+          .map(function (e) {
+            var preview = e.inputPreview || e.input || '';
+            var safePreview = esc(preview);
+            // derive path from catalog if not stored (e.g. server-synced entries)
+            var toolPath = e.path;
+            if (!toolPath) {
+              var hit = catalog.find(function (t) {
+                return t.name.toLowerCase() === (e.tool || '').toLowerCase();
+              });
+              if (hit) toolPath = (isRu ? '/ru/tools/' : '/tools/') + hit.slug + '/';
+            }
+            var hasLink = !!(toolPath && (e.hasInput || e.input));
+            var inputHtml = safePreview
+              ? '<span class="hist-row-input">' + safePreview + '</span>'
+              : '';
+            return (
+              '<div class="hist-row' +
+              (hasLink ? ' hist-row-link' : '') +
+              '"' +
+              (hasLink ? ' data-path="' + esc(toolPath) + '" data-ts="' + esc(e.ts) + '"' : '') +
+              '>' +
+              '<div class="hist-row-meta"><span class="hist-row-t">' +
+              esc(e.tool) +
+              '</span>' +
+              (hasLink
+                ? '<span class="hist-row-restore"><i class="ti ti-corner-down-left"></i></span>'
+                : '') +
+              '<span class="hist-row-ts">' +
+              timeAgo(e.ts) +
+              '</span></div>' +
+              '<span class="hist-row-s">' +
+              esc(e.summary) +
+              '</span>' +
+              inputHtml +
+              '</div>'
+            );
+          })
+          .join('');
+      } catch (err) {
+        list.innerHTML =
+          '<div class="hist-none">' + (isRu ? 'операций пока нет' : 'no operations yet') + '</div>';
+      }
+    }
+
+    var histSidebar = document.getElementById('whHist');
+    var histBtn = document.getElementById('histBtn');
+    var histClose = document.getElementById('histClose');
+    var histOverlay = document.getElementById('histOverlay');
+    var navHistBtn = document.getElementById('navHistBtn');
+
+    var histIcon = histBtn ? histBtn.querySelector('i') : null;
+
+    function openHist(opening) {
+      histSidebar.classList.toggle('open', opening);
+      if (histOverlay) histOverlay.classList.toggle('active', opening);
+      if (histBtn) histBtn.style.left = opening ? '268px' : '0';
+      if (histIcon) histIcon.className = opening ? 'ti ti-chevron-left' : 'ti ti-chevron-right';
+      if (opening) renderHistory();
+    }
+
+    histBtn &&
+      histBtn.addEventListener('click', function () {
+        openHist(!histSidebar.classList.contains('open'));
+      });
+
+    navHistBtn &&
+      navHistBtn.addEventListener('click', function () {
+        openHist(!histSidebar.classList.contains('open'));
+      });
+
+    histOverlay &&
+      histOverlay.addEventListener('click', function () {
+        openHist(false);
+      });
+
+    var histListEl = document.getElementById('histList');
+    histListEl &&
+      histListEl.addEventListener('click', function (ev) {
+        var row = ev.target.closest('.hist-row-link');
+        if (!row) return;
+        var path = row.dataset.path;
+        var ts = row.dataset.ts;
+        if (!path) return;
+        if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+        window.location.href = path;
+      });
+
+    histClose &&
+      histClose.addEventListener('click', function () {
+        openHist(false);
+      });
+
+    /* ─── History cloud sync for Pro users ─── */
+    var _plan = window.whApi.getPlan();
+    var histProEl = document.getElementById('histPro');
+    if (histProEl && (_plan === 'pro' || _plan === 'api')) {
+      histProEl.innerHTML =
+        '<span class="hist-pro-tag">Pro</span><span>' +
+        (isRu ? 'история синхронизируется' : 'history synced') +
+        ' <i class="ti ti-cloud-check" style="font-size:12px;vertical-align:middle"></i></span>';
+    }
+    if (_plan === 'pro' || _plan === 'api') {
+      window.whApi
+        .fetch('/user/history')
+        .then(function (r) {
+          return r && r.ok ? r.json() : null;
+        })
+        .then(function (data) {
+          if (data && Array.isArray(data.entries) && data.entries.length) {
+            var _existing = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+            var _pathByTs = {};
+            _existing.forEach(function (e) {
+              if (e.path) _pathByTs[e.ts] = e.path;
+            });
+            var localEntries = data.entries.map(function (e) {
+              return {
+                tool: e.tool,
+                summary: e.summary,
+                inputPreview: (e.input || '').slice(0, 300),
+                hasInput: !!e.input,
+                ts: e.ts,
+                path: _pathByTs[e.ts] || null,
+              };
+            });
+            localStorage.setItem(HIST_KEY, JSON.stringify(localEntries));
+            // only write to IndexedDB if not already present — don't overwrite full local input with server-truncated version
+            data.entries.forEach(function (e) {
+              if (e.input) {
+                dbGetInput(e.ts, function (existing) {
+                  if (!existing) dbSaveInput(e.ts, e.input);
+                });
+              }
+            });
+            renderHistory();
+          }
+        })
+        .catch(function () {});
+    }
+
+    /* ─── Restore input from history (IndexedDB) ─── */
+    var _restoreTs = sessionStorage.getItem('wh_restore_ts');
+    if (_restoreTs) {
+      sessionStorage.removeItem('wh_restore_ts');
+      setTimeout(function () {
+        dbGetInput(Number(_restoreTs), function (input) {
+          if (!input) return;
+          var el = document.querySelector('[data-hist-main-input]');
+          if (!el) return;
+          el.value = input;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }, 0);
+    }
+  })();
+</script>

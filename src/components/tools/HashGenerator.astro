@@ -2,17 +2,20 @@
 import PresetsBar from '../PresetsBar.astro';
 import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  statusPh:   isRu ? '— вставьте текст' : '— paste text to hash',
-  ph:         isRu ? 'вставьте текст для генерации хэшей…' : 'paste text to generate hashes…',
-  hashed:     isRu ? 'хэш' : 'hashed',
-  byte:       isRu ? 'байт' : 'byte',
-  bytes:      isRu ? 'байт' : 'bytes',
+  statusPh: isRu ? '— вставьте текст' : '— paste text to hash',
+  ph: isRu ? 'вставьте текст для генерации хэшей…' : 'paste text to generate hashes…',
+  hashed: isRu ? 'хэш' : 'hashed',
+  byte: isRu ? 'байт' : 'byte',
+  bytes: isRu ? 'байт' : 'bytes',
 };
 ---
+
 <style is:global>
   .hg {
     background: var(--surface);
@@ -44,7 +47,9 @@ const t = {
     color: var(--ink-faint);
     text-align: right;
   }
-  .hg-status.ok { color: var(--good); }
+  .hg-status.ok {
+    color: var(--good);
+  }
 
   .hg-input {
     display: block;
@@ -63,7 +68,10 @@ const t = {
     box-sizing: border-box;
   }
 
-  .hg-results { display: flex; flex-direction: column; }
+  .hg-results {
+    display: flex;
+    flex-direction: column;
+  }
 
   .hg-row {
     display: grid;
@@ -74,8 +82,12 @@ const t = {
     background: var(--surface-sunken);
     border-bottom: 0.5px solid var(--line);
   }
-  .hg-row:last-child { border-bottom: none; }
-  .hg-row:nth-child(even) { background: var(--surface); }
+  .hg-row:last-child {
+    border-bottom: none;
+  }
+  .hg-row:nth-child(even) {
+    background: var(--surface);
+  }
 
   .hg-algo {
     font-family: 'JetBrains Mono', monospace;
@@ -95,7 +107,9 @@ const t = {
     text-overflow: ellipsis;
     min-width: 0;
   }
-  .hg-hash.ph { color: var(--ink-faint); }
+  .hg-hash.ph {
+    color: var(--ink-faint);
+  }
 
   .hg-copy {
     width: 28px;
@@ -112,12 +126,22 @@ const t = {
     transition: all 0.12s;
     flex-shrink: 0;
   }
-  .hg-copy:hover { color: var(--ink); border-color: var(--line-strong); }
-  .hg-copy.done  { color: var(--good); border-color: var(--good); }
+  .hg-copy:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .hg-copy.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   @media (max-width: 760px) {
-    .hg-row  { grid-template-columns: 70px 1fr 28px; }
-    .hg-hash { font-size: 11px; }
+    .hg-row {
+      grid-template-columns: 70px 1fr 28px;
+    }
+    .hg-hash {
+      font-size: 11px;
+    }
   }
 </style>
 
@@ -129,7 +153,8 @@ const t = {
     <span class="hg-label local-badge">// hash · webcrypto api</span>
     <span class="hg-status" id="hgStatus">{t.statusPh}</span>
   </div>
-  <textarea class="hg-input" id="hgInput" data-hist-main-input spellcheck="false" placeholder={t.ph}></textarea>
+  <textarea class="hg-input" id="hgInput" data-hist-main-input spellcheck="false" placeholder={t.ph}
+  ></textarea>
   <div class="hg-results">
     <div class="hg-row">
       <span class="hg-algo">sha-1</span>
@@ -139,141 +164,194 @@ const t = {
     <div class="hg-row">
       <span class="hg-algo">sha-256</span>
       <span class="hg-hash ph" id="hgSha256">—</span>
-      <button class="hg-copy" id="hgCopy256" title="copy SHA-256"><i class="ti ti-copy"></i></button>
+      <button class="hg-copy" id="hgCopy256" title="copy SHA-256"><i class="ti ti-copy"></i></button
+      >
     </div>
     <div class="hg-row">
       <span class="hg-algo">sha-384</span>
       <span class="hg-hash ph" id="hgSha384">—</span>
-      <button class="hg-copy" id="hgCopy384" title="copy SHA-384"><i class="ti ti-copy"></i></button>
+      <button class="hg-copy" id="hgCopy384" title="copy SHA-384"><i class="ti ti-copy"></i></button
+      >
     </div>
     <div class="hg-row">
       <span class="hg-algo">sha-512</span>
       <span class="hg-hash ph" id="hgSha512">—</span>
-      <button class="hg-copy" id="hgCopy512" title="copy SHA-512"><i class="ti ti-copy"></i></button>
+      <button class="hg-copy" id="hgCopy512" title="copy SHA-512"><i class="ti ti-copy"></i></button
+      >
     </div>
   </div>
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inputEl  = document.getElementById('hgInput');
-  var statusEl = document.getElementById('hgStatus');
+  (function () {
+    var inputEl = document.getElementById('hgInput');
+    var statusEl = document.getElementById('hgStatus');
 
-  var algos = [
-    { name: 'SHA-1',   el: document.getElementById('hgSha1'),   btn: document.getElementById('hgCopy1')   },
-    { name: 'SHA-256', el: document.getElementById('hgSha256'), btn: document.getElementById('hgCopy256') },
-    { name: 'SHA-384', el: document.getElementById('hgSha384'), btn: document.getElementById('hgCopy384') },
-    { name: 'SHA-512', el: document.getElementById('hgSha512'), btn: document.getElementById('hgCopy512') },
-  ];
+    var algos = [
+      {
+        name: 'SHA-1',
+        el: document.getElementById('hgSha1'),
+        btn: document.getElementById('hgCopy1'),
+      },
+      {
+        name: 'SHA-256',
+        el: document.getElementById('hgSha256'),
+        btn: document.getElementById('hgCopy256'),
+      },
+      {
+        name: 'SHA-384',
+        el: document.getElementById('hgSha384'),
+        btn: document.getElementById('hgCopy384'),
+      },
+      {
+        name: 'SHA-512',
+        el: document.getElementById('hgSha512'),
+        btn: document.getElementById('hgCopy512'),
+      },
+    ];
 
-  function toHex(buf) {
-    return Array.from(new Uint8Array(buf)).map(function (b) {
-      return b.toString(16).padStart(2, '0');
-    }).join('');
-  }
+    function toHex(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(function (b) {
+          return b.toString(16).padStart(2, '0');
+        })
+        .join('');
+    }
 
-  function reset() {
-    algos.forEach(function (a) {
-      a.el.textContent = '—';
-      a.el.className   = 'hg-hash ph';
-    });
-    statusEl.textContent = t.statusPh;
-    statusEl.className   = 'hg-status';
-  }
-
-  var timer = null;
-
-  function process() {
-    var text = inputEl.value;
-    if (!text) { reset(); return; }
-
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      var data = new TextEncoder().encode(text);
-      Promise.all(algos.map(function (a) {
-        return crypto.subtle.digest(a.name, data).then(function (buf) {
-          return { a: a, hex: toHex(buf) };
-        });
-      })).then(function (results) {
-        results.forEach(function (r) {
-          r.a.el.textContent = r.hex;
-          r.a.el.className   = 'hg-hash';
-        });
-        var bytes = data.byteLength;
-        statusEl.textContent = t.hashed + ' · ' + bytes + ' ' + (bytes === 1 ? t.byte : t.bytes);
-        statusEl.className   = 'hg-status ok';
-        if (window.pushHistory) window.pushHistory('hash generator', statusEl.textContent, inputEl.value.trim());
-        var resultsEl = document.querySelector('.hg-results');
-        if (resultsEl) { resultsEl.classList.remove('flash-ok'); void resultsEl.offsetWidth; resultsEl.classList.add('flash-ok'); }
+    function reset() {
+      algos.forEach(function (a) {
+        a.el.textContent = '—';
+        a.el.className = 'hg-hash ph';
       });
-    }, 80);
-  }
+      statusEl.textContent = t.statusPh;
+      statusEl.className = 'hg-status';
+    }
 
-  algos.forEach(function (a) {
-    a.btn.addEventListener('click', function () {
-      if (a.el.classList.contains('ph')) return;
-      navigator.clipboard.writeText(a.el.textContent).then(function () {
-        a.btn.innerHTML = '<i class="ti ti-check"></i>';
-        a.btn.classList.add('done');
-        setTimeout(function () {
-          a.btn.innerHTML = '<i class="ti ti-copy"></i>';
-          a.btn.classList.remove('done');
-        }, 1400);
-      });
-    });
-  });
+    var timer = null;
 
-  inputEl.addEventListener('input', process);
-
-  window.toolGetPreset = function () {
-    return { input: inputEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inputEl.value = cfg.input ?? '';
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
-  document.addEventListener('keydown', function(e) {
-    var toolEl = document.querySelector('.hg');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
-      e.preventDefault();
-      var sha256El = document.getElementById('hgSha256');
-      if (sha256El && !sha256El.classList.contains('ph')) {
-        navigator.clipboard.writeText(sha256El.textContent);
-        var btn256 = document.getElementById('hgCopy256');
-        if (btn256) { btn256.innerHTML = '<i class="ti ti-check"></i>'; btn256.classList.add('done'); setTimeout(function() { btn256.innerHTML = '<i class="ti ti-copy"></i>'; btn256.classList.remove('done'); }, 1400); }
+    function process() {
+      var text = inputEl.value;
+      if (!text) {
+        reset();
+        return;
       }
-    }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inputEl.value = ''; reset(); inputEl.focus(); }
-  });
 
-  try {
-    var p = sessionStorage.getItem('hash_payload') || sessionStorage.getItem('magic_box_payload');
-    if (p) {
-      inputEl.value = p;
-      sessionStorage.removeItem('hash_payload');
-      sessionStorage.removeItem('magic_box_payload');
-      process();
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var data = new TextEncoder().encode(text);
+        Promise.all(
+          algos.map(function (a) {
+            return crypto.subtle.digest(a.name, data).then(function (buf) {
+              return { a: a, hex: toHex(buf) };
+            });
+          })
+        ).then(function (results) {
+          results.forEach(function (r) {
+            r.a.el.textContent = r.hex;
+            r.a.el.className = 'hg-hash';
+          });
+          var bytes = data.byteLength;
+          statusEl.textContent = t.hashed + ' · ' + bytes + ' ' + (bytes === 1 ? t.byte : t.bytes);
+          statusEl.className = 'hg-status ok';
+          if (window.pushHistory)
+            window.pushHistory('hash generator', statusEl.textContent, inputEl.value.trim());
+          var resultsEl = document.querySelector('.hg-results');
+          if (resultsEl) {
+            resultsEl.classList.remove('flash-ok');
+            void resultsEl.offsetWidth;
+            resultsEl.classList.add('flash-ok');
+          }
+        });
+      }, 80);
     }
-  } catch (e) {}
 
-  window.toolBatchProcess = function(lines) {
-    var encode = new TextEncoder();
-    return Promise.all(lines.map(function(line) {
-      var bytes = encode.encode(line);
-      return Promise.all([
-        crypto.subtle.digest('SHA-1',   bytes).then(toHex),
-        crypto.subtle.digest('SHA-256', bytes).then(toHex),
-        crypto.subtle.digest('SHA-384', bytes).then(toHex),
-        crypto.subtle.digest('SHA-512', bytes).then(toHex),
-      ]).then(function(hashes) {
-        return 'SHA-1:   ' + hashes[0] + '\nSHA-256: ' + hashes[1] + '\nSHA-384: ' + hashes[2] + '\nSHA-512: ' + hashes[3];
+    algos.forEach(function (a) {
+      a.btn.addEventListener('click', function () {
+        if (a.el.classList.contains('ph')) return;
+        navigator.clipboard.writeText(a.el.textContent).then(function () {
+          a.btn.innerHTML = '<i class="ti ti-check"></i>';
+          a.btn.classList.add('done');
+          setTimeout(function () {
+            a.btn.innerHTML = '<i class="ti ti-copy"></i>';
+            a.btn.classList.remove('done');
+          }, 1400);
+        });
       });
-    }));
-  };
-})();
+    });
+
+    inputEl.addEventListener('input', process);
+
+    window.toolGetPreset = function () {
+      return { input: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inputEl.value = cfg.input ?? '';
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.hg');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        var sha256El = document.getElementById('hgSha256');
+        if (sha256El && !sha256El.classList.contains('ph')) {
+          navigator.clipboard.writeText(sha256El.textContent);
+          var btn256 = document.getElementById('hgCopy256');
+          if (btn256) {
+            btn256.innerHTML = '<i class="ti ti-check"></i>';
+            btn256.classList.add('done');
+            setTimeout(function () {
+              btn256.innerHTML = '<i class="ti ti-copy"></i>';
+              btn256.classList.remove('done');
+            }, 1400);
+          }
+        }
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        inputEl.value = '';
+        reset();
+        inputEl.focus();
+      }
+    });
+
+    try {
+      var p = sessionStorage.getItem('hash_payload') || sessionStorage.getItem('magic_box_payload');
+      if (p) {
+        inputEl.value = p;
+        sessionStorage.removeItem('hash_payload');
+        sessionStorage.removeItem('magic_box_payload');
+        process();
+      }
+    } catch (e) {}
+
+    window.toolBatchProcess = function (lines) {
+      var encode = new TextEncoder();
+      return Promise.all(
+        lines.map(function (line) {
+          var bytes = encode.encode(line);
+          return Promise.all([
+            crypto.subtle.digest('SHA-1', bytes).then(toHex),
+            crypto.subtle.digest('SHA-256', bytes).then(toHex),
+            crypto.subtle.digest('SHA-384', bytes).then(toHex),
+            crypto.subtle.digest('SHA-512', bytes).then(toHex),
+          ]).then(function (hashes) {
+            return (
+              'SHA-1:   ' +
+              hashes[0] +
+              '\nSHA-256: ' +
+              hashes[1] +
+              '\nSHA-384: ' +
+              hashes[2] +
+              '\nSHA-512: ' +
+              hashes[3]
+            );
+          });
+        })
+      );
+    };
+  })();
 </script>

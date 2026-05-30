@@ -3,405 +3,583 @@ import Base from '../layouts/Base.astro';
 import { CATALOG, CAT_ORDER, CAT_META, toolSlug } from '../data/catalog';
 import pkg from '../../package.json';
 
-const totalTools = CATALOG.filter(t => !t.soon).length;
+const totalTools = CATALOG.filter((t) => !t.soon).length;
 const version = pkg.version;
 
-const catGroups = CAT_ORDER
-  .map(cat => ({
-    cat,
-    label: CAT_META[cat].label,
-    tools: CATALOG.filter(t => t.cat === cat),
-  }))
-  .filter(g => g.tools.length > 0);
+const catGroups = CAT_ORDER.map((cat) => ({
+  cat,
+  label: CAT_META[cat].label,
+  tools: CATALOG.filter((t) => t.cat === cat),
+})).filter((g) => g.tools.length > 0);
 ---
+
 <style is:global>
+  .hero {
+    padding: 72px 0 56px;
+    max-width: 780px;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  .hero-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 10px;
+    text-decoration: none;
+    transition:
+      color 0.12s,
+      border-color 0.12s,
+      background 0.12s;
+  }
+
+  .hero-tag:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* Demo */
+  .demo {
+    background: var(--surface);
+    border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow:
+      0 1px 0 rgba(26, 26, 24, 0.02),
+      0 18px 40px -22px rgba(26, 26, 24, 0.12);
+  }
+
+  .demo-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .demo-tabs {
+    display: flex;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .demo-tab {
+    padding: 4px 9px;
+    border-radius: 5px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition:
+      background 0.12s,
+      color 0.12s;
+    user-select: none;
+  }
+
+  .demo-tab:hover {
+    color: var(--ink-soft);
+  }
+  .demo-tab.active {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .demo-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .demo-status .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+  .demo-status.err {
+    color: var(--bad);
+  }
+  .demo-status.err .dot {
+    background: var(--bad);
+  }
+
+  .demo-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 260px;
+  }
+
+  .demo-pane {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    background: none;
+    resize: none;
+    width: 100%;
+    overflow: auto;
+    max-height: 320px;
+  }
+
+  .demo-pane.in {
+    border-right: 0.5px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .demo-pane.out {
+    background: var(--surface-sunken);
+    white-space: pre;
+    margin: 0;
+  }
+  .demo-pane.out .k {
+    color: var(--accent);
+  }
+  .demo-pane.out .s {
+    color: var(--good);
+  }
+  .demo-pane.out .n {
+    color: var(--ink);
+  }
+  .demo-pane.out .b {
+    color: var(--ink-soft);
+  }
+  .demo-pane.out .p {
+    color: var(--ink-faint);
+  }
+
+  /* Tool cards */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 16px 18px 14px;
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 132px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .tool-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+  }
+
+  .tool-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tool-icon {
+    font-size: 17px;
+    color: var(--ink-soft);
+  }
+  .tool-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .tool-preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-sm);
+    padding: 9px 11px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .tool-preview .row {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .tool-preview .arrow {
+    color: var(--accent);
+    margin: 0 6px;
+  }
+  .tool-preview .hl {
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0 1px;
+    border-radius: 2px;
+  }
+  .tool-preview .g {
+    color: var(--good);
+  }
+  .tool-preview .s {
+    color: var(--ink-soft);
+  }
+  .tool-preview .k {
+    color: var(--accent);
+  }
+
+  /* Categories — CLI ls output */
+  .ls {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ls-head {
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ls-head .prompt {
+    color: var(--accent);
+  }
+  .ls-head .flag {
+    color: var(--ink-faint);
+  }
+  .ls-head .caret {
+    width: 6px;
+    height: 12px;
+    background: var(--ink-soft);
+    margin-left: 2px;
+    animation: blink 1.1s steps(2) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .ls-body {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ls-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 56px;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.12s;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .ls-row:hover {
+    background: var(--accent-soft);
+  }
+  .ls-row .name {
+    color: var(--ink);
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .ls-row .name::after {
+    content: '/';
+    color: var(--ink-faint);
+  }
+  .ls-row .tools {
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .ls-row .tools .sep {
+    color: var(--ink-faint);
+    margin: 0 6px;
+  }
+  .ls-row .tools .more {
+    color: var(--ink-faint);
+  }
+  .ls-row .count {
+    color: var(--ink-faint);
+    font-size: 11px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 960px) {
     .hero {
-      padding: 72px 0 56px;
-      max-width: 780px;
+      grid-template-columns: 1fr;
+      gap: 36px;
+      padding-top: 48px;
     }
-
-    .hero-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 28px;
-    }
-
-    .hero-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--ink-soft);
-      background: var(--surface);
-      border: 0.5px solid var(--line);
-      border-radius: 6px;
-      padding: 5px 10px;
-      text-decoration: none;
-      transition: color 0.12s, border-color 0.12s, background 0.12s;
-    }
-
-    .hero-tag:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    /* Demo */
-    .demo {
-      background: var(--surface);
-      border: 0.5px solid var(--line-strong);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 1px 0 rgba(26,26,24,0.02), 0 18px 40px -22px rgba(26,26,24,0.12);
-    }
-
-    .demo-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      border-bottom: 0.5px solid var(--line);
-      background: var(--surface-sunken);
-    }
-
-    .demo-tabs {
-      display: flex;
-      gap: 4px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-    }
-
-    .demo-tab {
-      padding: 4px 9px;
-      border-radius: 5px;
-      color: var(--ink-faint);
-      cursor: pointer;
-      transition: background 0.12s, color 0.12s;
-      user-select: none;
-    }
-
-    .demo-tab:hover { color: var(--ink-soft); }
-    .demo-tab.active { background: var(--bg); color: var(--ink); }
-
-    .demo-status {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10.5px;
-      color: var(--ink-faint);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .demo-status .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--good); }
-    .demo-status.err { color: var(--bad); }
-    .demo-status.err .dot { background: var(--bad); }
-
-    .demo-body {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      min-height: 260px;
-    }
-
-    .demo-pane {
-      padding: 14px 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12.5px;
-      line-height: 1.55;
-      color: var(--ink);
-      border: none;
-      outline: none;
-      background: none;
-      resize: none;
-      width: 100%;
-      overflow: auto;
-      max-height: 320px;
-    }
-
-    .demo-pane.in { border-right: 0.5px solid var(--line); color: var(--ink-soft); }
-    .demo-pane.out { background: var(--surface-sunken); white-space: pre; margin: 0; }
-    .demo-pane.out .k { color: var(--accent); }
-    .demo-pane.out .s { color: var(--good); }
-    .demo-pane.out .n { color: var(--ink); }
-    .demo-pane.out .b { color: var(--ink-soft); }
-    .demo-pane.out .p { color: var(--ink-faint); }
-
-    /* Tool cards */
     .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(2, 1fr);
     }
+  }
 
-    .tool-card {
-      background: var(--surface);
-      border: 0.5px solid var(--line);
-      border-radius: var(--radius-md);
-      padding: 16px 18px 14px;
-      transition: border-color 0.15s, transform 0.15s;
-      cursor: pointer;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-height: 132px;
-      text-decoration: none;
-      color: inherit;
+  @media (max-width: 640px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
     }
-
-    .tool-card:hover { border-color: var(--line-strong); transform: translateY(-1px); }
-
-    .tool-head { display: flex; align-items: center; gap: 10px; }
-    .tool-icon { font-size: 17px; color: var(--ink-soft); }
-    .tool-name { font-size: 14px; font-weight: 500; color: var(--ink); flex: 1; }
-
-    .tool-preview {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      line-height: 1.6;
-      color: var(--ink-faint);
-      background: var(--surface-sunken);
-      border-radius: var(--radius-sm);
-      padding: 9px 11px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 2px;
+    .demo-body {
+      grid-template-columns: 1fr;
     }
-
-    .tool-preview .row { display: block; white-space: pre-wrap; word-break: break-word; }
-    .tool-preview .arrow { color: var(--accent); margin: 0 6px; }
-    .tool-preview .hl { color: var(--accent); background: var(--accent-soft); padding: 0 1px; border-radius: 2px; }
-    .tool-preview .g { color: var(--good); }
-    .tool-preview .s { color: var(--ink-soft); }
-    .tool-preview .k { color: var(--accent); }
-
-    /* Categories — CLI ls output */
-    .ls {
-      background: var(--surface);
-      border: 0.5px solid var(--line);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .ls-head {
-      padding: 10px 16px;
+    .demo-pane.in {
+      border-right: none;
       border-bottom: 0.5px solid var(--line);
-      background: var(--surface-sunken);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: var(--ink-soft);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
+  }
 
-    .ls-head .prompt { color: var(--accent); }
-    .ls-head .flag { color: var(--ink-faint); }
-    .ls-head .caret {
-      width: 6px; height: 12px;
-      background: var(--ink-soft);
-      margin-left: 2px;
-      animation: blink 1.1s steps(2) infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
+  /* Premium */
+  .premium {
+    margin: 64px 0 72px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+  }
 
-    .ls-body {
-      padding: 8px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12.5px;
-      display: flex;
-      flex-direction: column;
-    }
+  .premium-copy {
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    justify-content: center;
+    border-right: 0.5px solid var(--line);
+  }
 
-    .ls-row {
-      display: grid;
-      grid-template-columns: 110px 1fr 56px;
-      align-items: baseline;
-      gap: 16px;
-      padding: 8px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.12s;
-      color: var(--ink-soft);
-      text-decoration: none;
-    }
+  .premium-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
 
-    .ls-row:hover { background: var(--accent-soft); }
-    .ls-row .name { color: var(--ink); display: inline-flex; align-items: baseline; }
-    .ls-row .name::after { content: '/'; color: var(--ink-faint); }
-    .ls-row .tools { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .ls-row .tools .sep { color: var(--ink-faint); margin: 0 6px; }
-    .ls-row .tools .more { color: var(--ink-faint); }
-    .ls-row .count { color: var(--ink-faint); font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+  .premium-title {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
 
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; gap: 36px; padding-top: 48px; }
-      .tools-grid { grid-template-columns: repeat(2, 1fr); }
-    }
+  .premium-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
 
-    @media (max-width: 640px) {
-      .tools-grid { grid-template-columns: 1fr; }
-      .demo-body { grid-template-columns: 1fr; }
-      .demo-pane.in { border-right: none; border-bottom: 0.5px solid var(--line); }
-    }
+  .premium-body {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
 
-    /* Premium */
+  .btn-premium {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    align-self: flex-start;
+    margin-top: 6px;
+  }
+
+  .btn-premium:hover {
+    opacity: 0.85;
+  }
+
+  .premium-feat {
+    background: var(--surface-sunken);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .premium-feat-head {
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .premium-feat-head .prompt {
+    color: var(--accent);
+  }
+  .premium-feat-head .file {
+    color: var(--ink);
+  }
+
+  .premium-feat-body {
+    display: block;
+    padding: 18px 22px;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--ink);
+    overflow-x: auto;
+  }
+
+  .premium-feat-body .k {
+    color: var(--accent);
+  }
+  .premium-feat-body .p {
+    color: var(--ink-soft);
+  }
+  .premium-feat-body .c {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 768px) {
     .premium {
-      margin: 64px 0 72px;
-      background: var(--surface);
-      border: 0.5px solid var(--line);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 1fr 1.15fr;
+      grid-template-columns: 1fr;
     }
-
     .premium-copy {
-      padding: 32px 36px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      justify-content: center;
-      border-right: 0.5px solid var(--line);
-    }
-
-    .premium-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--accent);
-      letter-spacing: 0.06em;
-    }
-
-    .premium-title {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 26px;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-      color: var(--ink);
-    }
-
-    .premium-title em { font-style: italic; color: var(--accent); }
-
-    .premium-body {
-      font-size: 14.5px;
-      color: var(--ink-soft);
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .btn-premium {
-      display: inline-flex;
-      align-items: center;
-      padding: 10px 22px;
-      background: var(--accent);
-      color: white;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 500;
-      text-decoration: none;
-      transition: opacity 0.15s;
-      align-self: flex-start;
-      margin-top: 6px;
-    }
-
-    .btn-premium:hover { opacity: 0.85; }
-
-    .premium-feat {
-      background: var(--surface-sunken);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .premium-feat-head {
-      padding: 10px 16px;
+      border-right: none;
       border-bottom: 0.5px solid var(--line);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: var(--ink-soft);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 24px 22px;
     }
-
-    .premium-feat-head .prompt { color: var(--accent); }
-    .premium-feat-head .file { color: var(--ink); }
-
     .premium-feat-body {
-      display: block;
-      padding: 18px 22px;
-      margin: 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      line-height: 1.9;
-      color: var(--ink);
-      overflow-x: auto;
+      white-space: pre-wrap;
+      font-size: 12px;
+      padding: 14px 16px;
     }
+  }
 
-    .premium-feat-body .k { color: var(--accent); }
-    .premium-feat-body .p { color: var(--ink-soft); }
-    .premium-feat-body .c { color: var(--ink-faint); }
-
-    @media (max-width: 768px) {
-      .premium { grid-template-columns: 1fr; }
-      .premium-copy { border-right: none; border-bottom: 0.5px solid var(--line); padding: 24px 22px; }
-      .premium-feat-body { white-space: pre-wrap; font-size: 12px; padding: 14px 16px; }
+  /* Magic Box */
+  .magic-detect {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: var(--accent-soft);
+    border: 0.5px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    animation: magicIn 0.15s ease;
+  }
+  @keyframes magicIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
     }
-
-    /* Magic Box */
-    .magic-detect {
-      display: none; flex-direction: row; align-items: center; gap: 10px;
-      margin-top: 8px; padding: 8px 14px;
-      background: var(--accent-soft); border: 0.5px solid var(--accent);
-      border-radius: var(--radius-md);
-      font-family: 'JetBrains Mono', monospace; font-size: 12px;
-      animation: magicIn 0.15s ease;
+    to {
+      opacity: 1;
+      transform: none;
     }
-    @keyframes magicIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-    .magic-type { color: var(--accent); font-weight: 500; }
-    .magic-sep { color: var(--ink-faint); }
-    .magic-go { color: var(--ink); cursor: pointer; }
-    .magic-go:hover { color: var(--accent); }
+  }
+  .magic-type {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .magic-sep {
+    color: var(--ink-faint);
+  }
+  .magic-go {
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .magic-go:hover {
+    color: var(--accent);
+  }
 
-    .demo-format-status {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--ink-faint);
-    }
-    .demo-format-status.detected { color: var(--accent); }
+  .demo-format-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .demo-format-status.detected {
+    color: var(--accent);
+  }
 
-    .demo-foot {
-      padding: 8px 14px;
-      border-top: 0.5px solid var(--line);
-      background: var(--surface-sunken);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+  .demo-foot {
+    padding: 8px 14px;
+    border-top: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 
-    .demo-link {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: var(--accent);
-      text-decoration: none;
-      border: 0.5px solid var(--accent);
-      border-radius: 4px;
-      padding: 3px 9px;
-      transition: background 0.12s, color 0.12s;
-    }
-    .demo-link:hover { background: var(--accent); color: white; }
+  .demo-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    text-decoration: none;
+    border: 0.5px solid var(--accent);
+    border-radius: 4px;
+    padding: 3px 9px;
+    transition:
+      background 0.12s,
+      color 0.12s;
+  }
+  .demo-link:hover {
+    background: var(--accent);
+    color: white;
+  }
 
-    .demo-link-pro {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: var(--ink-faint);
-      text-decoration: none;
-    }
-    .demo-link-pro:hover { color: var(--accent); }
+  .demo-link-pro {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .demo-link-pro:hover {
+    color: var(--accent);
+  }
 </style>
 
 <Base
@@ -415,8 +593,10 @@ const catGroups = CAT_ORDER
         <span>{`${totalTools} tools · v${version}`}</span>
       </div>
       <h1>whittle your workflow down to <em>what matters</em>.</h1>
-      <p class="subhead">small sharp tools for developers. converters, formatters, validators, generators. runs locally in your browser. no signup, no ads, no dark patterns.</p>
-
+      <p class="subhead">
+        small sharp tools for developers. converters, formatters, validators, generators. runs
+        locally in your browser. no signup, no ads, no dark patterns.
+      </p>
 
       <div id="magicDetect" class="magic-detect">
         <span id="magicType" class="magic-type"></span>
@@ -424,7 +604,6 @@ const catGroups = CAT_ORDER
         <a id="magicGo" class="magic-go">open in tool →</a>
       </div>
     </div>
-
   </section>
 
   <section class="tools-section">
@@ -433,7 +612,6 @@ const catGroups = CAT_ORDER
       <a href="/tools/" class="see-all">all {totalTools} tools →</a>
     </div>
     <div class="tools-grid">
-
       <a class="tool-card" href="/tools/json-formatter/">
         <div class="tool-head">
           <i class="ti ti-braces tool-icon"></i>
@@ -441,7 +619,11 @@ const catGroups = CAT_ORDER
         </div>
         <div class="tool-preview">
           <span class="row">{'{"a":1,"b":[2,3]}'}</span>
-          <span class="row"><span class="k">"a"</span>: <span class="g">1</span>, <span class="k">"b"</span>: [<span class="g">2</span>, <span class="g">3</span>]</span>
+          <span class="row"
+            ><span class="k">"a"</span>: <span class="g">1</span>, <span class="k">"b"</span>: [<span
+              class="g">2</span
+            >, <span class="g">3</span>]</span
+          >
         </div>
       </a>
 
@@ -462,7 +644,11 @@ const catGroups = CAT_ORDER
           <span class="tool-name">jwt decoder</span>
         </div>
         <div class="tool-preview">
-          <span class="row"><span class="k">eyJhbGc</span>.<span class="g">eyJzdWI</span>.<span class="s">XdaY8</span></span>
+          <span class="row"
+            ><span class="k">eyJhbGc</span>.<span class="g">eyJzdWI</span>.<span class="s"
+              >XdaY8</span
+            ></span
+          >
           <span class="row">sub: alice · exp: 1h</span>
         </div>
       </a>
@@ -499,7 +685,6 @@ const catGroups = CAT_ORDER
           <span class="row"><span class="s">bulk · custom format</span></span>
         </div>
       </a>
-
     </div>
   </section>
 
@@ -515,25 +700,32 @@ const catGroups = CAT_ORDER
         <span class="caret"></span>
       </div>
       <div class="ls-body">
-        {catGroups.map(g => {
-          const visible = g.tools.slice(0, 3);
-          const rest    = g.tools.length - visible.length;
-          return (
-            <a class="ls-row" href={`/tools/?cat=${g.cat}`}>
-              <span class="name">{g.label}</span>
-              <span class="tools">
-                {visible.map((t, i) => (
-                  <>
-                    {i > 0 && <span class="sep">·</span>}
-                    {t.name}
-                  </>
-                ))}
-                {rest > 0 && <><span class="sep">·</span><span class="more">+{rest}</span></>}
-              </span>
-              <span class="count">{g.tools.length}</span>
-            </a>
-          );
-        })}
+        {
+          catGroups.map((g) => {
+            const visible = g.tools.slice(0, 3);
+            const rest = g.tools.length - visible.length;
+            return (
+              <a class="ls-row" href={`/tools/?cat=${g.cat}`}>
+                <span class="name">{g.label}</span>
+                <span class="tools">
+                  {visible.map((t, i) => (
+                    <>
+                      {i > 0 && <span class="sep">·</span>}
+                      {t.name}
+                    </>
+                  ))}
+                  {rest > 0 && (
+                    <>
+                      <span class="sep">·</span>
+                      <span class="more">+{rest}</span>
+                    </>
+                  )}
+                </span>
+                <span class="count">{g.tools.length}</span>
+              </a>
+            );
+          })
+        }
       </div>
     </div>
   </section>
@@ -541,8 +733,11 @@ const catGroups = CAT_ORDER
   <div class="premium">
     <div class="premium-copy">
       <div class="premium-label">// pro · from $6/mo</div>
-      <div class="premium-title">one step<br><em>further</em>.</div>
-      <p class="premium-body">batch convert, call the api, save presets — for workflows where one file at a time isn't enough.</p>
+      <div class="premium-title">one step<br /><em>further</em>.</div>
+      <p class="premium-body">
+        batch convert, call the api, save presets — for workflows where one file at a time isn't
+        enough.
+      </p>
       <a href="/premium/" class="btn-premium">see plans →</a>
     </div>
     <div class="premium-feat">
@@ -551,7 +746,8 @@ const catGroups = CAT_ORDER
         <span>cat</span>
         <span class="file">pro.txt</span>
       </div>
-      <pre class="premium-feat-body"><span class="c"># pro tier  ·  $6/mo  ·  $49/yr</span>
+      <pre
+        class="premium-feat-body"><span class="c"># pro tier  ·  $6/mo  ·  $49/yr</span>
 <span class="k">batch</span>        <span class="p">·</span> process up to 500 items at once
 <span class="k">large_files</span>  <span class="p">·</span> up to 100 MB per file
 <span class="k">history</span>      <span class="p">·</span> persistent, synced across devices
@@ -567,32 +763,53 @@ const catGroups = CAT_ORDER
 
 <script is:inline>
   /* ── Smart Demo Box ─────────────────────────────────── */
-  const demoInEl    = document.getElementById('demoIn');
-  const demoOutEl   = document.getElementById('demoOut');
-  const demoFmtEl   = document.getElementById('demoFormatStatus');
-  const demoFootEl  = document.getElementById('demoFoot');
+  const demoInEl = document.getElementById('demoIn');
+  const demoOutEl = document.getElementById('demoOut');
+  const demoFmtEl = document.getElementById('demoFormatStatus');
+  const demoFootEl = document.getElementById('demoFoot');
   const demoGoBtnEl = document.getElementById('demoGoBtn');
-  let   demoPloadKey = null;
+  let demoPloadKey = null;
 
-  const ESC = {'&':'&amp;','<':'&lt;','>':'&gt;'};
-  function esc(s) { return s.replace(/[&<>]/g, c => ESC[c]); }
+  const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+  function esc(s) {
+    return s.replace(/[&<>]/g, (c) => ESC[c]);
+  }
 
   function colorizeJson(obj, d = 0) {
-    const pad  = '  '.repeat(d);
+    const pad = '  '.repeat(d);
     const pad1 = '  '.repeat(d + 1);
     if (obj === null) return '<span class="b">null</span>';
     if (typeof obj === 'boolean') return '<span class="b">' + obj + '</span>';
-    if (typeof obj === 'number')  return '<span class="n">' + obj + '</span>';
-    if (typeof obj === 'string')  return '<span class="s">"' + esc(obj) + '"</span>';
+    if (typeof obj === 'number') return '<span class="n">' + obj + '</span>';
+    if (typeof obj === 'string') return '<span class="s">"' + esc(obj) + '"</span>';
     if (Array.isArray(obj)) {
       if (!obj.length) return '[]';
-      return '[\n' + obj.map(v => pad1 + colorizeJson(v, d + 1)).join('<span class="p">,</span>\n') + '\n' + pad + ']';
+      return (
+        '[\n' +
+        obj.map((v) => pad1 + colorizeJson(v, d + 1)).join('<span class="p">,</span>\n') +
+        '\n' +
+        pad +
+        ']'
+      );
     }
     const keys = Object.keys(obj);
     if (!keys.length) return '{}';
-    return '{\n' + keys.map(k =>
-      pad1 + '<span class="k">"' + esc(k) + '"</span><span class="p">:</span> ' + colorizeJson(obj[k], d + 1)
-    ).join('<span class="p">,</span>\n') + '\n' + pad + '}';
+    return (
+      '{\n' +
+      keys
+        .map(
+          (k) =>
+            pad1 +
+            '<span class="k">"' +
+            esc(k) +
+            '"</span><span class="p">:</span> ' +
+            colorizeJson(obj[k], d + 1)
+        )
+        .join('<span class="p">,</span>\n') +
+      '\n' +
+      pad +
+      '}'
+    );
   }
 
   function decodeB64Url(s) {
@@ -606,112 +823,131 @@ const catGroups = CAT_ORDER
     return { header: decodeB64Url(parts[0]), payload: decodeB64Url(parts[1]) };
   }
 
-  const DOW_NAMES = ['sun','mon','tue','wed','thu','fri','sat'];
+  const DOW_NAMES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   function describeCron(expr) {
     const [min, hr, dom, mon, dow] = expr.trim().split(/\s+/);
     const out = [];
-    if (min === '*')                   out.push('every minute');
-    else if (/^\*\/\d+$/.test(min))   out.push('every ' + min.slice(2) + ' min');
-    else                              out.push('at :' + min.padStart(2, '0'));
+    if (min === '*') out.push('every minute');
+    else if (/^\*\/\d+$/.test(min)) out.push('every ' + min.slice(2) + ' min');
+    else out.push('at :' + min.padStart(2, '0'));
     if (hr !== '*') {
-      if (/^\*\/\d+$/.test(hr))       out.push('every ' + hr.slice(2) + 'h');
-      else if (hr.includes('-'))       out.push('hours ' + hr);
-      else                            out.push(hr.padStart(2, '0') + ':xx');
+      if (/^\*\/\d+$/.test(hr)) out.push('every ' + hr.slice(2) + 'h');
+      else if (hr.includes('-')) out.push('hours ' + hr);
+      else out.push(hr.padStart(2, '0') + ':xx');
     }
     if (dow !== '*') {
-      if (dow === '1-5')              out.push('weekdays');
+      if (dow === '1-5') out.push('weekdays');
       else if (dow === '0,6' || dow === '6,0') out.push('weekends');
-      else out.push(dow.split(',').map(d => DOW_NAMES[+d] ?? d).join(','));
+      else
+        out.push(
+          dow
+            .split(',')
+            .map((d) => DOW_NAMES[+d] ?? d)
+            .join(',')
+        );
     }
     if (dom !== '*') out.push('dom ' + dom);
     if (mon !== '*') out.push('month ' + mon);
     return out.join(' · ');
   }
 
-  const RE_JWT  = /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/;
+  const RE_JWT = /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/;
   const RE_JSON = /^\s*[\{\[][\s\S]{2,}[\}\]]\s*$/;
-  const RE_CRON = /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/;
+  const RE_CRON =
+    /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/;
 
   function resetDemo() {
-    demoFmtEl.textContent    = '// auto-detecting…';
-    demoFmtEl.className      = 'demo-format-status';
-    demoOutEl.innerHTML      = '<span class="p">// output will appear here</span>';
+    demoFmtEl.textContent = '// auto-detecting…';
+    demoFmtEl.className = 'demo-format-status';
+    demoOutEl.innerHTML = '<span class="p">// output will appear here</span>';
     demoFootEl.style.display = 'none';
-    demoPloadKey             = null;
+    demoPloadKey = null;
   }
 
   function detectAndRender() {
     const val = demoInEl.value;
-    if (!val.trim()) { resetDemo(); return; }
+    if (!val.trim()) {
+      resetDemo();
+      return;
+    }
 
     if (val.length > 32768) {
-      demoFmtEl.textContent    = '[payload too large for preview]';
-      demoFmtEl.className      = 'demo-format-status detected';
-      demoOutEl.innerHTML      =
+      demoFmtEl.textContent = '[payload too large for preview]';
+      demoFmtEl.className = 'demo-format-status detected';
+      demoOutEl.innerHTML =
         '<span class="p">// payload &gt;32 KB — too large for fast preview.</span>\n' +
         '<span class="p">// open the full tool to process it.</span>';
       demoFootEl.style.display = 'flex';
-      demoGoBtnEl.textContent  = '[ open full tool (free) ]';
-      demoGoBtnEl.href         = '/tools/json-formatter/';
-      demoPloadKey             = 'magic_box_payload';
+      demoGoBtnEl.textContent = '[ open full tool (free) ]';
+      demoGoBtnEl.href = '/tools/json-formatter/';
+      demoPloadKey = 'magic_box_payload';
       return;
     }
 
     if (RE_JWT.test(val.trim())) {
       try {
         const jwt = tryDecodeJwt(val.trim());
-        demoFmtEl.textContent    = '[format: jwt]';
-        demoFmtEl.className      = 'demo-format-status detected';
-        demoOutEl.innerHTML      =
-          '<span class="p">// header</span>\n'  + colorizeJson(jwt.header)  +
-          '\n\n<span class="p">// payload</span>\n' + colorizeJson(jwt.payload);
+        demoFmtEl.textContent = '[format: jwt]';
+        demoFmtEl.className = 'demo-format-status detected';
+        demoOutEl.innerHTML =
+          '<span class="p">// header</span>\n' +
+          colorizeJson(jwt.header) +
+          '\n\n<span class="p">// payload</span>\n' +
+          colorizeJson(jwt.payload);
         demoFootEl.style.display = 'flex';
-        demoGoBtnEl.textContent  = '[ open in full jwt decoder ]';
-        demoGoBtnEl.href         = '/tools/jwt-decoder/';
-        demoPloadKey             = 'magic_box_payload';
+        demoGoBtnEl.textContent = '[ open in full jwt decoder ]';
+        demoGoBtnEl.href = '/tools/jwt-decoder/';
+        demoPloadKey = 'magic_box_payload';
         return;
-      } catch (e) { /* fall through */ }
+      } catch (e) {
+        /* fall through */
+      }
     }
 
     if (RE_JSON.test(val)) {
       try {
         const parsed = JSON.parse(val);
-        demoFmtEl.textContent    = '[format: json]';
-        demoFmtEl.className      = 'demo-format-status detected';
-        demoOutEl.innerHTML      = colorizeJson(parsed);
+        demoFmtEl.textContent = '[format: json]';
+        demoFmtEl.className = 'demo-format-status detected';
+        demoOutEl.innerHTML = colorizeJson(parsed);
         demoFootEl.style.display = 'flex';
-        demoGoBtnEl.textContent  = '[ open in full json formatter ]';
-        demoGoBtnEl.href         = '/tools/json-formatter/';
-        demoPloadKey             = 'magic_box_payload';
+        demoGoBtnEl.textContent = '[ open in full json formatter ]';
+        demoGoBtnEl.href = '/tools/json-formatter/';
+        demoPloadKey = 'magic_box_payload';
         return;
-      } catch (e) { /* fall through */ }
+      } catch (e) {
+        /* fall through */
+      }
     }
 
     if (RE_CRON.test(val.trim())) {
       const desc = describeCron(val.trim());
-      demoFmtEl.textContent    = '[format: cron]';
-      demoFmtEl.className      = 'demo-format-status detected';
-      demoOutEl.innerHTML      =
+      demoFmtEl.textContent = '[format: cron]';
+      demoFmtEl.className = 'demo-format-status detected';
+      demoOutEl.innerHTML =
         '<span class="p">// expression</span>\n' +
-        '<span class="k">' + esc(val.trim()) + '</span>\n\n' +
-        '<span class="p">// schedule</span>\n' + esc(desc);
+        '<span class="k">' +
+        esc(val.trim()) +
+        '</span>\n\n' +
+        '<span class="p">// schedule</span>\n' +
+        esc(desc);
       demoFootEl.style.display = 'flex';
-      demoGoBtnEl.textContent  = '[ open in full cron parser ]';
-      demoGoBtnEl.href         = '/tools/cron-parser/';
-      demoPloadKey             = 'magic_box_payload';
+      demoGoBtnEl.textContent = '[ open in full cron parser ]';
+      demoGoBtnEl.href = '/tools/cron-parser/';
+      demoPloadKey = 'magic_box_payload';
       return;
     }
 
-    demoFmtEl.textContent    = '// detecting…';
-    demoFmtEl.className      = 'demo-format-status';
-    demoOutEl.innerHTML      = '<span class="p">// paste JSON, JWT, or cron expression</span>';
+    demoFmtEl.textContent = '// detecting…';
+    demoFmtEl.className = 'demo-format-status';
+    demoOutEl.innerHTML = '<span class="p">// paste JSON, JWT, or cron expression</span>';
     demoFootEl.style.display = 'none';
-    demoPloadKey             = null;
+    demoPloadKey = null;
   }
 
   demoInEl?.addEventListener('input', detectAndRender);
 
-  demoGoBtnEl?.addEventListener('click', e => {
+  demoGoBtnEl?.addEventListener('click', (e) => {
     e.preventDefault();
     if (demoPloadKey && demoInEl.value.trim()) {
       sessionStorage.setItem(demoPloadKey, demoInEl.value.trim());
@@ -724,31 +960,46 @@ const catGroups = CAT_ORDER
   /* ── Search bar / shortcut ──────────────────────────── */
   const searchInput = document.querySelector('.search input');
 
-
   /* ── Smart Magic Box (search input detection) ───────── */
   const MAGIC = [
-    { re: /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/, label: '[detected: jwt token]',      slug: 'jwt-decoder',    key: 'jwt_payload'  },
-    { re: /^\s*[{\[][\s\S]{2,}[}\]]\s*$/,                                       label: '[detected: json]',          slug: 'json-formatter', key: 'json_payload' },
-    { re: /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/, label: '[detected: cron expression]', slug: 'cron-parser', key: 'cron_payload' },
+    {
+      re: /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/,
+      label: '[detected: jwt token]',
+      slug: 'jwt-decoder',
+      key: 'jwt_payload',
+    },
+    {
+      re: /^\s*[{\[][\s\S]{2,}[}\]]\s*$/,
+      label: '[detected: json]',
+      slug: 'json-formatter',
+      key: 'json_payload',
+    },
+    {
+      re: /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/,
+      label: '[detected: cron expression]',
+      slug: 'cron-parser',
+      key: 'cron_payload',
+    },
   ];
 
   const magicDetect = document.getElementById('magicDetect');
-  const magicType   = document.getElementById('magicType');
-  const magicGo     = document.getElementById('magicGo');
-  let magicSlug = null, magicKey = null;
+  const magicType = document.getElementById('magicType');
+  const magicGo = document.getElementById('magicGo');
+  let magicSlug = null,
+    magicKey = null;
 
   if (searchInput && magicDetect) {
     searchInput.addEventListener('input', () => {
       const val = searchInput.value.trim();
-      const hit = val.length > 8 ? MAGIC.find(p => p.re.test(val)) : null;
+      const hit = val.length > 8 ? MAGIC.find((p) => p.re.test(val)) : null;
       if (hit) {
-        magicType.textContent     = hit.label;
-        magicSlug                 = hit.slug;
-        magicKey                  = hit.key;
+        magicType.textContent = hit.label;
+        magicSlug = hit.slug;
+        magicKey = hit.key;
         magicDetect.style.display = 'flex';
       } else {
         magicDetect.style.display = 'none';
-        magicSlug                 = null;
+        magicSlug = null;
       }
     });
   }

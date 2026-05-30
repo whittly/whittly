@@ -2,8 +2,10 @@
 import '../styles/global.css';
 import { CATALOG, toolSlug } from '../data/catalog';
 import pkg from '../../package.json';
+import CommandPalette from '../components/CommandPalette.astro';
+import HistorySidebar from '../components/HistorySidebar.astro';
 const version = pkg.version;
-const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+const buildDate = import.meta.env.VITE_BUILD_DATE ?? null;
 
 interface Props {
   title: string;
@@ -17,15 +19,13 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 const SITE = 'https://whittly.dev';
 const pathname = Astro.url.pathname;
 const isRu = pathname.startsWith('/ru');
-const altUrl = isRu
-  ? (pathname.replace(/^\/ru/, '') || '/')
-  : '/ru' + pathname;
+const altUrl = isRu ? pathname.replace(/^\/ru/, '') || '/' : '/ru' + pathname;
 const canonical = SITE + pathname;
 const altAbsolute = SITE + altUrl;
 const enUrl = isRu ? altAbsolute : canonical;
 const ruUrl = isRu ? canonical : altAbsolute;
 
-const catalog = CATALOG.map(t => ({
+const catalog = CATALOG.map((t) => ({
   name: t.name,
   slug: toolSlug(t),
   desc: t.desc,
@@ -35,662 +35,307 @@ const catalog = CATALOG.map(t => ({
 ---
 
 <style is:global>
-/* ─── Cmd+K Palette ─────────────────────────────────── */
-.palette-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
-  z-index: 1000; align-items: flex-start; justify-content: center;
-  padding-top: 18vh;
-}
-.palette-overlay.active { display: flex; }
+  .nav-pro {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #c44520 0%, #d4a030 100%);
+    color: white !important;
+    text-decoration: none !important;
+    letter-spacing: 0.06em;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .nav-pro:hover {
+    opacity: 0.82;
+  }
+  .nav-pro-cs {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .nav-pro-cs:hover {
+    opacity: 0.45;
+  }
 
-.palette-modal {
-  background: var(--surface); border: 0.5px solid var(--line-strong);
-  border-radius: var(--radius-lg); width: calc(100% - 32px); max-width: 540px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
-}
+  .nav-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 8px;
+    text-decoration: none;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .nav-lang:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
-.palette-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 18px; border-bottom: 0.5px solid var(--line);
-}
-.palette-bar .pi { font-size: 15px; color: var(--ink-faint); flex-shrink: 0; }
-.palette-bar input {
-  flex: 1; border: none; outline: none; background: none;
-  font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--ink);
-}
-.palette-bar input::placeholder { color: var(--ink-faint); }
-.palette-esc {
-  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
-  border: 0.5px solid var(--line-strong); border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
-}
-
-.palette-list { max-height: 340px; overflow-y: auto; }
-
-.pl-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 18px; text-decoration: none; color: var(--ink);
-  transition: background 0.1s;
-}
-.pl-item:hover, .pl-item.pl-on { background: var(--accent-soft); }
-.pl-icon { font-size: 15px; color: var(--ink-soft); flex-shrink: 0; width: 20px; }
-.pl-name { font-size: 13.5px; flex: 1; }
-.pl-cat { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint); }
-.pl-empty { padding: 22px 18px; font-size: 13px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
-
-/* ─── History Sidebar ───────────────────────────────── */
-.hist-sidebar {
-  position: fixed; left: 0; top: 0; height: 100vh; width: 268px;
-  background: var(--surface); border-right: 0.5px solid var(--line);
-  transform: translateX(-100%); transition: transform 0.22s ease;
-  z-index: 900; display: flex; flex-direction: column;
-  box-shadow: 4px 0 24px rgba(0,0,0,0.06);
-}
-.hist-sidebar.open { transform: translateX(0); }
-
-.hist-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; border-bottom: 0.5px solid var(--line);
-}
-.hist-head-title {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px;
-  font-weight: 500; color: var(--ink-soft); letter-spacing: 0.06em;
-}
-.hist-x {
-  background: none; border: none; cursor: pointer; color: var(--ink-faint);
-  display: flex; align-items: center; font-size: 14px; padding: 4px;
-  border-radius: 4px; transition: color 0.12s, background 0.12s;
-}
-.hist-x:hover { color: var(--ink); background: var(--surface-sunken); }
-
-.hist-pro {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 18px; border-bottom: 0.5px solid var(--line);
-  background: var(--surface-sunken); font-size: 12px; color: var(--ink-faint);
-}
-.hist-pro a { color: var(--accent); text-decoration: none; }
-.hist-pro a:hover { text-decoration: underline; }
-.hist-pro-tag {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
-  background: var(--accent-soft); color: var(--accent);
-  border: 0.5px solid var(--accent); border-radius: 4px;
-  padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.04em;
-}
-
-.hist-list { flex: 1; overflow-y: auto; }
-.hist-none { padding: 24px 18px; font-size: 12.5px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; }
-
-.hist-row { padding: 10px 18px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
-.hist-row:last-child { border-bottom: none; }
-.hist-row-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.hist-row-t { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
-.hist-row-s { font-size: 12px; color: var(--ink-soft); }
-.hist-row-ts { font-size: 10px; color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-.hist-row-link { cursor: pointer; }
-.hist-row-link:hover { background: var(--accent-soft); }
-.hist-row-restore { font-size: 11px; color: var(--ink-faint); opacity: 0; transition: opacity 0.12s; }
-.hist-row-link:hover .hist-row-restore { opacity: 1; color: var(--accent); }
-
-.hist-row-input {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-faint);
-  background: var(--surface-sunken); border-radius: 4px;
-  padding: 4px 6px; margin-top: 2px;
-  display: block; white-space: pre-wrap; word-break: break-all;
-  max-height: 56px; overflow: hidden;
-}
-
-.hist-btn {
-  position: fixed; left: 0; top: 0; height: 100vh;
-  width: 24px;
-  background: var(--surface);
-  border-right: 0.5px solid var(--line);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--ink-soft);
-  transition: color 0.12s, left 0.22s ease; z-index: 950;
-  overflow: visible;
-}
-.hist-btn:hover { color: var(--accent); }
-.hist-btn-tab {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  padding: 14px 0;
-  width: 100%;
-  z-index: 1;
-}
-.hist-btn-tab::after {
-  content: '';
-  position: absolute; top: 0; bottom: 0;
-  left: -1px; right: -10px;
-  background: var(--surface);
-  border: 0.5px solid var(--line); border-left: none;
-  border-radius: 0 9px 9px 0;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
-  z-index: -1;
-  transition: background 0.12s;
-}
-.hist-btn:hover .hist-btn-tab::after { background: var(--accent-soft); border-color: var(--accent); }
-.hist-btn-label {
-  writing-mode: vertical-rl; transform: rotate(180deg);
-  font-family: 'JetBrains Mono', monospace; font-size: 11px;
-  letter-spacing: 0.1em; color: inherit;
-}
-/* hist-btn moves with the sidebar — handled via JS */
-
-.nav-pro {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #C44520 0%, #D4A030 100%);
-  color: white !important;
-  text-decoration: none !important;
-  letter-spacing: 0.06em;
-  transition: opacity 0.15s;
-  white-space: nowrap;
-}
-.nav-pro:hover { opacity: 0.82; }
-.nav-pro-cs { opacity: 0.45; cursor: default; }
-.nav-pro-cs:hover { opacity: 0.45; }
-
-.nav-lang {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--ink-faint);
-  border: 0.5px solid var(--line);
-  border-radius: 5px;
-  padding: 3px 8px;
-  text-decoration: none;
-  transition: all 0.12s;
-  white-space: nowrap;
-}
-.nav-lang:hover { color: var(--accent); border-color: var(--accent); }
-
-.nav-account {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--ink-faint);
-  border: 0.5px solid var(--line);
-  border-radius: 5px;
-  padding: 3px 8px;
-  text-decoration: none;
-  display: flex; align-items: center; gap: 4px;
-  transition: all 0.12s;
-  white-space: nowrap;
-}
-.nav-account:hover { color: var(--accent); border-color: var(--accent); }
-.nav-account.authed { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+  .nav-account {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 8px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .nav-account:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .nav-account.authed {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
 </style>
 
-<!DOCTYPE html>
 <html lang={isRu ? 'ru' : 'en'}>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <title>{title}</title>
-  {description && <meta name="description" content={description} />}
-  <link rel="canonical" href={canonical} />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
 
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content={canonical} />
-  <meta property="og:title" content={title} />
-  {description && <meta property="og:description" content={description} />}
-  <meta property="og:site_name" content="whittly" />
-  <meta property="og:image" content={`${SITE}/og.png`} />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:site_name" content="whittly" />
+    <meta property="og:image" content={`${SITE}/og.png`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={title} />
-  {description && <meta name="twitter:description" content={description} />}
-  <meta name="twitter:image" content={`${SITE}/og.png`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={`${SITE}/og.png`} />
 
-  {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
-  <link rel="alternate" hreflang="en" href={enUrl} />
-  <link rel="alternate" hreflang="ru" href={ruUrl} />
-  <link rel="alternate" hreflang="x-default" href={enUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="ru" href={ruUrl} />
+    <link rel="alternate" hreflang="x-default" href={enUrl} />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-  <slot name="head" />
-  <script is:inline>
-  /* Auto-redirect CIS browser languages to /ru/ — skips if user explicitly chose EN */
-  (function () {
-    try {
-      if (localStorage.getItem('wh_lang') === 'en') return;
-      var path = location.pathname;
-      if (path.startsWith('/ru')) return;
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+    />
+    <slot name="head" />
+    <script is:inline>
+      /* Auto-redirect CIS browser languages to /ru/ — skips if user explicitly chose EN */
+      (function () {
+        try {
+          if (localStorage.getItem('wh_lang') === 'en') return;
+          var path = location.pathname;
+          if (path.startsWith('/ru')) return;
 
-      var lang = (navigator.language || '').toLowerCase();
-      var isCis = /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang);
-      if (!isCis) return;
-      location.replace(path === '/' ? '/ru/' : '/ru' + path + location.search);
-    } catch (e) {}
-  })();
-  </script>
-</head>
-<body>
-  <div class="container">
-    <nav>
-      <a class="logo" href={isRu ? '/ru/' : '/'}>
-        <span class="logo-mark">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" fill="currentColor">
-            <text x="24" y="38" font-family="Georgia, serif" font-size="44" font-weight="400" text-anchor="middle">{'{}' }</text>
-          </svg>
-        </span>
-        <span>whittly</span>
-      </a>
-
-      <button class="nav-search" id="navCmdK" type="button">
-        <i class="ti ti-search"></i>
-        <span class="nav-search-ph">{isRu ? 'поиск инструментов…' : 'search tools…'}</span>
-        <kbd class="nav-search-kbd" id="kbdHint">⌘K</kbd>
-      </button>
-
-      <div class="nav-util">
-        <a href={altUrl} class="nav-lang">{isRu ? 'EN' : 'RU'}</a>
-        <a class="nav-account" id="navAccount" href={isRu ? '/ru/account/login/' : '/account/login/'}>
-          <i class="ti ti-user-circle"></i>
-          <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
+          var lang = (navigator.language || '').toLowerCase();
+          var isCis = /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang);
+          if (!isCis) return;
+          location.replace(path === '/' ? '/ru/' : '/ru' + path + location.search);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <nav>
+        <a class="logo" href={isRu ? '/ru/' : '/'}>
+          <span class="logo-mark">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+              width="28"
+              height="28"
+              fill="currentColor"
+            >
+              <text
+                x="24"
+                y="38"
+                font-family="Georgia, serif"
+                font-size="44"
+                font-weight="400"
+                text-anchor="middle">{'{}'}</text
+              >
+            </svg>
+          </span>
+          <span>whittly</span>
         </a>
-      </div>
-    </nav>
 
-    <slot />
+        <button class="nav-search" id="navCmdK" type="button">
+          <i class="ti ti-search"></i>
+          <span class="nav-search-ph">{isRu ? 'поиск инструментов…' : 'search tools…'}</span>
+          <kbd class="nav-search-kbd" id="kbdHint">⌘K</kbd>
+        </button>
 
-    <footer>
-      <span>{isRu ? 'сделано с заботой о разработчиках · ' : 'made with care for fellow developers · '}<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener">popelyshko.com</a></span>
-      <nav class="footer-nav">
-        <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
-        <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
-        <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
-        <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link">{isRu ? 'конфиденциальность' : 'privacy'}</a>
-        <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link">{isRu ? 'условия' : 'terms'}</a>
+        <div class="nav-util">
+          <a href={altUrl} class="nav-lang">{isRu ? 'EN' : 'RU'}</a>
+          <a
+            class="nav-account"
+            id="navAccount"
+            href={isRu ? '/ru/account/login/' : '/account/login/'}
+          >
+            <i class="ti ti-user-circle"></i>
+            <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
+          </a>
+        </div>
       </nav>
-      <span class="meta">v{version} · build {buildDate} · <a href="https://github.com/whittly" target="_blank" rel="noopener" class="meta-link">github ↗</a></span>
-    </footer>
-  </div>
 
-  <!-- Cmd+K Palette -->
-  <div id="whPalette" class="palette-overlay" role="dialog" aria-modal="true" aria-label="command palette">
-    <div class="palette-modal">
-      <div class="palette-bar">
-        <i class="ti ti-search pi"></i>
-        <input id="paletteInput" type="text" placeholder={isRu ? 'поиск инструментов…' : 'search tools…'} autocomplete="off" spellcheck="false" />
-        <kbd class="palette-esc">esc</kbd>
-      </div>
-      <div class="palette-list" id="paletteList"></div>
+      <slot />
+
+      <footer>
+        <span
+          >{
+            isRu
+              ? 'сделано с заботой о разработчиках · '
+              : 'made with care for fellow developers · '
+          }<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener"
+            >popelyshko.com</a
+          ></span
+        >
+        <nav class="footer-nav">
+          <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link"
+            >{isRu ? 'инструменты' : 'tools'}</a
+          >
+          <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link"
+            >{isRu ? 'о проекте' : 'about'}</a
+          >
+          <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
+          <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link"
+            >{isRu ? 'конфиденциальность' : 'privacy'}</a
+          >
+          <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link"
+            >{isRu ? 'условия' : 'terms'}</a
+          >
+        </nav>
+        <span class="meta"
+          >v{version}{buildDate ? ` · ${buildDate}` : ''} · <a
+            href="https://github.com/whittly"
+            target="_blank"
+            rel="noopener"
+            class="meta-link">github ↗</a
+          ></span
+        >
+      </footer>
     </div>
-  </div>
 
-  <!-- History Sidebar -->
-  <div id="whHist" class="hist-sidebar">
-    <div class="hist-head">
-      <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
-      <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="hist-pro" id="histPro">
-      <span class="hist-pro-tag">Pro</span>
-      <span>{isRu ? 'Облачная синхронизация — ' : 'Cloud Sync — '}<a href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее' : 'upgrade'}</a></span>
-    </div>
-    <div class="hist-list" id="histList"><div class="hist-none">{isRu ? 'операций пока нет' : 'no operations yet'}</div></div>
-  </div>
-  <button class="hist-btn" id="histBtn" type="button" title={isRu ? 'история операций' : 'operation history'}>
-    <div class="hist-btn-tab">
-      <i class="ti ti-chevron-right" style="font-size:11px"></i>
-      <span class="hist-btn-label">{isRu ? 'история' : 'history'}</span>
-    </div>
-  </button>
+    <CommandPalette isRu={isRu} catalog={catalog} />
+    <HistorySidebar isRu={isRu} catalog={catalog} />
 
-  <!-- Catalog data for Cmd+K palette -->
-  <div id="whCatalog" hidden>{JSON.stringify(catalog)}</div>
-  <div id="whApi" hidden>{API}</div>
+    <script is:inline define:vars={{ API }}>
+      (function () {
+        var API_URL = API;
 
-  <script is:inline>
-  (function () {
-    var isRu = document.documentElement.lang === 'ru';
-    var catalog = [];
-    try { catalog = JSON.parse(document.getElementById('whCatalog').textContent || '[]'); } catch (e) {}
-    var API_URL = (document.getElementById('whApi') || {}).textContent || '';
-
-    function getJwtPlan() {
-      try {
-        var token = localStorage.getItem('wh_access');
-        if (!token) return null;
-        var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-        return payload.plan || 'free';
-      } catch (e) { return null; }
-    }
-
-    /* ─── Auth token refresh ─── */
-    window.whRefreshAuth = function() {
-      var rt = localStorage.getItem('wh_refresh');
-      if (!rt) return Promise.resolve(null);
-      return fetch(API_URL + '/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: rt }),
-      }).then(function(r) {
-        return r.ok ? r.json() : null;
-      }).then(function(data) {
-        if (!data) { localStorage.removeItem('wh_access'); localStorage.removeItem('wh_refresh'); return null; }
-        localStorage.setItem('wh_access',  data.accessToken);
-        localStorage.setItem('wh_refresh', data.refreshToken);
-        return data.accessToken;
-      }).catch(function() { return null; });
-    };
-
-    /* ─── IndexedDB for full history inputs ─── */
-    var _idb = null;
-    function openDB(cb) {
-      if (_idb) { cb(_idb); return; }
-      var req = indexedDB.open('whittly', 1);
-      req.onupgradeneeded = function (e) {
-        e.target.result.createObjectStore('hist_inputs', { keyPath: 'ts' });
-      };
-      req.onsuccess = function (e) { _idb = e.target.result; cb(_idb); };
-      req.onerror   = function ()  { cb(null); };
-    }
-    function dbSaveInput(ts, input) {
-      openDB(function (db) {
-        if (!db) return;
-        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').put({ ts: ts, input: input });
-      });
-    }
-    function dbGetInput(ts, cb) {
-      openDB(function (db) {
-        if (!db) { cb(null); return; }
-        var req = db.transaction('hist_inputs', 'readonly').objectStore('hist_inputs').get(ts);
-        req.onsuccess = function () { cb(req.result ? req.result.input : null); };
-        req.onerror   = function () { cb(null); };
-      });
-    }
-    function dbDeleteInput(ts) {
-      openDB(function (db) {
-        if (!db) return;
-        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').delete(ts);
-      });
-    }
-
-    /* ─── Palette ─── */
-    var palette = document.getElementById('whPalette');
-    var pInput  = document.getElementById('paletteInput');
-    var pList   = document.getElementById('paletteList');
-
-    function renderPalette(q) {
-      q = (q || '').toLowerCase().trim();
-      var items = q
-        ? catalog.filter(function (t) {
-            return t.name.indexOf(q) !== -1 || t.desc.indexOf(q) !== -1 || t.cat.indexOf(q) !== -1;
-          })
-        : catalog;
-      if (!items.length) {
-        pList.innerHTML = '<div class="pl-empty">// ' + (isRu ? 'инструменты не найдены' : 'no tools found') + '</div>';
-        return;
-      }
-      pList.innerHTML = items.map(function (t, i) {
-        return '<a class="pl-item' + (i === 0 ? ' pl-on' : '') + '" href="' + (isRu ? '/ru/tools/' : '/tools/') + t.slug + '/">'
-          + '<i class="ti ' + t.icon + ' pl-icon"></i>'
-          + '<span class="pl-name">' + t.name + '</span>'
-          + '<span class="pl-cat">' + t.cat + '</span>'
-          + '</a>';
-      }).join('');
-    }
-
-    var isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
-    var kbdHint = document.getElementById('kbdHint');
-    if (kbdHint) kbdHint.textContent = isMac ? '⌘K' : 'Ctrl K';
-
-    function openPalette() {
-      palette.classList.add('active');
-      pInput.value = '';
-      renderPalette('');
-      requestAnimationFrame(function () { pInput.focus(); });
-    }
-
-    function closePalette() { palette.classList.remove('active'); }
-
-    document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        palette.classList.contains('active') ? closePalette() : openPalette();
-      }
-      if (e.key === 'Escape' && palette.classList.contains('active')) closePalette();
-    });
-
-    pInput && pInput.addEventListener('input', function () { renderPalette(pInput.value); });
-
-    pInput && pInput.addEventListener('keydown', function (e) {
-      var items  = pList.querySelectorAll('.pl-item');
-      var active = pList.querySelector('.pl-item.pl-on');
-      var idx    = Array.prototype.indexOf.call(items, active);
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (active) active.classList.remove('pl-on');
-        var nxt = items[(idx + 1) % items.length];
-        if (nxt) { nxt.classList.add('pl-on'); nxt.scrollIntoView({ block: 'nearest' }); }
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (active) active.classList.remove('pl-on');
-        var prv = items[(idx - 1 + items.length) % items.length];
-        if (prv) { prv.classList.add('pl-on'); prv.scrollIntoView({ block: 'nearest' }); }
-      } else if (e.key === 'Enter') {
-        var cur = pList.querySelector('.pl-item.pl-on');
-        if (cur) window.location.href = cur.getAttribute('href');
-      }
-    });
-
-    palette && palette.addEventListener('click', function (e) {
-      if (e.target === palette) closePalette();
-    });
-
-    var navCmdK = document.getElementById('navCmdK');
-    navCmdK && navCmdK.addEventListener('click', openPalette);
-
-    /* ─── History ─── */
-    var HIST_KEY = 'wh_hist';
-    var HIST_MAX = 15;
-
-    window.pushHistory = function (tool, summary, input) {
-      try {
-        var ts = Date.now();
-        var inputStr = input || '';
-        var entry = {
-          tool: tool, summary: summary,
-          inputPreview: inputStr.slice(0, 300),
-          hasInput: inputStr.length > 0,
-          ts: ts, path: location.pathname,
-        };
-        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-        entries.unshift(entry);
-        var removed = entries.length > HIST_MAX ? entries.splice(HIST_MAX) : [];
-        localStorage.setItem(HIST_KEY, JSON.stringify(entries));
-        renderHistory();
-        if (inputStr) {
-          dbSaveInput(ts, inputStr);
-          removed.forEach(function (e) { if (e.hasInput) dbDeleteInput(e.ts); });
-        }
-        var plan = getJwtPlan();
-        if (plan === 'pro' || plan === 'api') {
-          fetch(API_URL + '/user/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('wh_access') },
-            body: JSON.stringify({ tool: tool, summary: summary, input: inputStr.slice(0, 2000), ts: ts }),
-          }).catch(function () {});
-        }
-      } catch (err) {}
-    };
-
-    function timeAgo(ts) {
-      var diff = Date.now() - ts;
-      var m = Math.floor(diff / 60000);
-      if (isRu) {
-        if (m < 1) return 'только что';
-        if (m < 60) return m + 'м назад';
-        var h = Math.floor(m / 60);
-        if (h < 24) return h + 'ч назад';
-        return Math.floor(h / 24) + 'д назад';
-      }
-      if (m < 1) return 'just now';
-      if (m < 60) return m + 'm ago';
-      var h = Math.floor(m / 60);
-      if (h < 24) return h + 'h ago';
-      return Math.floor(h / 24) + 'd ago';
-    }
-
-    function renderHistory() {
-      var list = document.getElementById('histList');
-      if (!list) return;
-      try {
-        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-        if (!entries.length) {
-          list.innerHTML = '<div class="hist-none">' + (isRu ? 'операций пока нет' : 'no operations yet') + '</div>';
-          return;
-        }
-        list.innerHTML = entries.map(function (e) {
-          var preview = e.inputPreview || e.input || '';
-          var safePreview = preview.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          // derive path from catalog if not stored (e.g. server-synced entries)
-          var toolPath = e.path;
-          if (!toolPath) {
-            var hit = catalog.find(function (t) { return t.name.toLowerCase() === (e.tool || '').toLowerCase(); });
-            if (hit) toolPath = (isRu ? '/ru/tools/' : '/tools/') + hit.slug + '/';
+        function getJwtPlan() {
+          try {
+            var token = localStorage.getItem('wh_access');
+            if (!token) return null;
+            var payload = JSON.parse(
+              atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+            );
+            return payload.plan || 'free';
+          } catch (e) {
+            return null;
           }
-          var hasLink = !!(toolPath && (e.hasInput || e.input));
-          var inputHtml = safePreview
-            ? '<span class="hist-row-input">' + safePreview + '</span>'
-            : '';
-          return '<div class="hist-row' + (hasLink ? ' hist-row-link' : '') + '"'
-            + (hasLink ? ' data-path="' + toolPath + '" data-ts="' + e.ts + '"' : '') + '>'
-            + '<div class="hist-row-meta"><span class="hist-row-t">' + e.tool + '</span>'
-            + (hasLink ? '<span class="hist-row-restore"><i class="ti ti-corner-down-left"></i></span>' : '')
-            + '<span class="hist-row-ts">' + timeAgo(e.ts) + '</span></div>'
-            + '<span class="hist-row-s">' + e.summary + '</span>'
-            + inputHtml
-            + '</div>';
-        }).join('');
-      } catch (err) {
-        list.innerHTML = '<div class="hist-none">' + (isRu ? 'операций пока нет' : 'no operations yet') + '</div>';
-      }
-    }
-
-    var histSidebar = document.getElementById('whHist');
-    var histBtn     = document.getElementById('histBtn');
-    var histClose   = document.getElementById('histClose');
-
-    var histIcon = histBtn ? histBtn.querySelector('i') : null;
-    histBtn && histBtn.addEventListener('click', function () {
-      var opening = !histSidebar.classList.contains('open');
-      histSidebar.classList.toggle('open', opening);
-      histBtn.style.left = opening ? '268px' : '0';
-      if (histIcon) {
-        histIcon.className = opening ? 'ti ti-chevron-left' : 'ti ti-chevron-right';
-      }
-      if (opening) renderHistory();
-    });
-
-    var histListEl = document.getElementById('histList');
-    histListEl && histListEl.addEventListener('click', function (ev) {
-      var row = ev.target.closest('.hist-row-link');
-      if (!row) return;
-      var path = row.dataset.path;
-      var ts   = row.dataset.ts;
-      if (!path) return;
-      if (ts) sessionStorage.setItem('wh_restore_ts', ts);
-      window.location.href = path;
-    });
-
-    histClose && histClose.addEventListener('click', function () {
-      histSidebar.classList.remove('open');
-      histBtn.style.left = '0';
-      if (histIcon) histIcon.className = 'ti ti-chevron-right';
-    });
-
-    /* ─── Account nav ─── */
-    var navAccount      = document.getElementById('navAccount');
-    var navAccountLabel = document.getElementById('navAccountLabel');
-    if (navAccount && navAccountLabel && localStorage.getItem('wh_access')) {
-      navAccount.href = isRu ? '/ru/account/' : '/account/';
-      navAccount.classList.add('authed');
-      navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
-    }
-
-    /* ─── History cloud sync for Pro users ─── */
-    var _plan = getJwtPlan();
-    var histProEl = document.getElementById('histPro');
-    if (histProEl && (_plan === 'pro' || _plan === 'api')) {
-      histProEl.innerHTML = '<span class="hist-pro-tag">Pro</span><span>' + (isRu ? 'история синхронизируется' : 'history synced') + ' <i class="ti ti-cloud-check" style="font-size:12px;vertical-align:middle"></i></span>';
-    }
-    if (_plan === 'pro' || _plan === 'api') {
-      function doHistoryFetch(token) {
-        return fetch(API_URL + '/user/history', { headers: { 'Authorization': 'Bearer ' + token } });
-      }
-      doHistoryFetch(localStorage.getItem('wh_access') || '').then(function(r) {
-        if (r.status === 401 && window.whRefreshAuth) {
-          return window.whRefreshAuth().then(function(t) { return t ? doHistoryFetch(t) : null; });
         }
-        return r;
-      }).then(function (r) {
-        return (r && r.ok) ? r.json() : null;
-      }).then(function (data) {
-        if (data && Array.isArray(data.entries) && data.entries.length) {
-          var _existing = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-          var _pathByTs = {};
-          _existing.forEach(function (e) { if (e.path) _pathByTs[e.ts] = e.path; });
-          var localEntries = data.entries.map(function (e) {
-            return { tool: e.tool, summary: e.summary, inputPreview: (e.input || '').slice(0, 300), hasInput: !!(e.input), ts: e.ts, path: _pathByTs[e.ts] || null };
-          });
-          localStorage.setItem(HIST_KEY, JSON.stringify(localEntries));
-          // only write to IndexedDB if not already present — don't overwrite full local input with server-truncated version
-          data.entries.forEach(function (e) {
-            if (e.input) {
-              dbGetInput(e.ts, function(existing) {
-                if (!existing) dbSaveInput(e.ts, e.input);
+
+        /* ─── Auth token refresh ─── */
+        window.whRefreshAuth = function () {
+          var rt = localStorage.getItem('wh_refresh');
+          if (!rt) return Promise.resolve(null);
+          return fetch(API_URL + '/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+          })
+            .then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+            .then(function (data) {
+              if (!data) {
+                localStorage.removeItem('wh_access');
+                localStorage.removeItem('wh_refresh');
+                return null;
+              }
+              localStorage.setItem('wh_access', data.accessToken);
+              localStorage.setItem('wh_refresh', data.refreshToken);
+              return data.accessToken;
+            })
+            .catch(function () {
+              return null;
+            });
+        };
+
+        /* ─── Global API client ─── */
+        window.whApi = {
+          getToken: function () {
+            return localStorage.getItem('wh_access') || '';
+          },
+          getPlan: getJwtPlan,
+          fetch: function (path, opts) {
+            opts = opts || {};
+            var doFetch = function (tok) {
+              return fetch(
+                API_URL + path,
+                Object.assign({}, opts, {
+                  headers: Object.assign({}, opts.headers || {}, {
+                    Authorization: 'Bearer ' + tok,
+                  }),
+                })
+              );
+            };
+            return doFetch(localStorage.getItem('wh_access') || '').then(function (r) {
+              if (r.status !== 401 || !window.whRefreshAuth) return r;
+              return window.whRefreshAuth().then(function (t) {
+                return t ? doFetch(t) : r;
               });
+            });
+          },
+        };
+
+        /* ─── Account nav ─── */
+        var isRu = document.documentElement.lang === 'ru';
+        var navAccount = document.getElementById('navAccount');
+        var navAccountLabel = document.getElementById('navAccountLabel');
+        if (navAccount && navAccountLabel && localStorage.getItem('wh_access')) {
+          navAccount.href = isRu ? '/ru/account/' : '/account/';
+          navAccount.classList.add('authed');
+          navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
+        }
+
+        /* ─── Language switcher — persist explicit choice ─── */
+        var langSwitcherEl = document.querySelector('.nav-lang');
+        if (langSwitcherEl) {
+          langSwitcherEl.addEventListener('click', function () {
+            if (isRu) {
+              localStorage.setItem('wh_lang', 'en');
+            } else {
+              localStorage.removeItem('wh_lang');
             }
           });
-          renderHistory();
         }
-      }).catch(function () {});
-    }
-
-    /* ─── Restore input from history (IndexedDB) ─── */
-    var _restoreTs = sessionStorage.getItem('wh_restore_ts');
-    if (_restoreTs) {
-      sessionStorage.removeItem('wh_restore_ts');
-      setTimeout(function () {
-        dbGetInput(Number(_restoreTs), function (input) {
-          if (!input) return;
-          var el = document.querySelector('[data-hist-main-input]');
-          if (!el) return;
-          el.value = input;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.focus();
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }, 0);
-    }
-
-    /* ─── Language switcher — persist explicit choice ─── */
-    var langSwitcherEl = document.querySelector('.nav-lang');
-    if (langSwitcherEl) {
-      langSwitcherEl.addEventListener('click', function () {
-        if (isRu) {
-          localStorage.setItem('wh_lang', 'en');
-        } else {
-          localStorage.removeItem('wh_lang');
-        }
-      });
-    }
-
-  })();
-  </script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

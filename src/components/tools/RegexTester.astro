@@ -1,52 +1,55 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  statusEmpty:       isRu ? '— введите паттерн' : '— enter a pattern',
-  noMatches:         isRu ? 'нет совпадений' : 'no matches',
+  statusEmpty: isRu ? '— введите паттерн' : '— enter a pattern',
+  noMatches: isRu ? 'нет совпадений' : 'no matches',
   enterPatternAbove: isRu ? '— введите паттерн выше' : '— enter a pattern above',
-  matchSuffix:       isRu ? ' совп.' : ' match',
-  matchesSuffix:     isRu ? ' совп.' : ' matches',
-  groups:            isRu ? '· группы:' : '· groups:',
-  refTitle:          isRu ? '// справка' : '// reference',
-  matchesHead:       isRu ? '// совпадения' : '// matches',
+  matchSuffix: isRu ? ' совп.' : ' match',
+  matchesSuffix: isRu ? ' совп.' : ' matches',
+  groups: isRu ? '· группы:' : '· groups:',
+  refTitle: isRu ? '// справка' : '// reference',
+  matchesHead: isRu ? '// совпадения' : '// matches',
   // reference group names
-  gChars:     isRu ? 'символы'      : 'characters',
-  gAnchors:   isRu ? 'якоря'        : 'anchors',
-  gQuant:     isRu ? 'кванторы'     : 'quantifiers',
-  gGroups:    isRu ? 'группы & наборы' : 'groups &amp; sets',
+  gChars: isRu ? 'символы' : 'characters',
+  gAnchors: isRu ? 'якоря' : 'anchors',
+  gQuant: isRu ? 'кванторы' : 'quantifiers',
+  gGroups: isRu ? 'группы & наборы' : 'groups &amp; sets',
   // character descriptions
-  dDigit:     isRu ? 'цифра 0–9'           : 'digit 0–9',
-  dNonDigit:  isRu ? 'не цифра'            : 'non-digit',
-  dWord:      isRu ? 'символ слова'        : 'word char',
-  dNonWord:   isRu ? 'не символ слова'     : 'non-word',
-  dSpace:     isRu ? 'пробельный'          : 'whitespace',
-  dNonSpace:  isRu ? 'не пробельный'       : 'non-whitespace',
-  dAny:       isRu ? 'любой (кроме \\n)'  : 'any (not \\n)',
-  dNewline:   isRu ? 'новая строка'        : 'newline',
-  dTab:       isRu ? 'табуляция'           : 'tab',
-  dLineStart: isRu ? 'начало строки'       : 'line start',
-  dLineEnd:   isRu ? 'конец строки'        : 'line end',
-  dBound:     isRu ? 'граница слова'       : 'word boundary',
-  dNonBound:  isRu ? 'не граница'          : 'non-boundary',
-  d0Plus:     isRu ? '0+ жадный'           : '0+ greedy',
-  d1Plus:     isRu ? '1+ жадный'           : '1+ greedy',
-  d0Or1:      isRu ? '0 или 1'             : '0 or 1',
-  dExactN:    isRu ? 'ровно n'             : 'exactly n',
-  dNtoM:      isRu ? 'от n до m'           : 'n to m',
-  d0Lazy:     isRu ? '0+ ленивый'          : '0+ lazy',
-  d1Lazy:     isRu ? '1+ ленивый'          : '1+ lazy',
-  dCapture:   isRu ? 'группа захвата'      : 'capture',
-  dNonCap:    isRu ? 'без захвата'         : 'non-capture',
-  dLook:      isRu ? 'опережение'          : 'lookahead',
-  dNegLook:   isRu ? 'neg. опережение'     : 'neg lookahead',
-  dSet:       isRu ? 'набор символов'      : 'char set',
-  dNegSet:    isRu ? 'отрицание набора'    : 'negated set',
-  dOr:        isRu ? 'или'                 : 'or',
+  dDigit: isRu ? 'цифра 0–9' : 'digit 0–9',
+  dNonDigit: isRu ? 'не цифра' : 'non-digit',
+  dWord: isRu ? 'символ слова' : 'word char',
+  dNonWord: isRu ? 'не символ слова' : 'non-word',
+  dSpace: isRu ? 'пробельный' : 'whitespace',
+  dNonSpace: isRu ? 'не пробельный' : 'non-whitespace',
+  dAny: isRu ? 'любой (кроме \\n)' : 'any (not \\n)',
+  dNewline: isRu ? 'новая строка' : 'newline',
+  dTab: isRu ? 'табуляция' : 'tab',
+  dLineStart: isRu ? 'начало строки' : 'line start',
+  dLineEnd: isRu ? 'конец строки' : 'line end',
+  dBound: isRu ? 'граница слова' : 'word boundary',
+  dNonBound: isRu ? 'не граница' : 'non-boundary',
+  d0Plus: isRu ? '0+ жадный' : '0+ greedy',
+  d1Plus: isRu ? '1+ жадный' : '1+ greedy',
+  d0Or1: isRu ? '0 или 1' : '0 or 1',
+  dExactN: isRu ? 'ровно n' : 'exactly n',
+  dNtoM: isRu ? 'от n до m' : 'n to m',
+  d0Lazy: isRu ? '0+ ленивый' : '0+ lazy',
+  d1Lazy: isRu ? '1+ ленивый' : '1+ lazy',
+  dCapture: isRu ? 'группа захвата' : 'capture',
+  dNonCap: isRu ? 'без захвата' : 'non-capture',
+  dLook: isRu ? 'опережение' : 'lookahead',
+  dNegLook: isRu ? 'neg. опережение' : 'neg lookahead',
+  dSet: isRu ? 'набор символов' : 'char set',
+  dNegSet: isRu ? 'отрицание набора' : 'negated set',
+  dOr: isRu ? 'или' : 'or',
 };
 ---
+
 <style is:global>
   .rx {
     background: var(--surface);
@@ -77,8 +80,12 @@ const t = {
     transition: border-color 0.15s;
   }
 
-  .rx-pattern-wrap:focus-within { border-color: var(--accent); }
-  .rx-pattern-wrap.rx-err        { border-color: var(--bad); }
+  .rx-pattern-wrap:focus-within {
+    border-color: var(--accent);
+  }
+  .rx-pattern-wrap.rx-err {
+    border-color: var(--bad);
+  }
 
   .rx-slash {
     font-family: 'JetBrains Mono', monospace;
@@ -112,7 +119,10 @@ const t = {
     letter-spacing: 0.03em;
   }
 
-  .rx-flag-btns { display: flex; gap: 3px; }
+  .rx-flag-btns {
+    display: flex;
+    gap: 3px;
+  }
 
   .rx-flag {
     font-family: 'JetBrains Mono', monospace;
@@ -127,8 +137,15 @@ const t = {
     font-style: italic;
   }
 
-  .rx-flag:hover { color: var(--ink); border-color: var(--line-strong); }
-  .rx-flag.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .rx-flag:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .rx-flag.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
 
   .rx-status {
     font-family: 'JetBrains Mono', monospace;
@@ -138,9 +155,15 @@ const t = {
     padding: 0 4px;
   }
 
-  .rx-status.ok  { color: var(--good); }
-  .rx-status.none { color: var(--ink-faint); }
-  .rx-status.err { color: var(--bad); }
+  .rx-status.ok {
+    color: var(--good);
+  }
+  .rx-status.none {
+    color: var(--ink-faint);
+  }
+  .rx-status.err {
+    color: var(--bad);
+  }
 
   .rx-panels {
     display: grid;
@@ -165,7 +188,9 @@ const t = {
     overflow: auto;
   }
 
-  .rx-sep { background: var(--line); }
+  .rx-sep {
+    background: var(--line);
+  }
 
   .rx-out {
     padding: 14px 16px;
@@ -187,12 +212,28 @@ const t = {
     outline: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   }
 
-  .rx-out .rx-hl0 { background: color-mix(in srgb, var(--accent) 18%, transparent); }
-  .rx-out .rx-hl1 { background: color-mix(in srgb, var(--good)   18%, transparent); color: var(--good); outline-color: color-mix(in srgb, var(--good) 30%, transparent); }
-  .rx-out .rx-hl2 { background: color-mix(in srgb, oklch(65% 0.18 60) 18%, transparent); color: oklch(55% 0.18 60); outline-color: color-mix(in srgb, oklch(65% 0.18 60) 30%, transparent); }
-  .rx-out .rx-hl3 { background: color-mix(in srgb, oklch(65% 0.16 300) 18%, transparent); color: oklch(55% 0.16 300); outline-color: color-mix(in srgb, oklch(65% 0.16 300) 30%, transparent); }
+  .rx-out .rx-hl0 {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .rx-out .rx-hl1 {
+    background: color-mix(in srgb, var(--good) 18%, transparent);
+    color: var(--good);
+    outline-color: color-mix(in srgb, var(--good) 30%, transparent);
+  }
+  .rx-out .rx-hl2 {
+    background: color-mix(in srgb, oklch(65% 0.18 60) 18%, transparent);
+    color: oklch(55% 0.18 60);
+    outline-color: color-mix(in srgb, oklch(65% 0.18 60) 30%, transparent);
+  }
+  .rx-out .rx-hl3 {
+    background: color-mix(in srgb, oklch(65% 0.16 300) 18%, transparent);
+    color: oklch(55% 0.16 300);
+    outline-color: color-mix(in srgb, oklch(65% 0.16 300) 30%, transparent);
+  }
 
-  .rx-out-ph { color: var(--ink-faint); }
+  .rx-out-ph {
+    color: var(--ink-faint);
+  }
 
   .rx-matches {
     border-top: 0.5px solid var(--line);
@@ -223,13 +264,38 @@ const t = {
     transition: background 0.1s;
   }
 
-  .rx-match-row:last-child { border-bottom: none; }
-  .rx-match-row:hover { background: var(--surface-sunken); }
+  .rx-match-row:last-child {
+    border-bottom: none;
+  }
+  .rx-match-row:hover {
+    background: var(--surface-sunken);
+  }
 
-  .rx-match-n    { color: var(--accent); font-size: 10px; font-weight: 700; width: 22px; flex-shrink: 0; }
-  .rx-match-val  { color: var(--ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rx-match-pos  { color: var(--ink-faint); font-size: 11px; flex-shrink: 0; }
-  .rx-match-grps { color: var(--ink-soft); font-size: 11px; flex-shrink: 0; }
+  .rx-match-n {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    width: 22px;
+    flex-shrink: 0;
+  }
+  .rx-match-val {
+    color: var(--ink);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rx-match-pos {
+    color: var(--ink-faint);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .rx-match-grps {
+    color: var(--ink-soft);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
 
   .rx-empty {
     padding: 12px 16px;
@@ -256,7 +322,9 @@ const t = {
     user-select: none;
     transition: color 0.12s;
   }
-  .rx-ref-hd:hover { color: var(--ink-soft); }
+  .rx-ref-hd:hover {
+    color: var(--ink-soft);
+  }
 
   .rx-ref-body {
     padding: 0 16px 14px;
@@ -276,7 +344,10 @@ const t = {
     border-bottom: 0.5px solid var(--line);
   }
 
-  .rx-ref-items { display: flex; flex-direction: column; }
+  .rx-ref-items {
+    display: flex;
+    flex-direction: column;
+  }
 
   .rx-ref-item {
     display: flex;
@@ -285,7 +356,9 @@ const t = {
     padding: 3px 0;
     border-bottom: 0.5px solid color-mix(in srgb, var(--line) 60%, transparent);
   }
-  .rx-ref-item:last-child { border-bottom: none; }
+  .rx-ref-item:last-child {
+    border-bottom: none;
+  }
 
   .rx-ref-tok {
     font-family: 'JetBrains Mono', monospace;
@@ -302,7 +375,11 @@ const t = {
     width: 50px;
     text-align: center;
   }
-  .rx-ref-tok:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .rx-ref-tok:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
 
   .rx-ref-desc {
     font-size: 11px;
@@ -312,12 +389,24 @@ const t = {
     text-overflow: ellipsis;
   }
 
-  @media (max-width: 760px) { .rx-ref-body { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 760px) {
+    .rx-ref-body {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
 
   @media (max-width: 640px) {
-    .rx-panels { grid-template-columns: 1fr; grid-template-rows: 180px 1px 180px; }
-    .rx-sep { width: 100%; height: 1px; }
-    .rx-ref-body { grid-template-columns: repeat(2, 1fr); }
+    .rx-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 180px 1px 180px;
+    }
+    .rx-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .rx-ref-body {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 </style>
 
@@ -326,26 +415,39 @@ const t = {
   <div class="rx-bar">
     <div class="rx-pattern-wrap" id="rxWrap">
       <span class="rx-slash">/</span>
-      <input class="rx-input" id="rxInput" spellcheck="false"
-             autocomplete="off" autocorrect="off" placeholder="pattern" />
+      <input
+        class="rx-input"
+        id="rxInput"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="pattern"
+      />
       <span class="rx-slash rx-flags-inline" id="rxFlagsInline">/g</span>
     </div>
     <div class="rx-flag-btns" id="rxFlagBtns">
       <button class="rx-flag active" data-flag="g" title="global">g</button>
-      <button class="rx-flag"        data-flag="i" title="ignore case">i</button>
-      <button class="rx-flag"        data-flag="m" title="multiline">m</button>
-      <button class="rx-flag"        data-flag="s" title="dot-all">s</button>
+      <button class="rx-flag" data-flag="i" title="ignore case">i</button>
+      <button class="rx-flag" data-flag="m" title="multiline">m</button>
+      <button class="rx-flag" data-flag="s" title="dot-all">s</button>
     </div>
     <span class="rx-status" id="rxStatus">{t.statusEmpty}</span>
     <span class="local-badge">// client-only</span>
   </div>
 
   <div class="rx-panels">
-    <textarea class="rx-in" id="rxText" data-hist-main-input spellcheck="false"
-              placeholder="test string…">The quick brown fox jumps over the lazy dog.
-Pack my box with five dozen liquor jugs.</textarea>
+    <textarea
+      class="rx-in"
+      id="rxText"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder="test string…"
+      >The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</textarea
+    >
     <div class="rx-sep"></div>
-    <pre class="rx-out" id="rxOut"><span class="rx-out-ph">// {isRu ? 'совпадения появятся здесь' : 'matches appear here'}</span></pre>
+    <pre
+      class="rx-out"
+      id="rxOut"><span class="rx-out-ph">// {isRu ? 'совпадения появятся здесь' : 'matches appear here'}</span></pre>
   </div>
 
   <div class="rx-matches">
@@ -361,240 +463,406 @@ Pack my box with five dozen liquor jugs.</textarea>
       <span id="rxRefArrow">−</span>
     </div>
     <div class="rx-ref-body" id="rxRefBody">
-
       <div class="rx-ref-group">
         <div class="rx-ref-gname">{t.gChars}</div>
         <div class="rx-ref-items">
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\d">\d</button><span class="rx-ref-desc">{t.dDigit}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\D">\D</button><span class="rx-ref-desc">{t.dNonDigit}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\w">\w</button><span class="rx-ref-desc">{t.dWord}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\W">\W</button><span class="rx-ref-desc">{t.dNonWord}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\s">\s</button><span class="rx-ref-desc">{t.dSpace}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\S">\S</button><span class="rx-ref-desc">{t.dNonSpace}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert=".">.</button><span class="rx-ref-desc">{t.dAny}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\n">\n</button><span class="rx-ref-desc">{t.dNewline}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\t">\t</button><span class="rx-ref-desc">{t.dTab}</span></div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\d">\d</button><span
+              class="rx-ref-desc">{t.dDigit}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\D">\D</button><span
+              class="rx-ref-desc">{t.dNonDigit}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\w">\w</button><span
+              class="rx-ref-desc">{t.dWord}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\W">\W</button><span
+              class="rx-ref-desc">{t.dNonWord}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\s">\s</button><span
+              class="rx-ref-desc">{t.dSpace}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\S">\S</button><span
+              class="rx-ref-desc">{t.dNonSpace}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert=".">.</button><span
+              class="rx-ref-desc">{t.dAny}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\n">\n</button><span
+              class="rx-ref-desc">{t.dNewline}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\t">\t</button><span
+              class="rx-ref-desc">{t.dTab}</span
+            >
+          </div>
         </div>
       </div>
 
       <div class="rx-ref-group">
         <div class="rx-ref-gname">{t.gAnchors}</div>
         <div class="rx-ref-items">
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="^">^</button><span class="rx-ref-desc">{t.dLineStart}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="$">$</button><span class="rx-ref-desc">{t.dLineEnd}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\b">\b</button><span class="rx-ref-desc">{t.dBound}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="\B">\B</button><span class="rx-ref-desc">{t.dNonBound}</span></div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="^">^</button><span
+              class="rx-ref-desc">{t.dLineStart}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="$">$</button><span
+              class="rx-ref-desc">{t.dLineEnd}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\b">\b</button><span
+              class="rx-ref-desc">{t.dBound}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="\B">\B</button><span
+              class="rx-ref-desc">{t.dNonBound}</span
+            >
+          </div>
         </div>
       </div>
 
       <div class="rx-ref-group">
         <div class="rx-ref-gname">{t.gQuant}</div>
         <div class="rx-ref-items">
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="*">*</button><span class="rx-ref-desc">{t.d0Plus}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="+">+</button><span class="rx-ref-desc">{t.d1Plus}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="?">?</button><span class="rx-ref-desc">{t.d0Or1}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert={"{n}"}>&#123;n&#125;</button><span class="rx-ref-desc">{t.dExactN}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert={"{n,m}"}>&#123;n,m&#125;</button><span class="rx-ref-desc">{t.dNtoM}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="*?">*?</button><span class="rx-ref-desc">{t.d0Lazy}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="+?">+?</button><span class="rx-ref-desc">{t.d1Lazy}</span></div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="*">*</button><span
+              class="rx-ref-desc">{t.d0Plus}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="+">+</button><span
+              class="rx-ref-desc">{t.d1Plus}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="?">?</button><span
+              class="rx-ref-desc">{t.d0Or1}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert={'{n}'}>&#123;n&#125;</button><span
+              class="rx-ref-desc">{t.dExactN}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert={'{n,m}'}>&#123;n,m&#125;</button
+            ><span class="rx-ref-desc">{t.dNtoM}</span>
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="*?">*?</button><span
+              class="rx-ref-desc">{t.d0Lazy}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="+?">+?</button><span
+              class="rx-ref-desc">{t.d1Lazy}</span
+            >
+          </div>
         </div>
       </div>
 
       <div class="rx-ref-group">
-        <div class="rx-ref-gname" set:html={t.gGroups}></div>
+        <div class="rx-ref-gname" set:html={t.gGroups} />
         <div class="rx-ref-items">
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="()">(…)</button><span class="rx-ref-desc">{t.dCapture}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="(?:)">(?:…)</button><span class="rx-ref-desc">{t.dNonCap}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="(?=)">(?=…)</button><span class="rx-ref-desc">{t.dLook}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="(?!)">(?!…)</button><span class="rx-ref-desc">{t.dNegLook}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="[]">[abc]</button><span class="rx-ref-desc">{t.dSet}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="[^]">[^abc]</button><span class="rx-ref-desc">{t.dNegSet}</span></div>
-          <div class="rx-ref-item"><button type="button" class="rx-ref-tok" data-insert="|">a|b</button><span class="rx-ref-desc">{t.dOr}</span></div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="()">(…)</button><span
+              class="rx-ref-desc">{t.dCapture}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="(?:)">(?:…)</button><span
+              class="rx-ref-desc">{t.dNonCap}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="(?=)">(?=…)</button><span
+              class="rx-ref-desc">{t.dLook}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="(?!)">(?!…)</button><span
+              class="rx-ref-desc">{t.dNegLook}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="[]">[abc]</button><span
+              class="rx-ref-desc">{t.dSet}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="[^]">[^abc]</button><span
+              class="rx-ref-desc">{t.dNegSet}</span
+            >
+          </div>
+          <div class="rx-ref-item">
+            <button type="button" class="rx-ref-tok" data-insert="|">a|b</button><span
+              class="rx-ref-desc">{t.dOr}</span
+            >
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inputEl   = document.getElementById('rxInput');
-  var textEl    = document.getElementById('rxText');
-  var outEl     = document.getElementById('rxOut');
-  var statusEl  = document.getElementById('rxStatus');
-  var wrapEl    = document.getElementById('rxWrap');
-  var listEl    = document.getElementById('rxMatchList');
-  var flagsEl   = document.getElementById('rxFlagsInline');
+  (function () {
+    var inputEl = document.getElementById('rxInput');
+    var textEl = document.getElementById('rxText');
+    var outEl = document.getElementById('rxOut');
+    var statusEl = document.getElementById('rxStatus');
+    var wrapEl = document.getElementById('rxWrap');
+    var listEl = document.getElementById('rxMatchList');
+    var flagsEl = document.getElementById('rxFlagsInline');
 
-  var activeFlags = { g: true, i: false, m: false, s: false };
+    var activeFlags = { g: true, i: false, m: false, s: false };
 
-  function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function truncate(s, max) {
-    return s.length > max ? s.slice(0, max) + '…' : s;
-  }
-
-  function getFlags() {
-    return Object.keys(activeFlags).filter(function (f) { return activeFlags[f]; }).join('');
-  }
-
-  function buildOutput(text, matches) {
-    if (!matches.length) return '<span class="rx-out-ph">' + esc(text) + '</span>';
-    var parts = [];
-    var last  = 0;
-    for (var i = 0; i < matches.length; i++) {
-      var m   = matches[i];
-      var idx = m.index;
-      if (idx < last) continue;
-      parts.push(esc(text.slice(last, idx)));
-      parts.push('<mark class="rx-hl rx-hl' + (i % 4) + '">' + esc(m[0]) + '</mark>');
-      last = idx + m[0].length;
-    }
-    parts.push(esc(text.slice(last)));
-    return parts.join('');
-  }
-
-  function renderMatches(matches) {
-    if (!matches.length) {
-      listEl.innerHTML = '<div class="rx-empty">' + t.noMatches + '</div>';
-      return;
-    }
-    listEl.innerHTML = matches.map(function (m, i) {
-      var end  = m.index + m[0].length;
-      var grps = m.slice(1).filter(function (g) { return g !== undefined; });
-      var grpStr = grps.length
-        ? ' ' + t.groups + ' ' + grps.map(function (g, gi) {
-            return '<span style="color:var(--ink-soft)">[' + (gi+1) + '] "' + esc(truncate(g, 24)) + '"</span>';
-          }).join(' ')
-        : '';
-      return '<div class="rx-match-row">' +
-        '<span class="rx-match-n">' + (i+1) + '</span>' +
-        '<span class="rx-match-val">"' + esc(truncate(m[0], 40)) + '"</span>' +
-        '<span class="rx-match-pos">' + m.index + '–' + end + '</span>' +
-        (grpStr ? '<span class="rx-match-grps">' + grpStr + '</span>' : '') +
-        '</div>';
-    }).join('');
-  }
-
-  function process() {
-    var pattern = inputEl.value;
-    var text    = textEl.value;
-    var flags   = getFlags();
-
-    flagsEl.textContent = '/' + flags;
-
-    if (!pattern) {
-      outEl.innerHTML = text ? esc(text) : '<span class="rx-out-ph">// ' + (document.documentElement.lang === 'ru' ? 'совпадения появятся здесь' : 'matches appear here') + '</span>';
-      statusEl.textContent = t.statusEmpty;
-      statusEl.className   = 'rx-status';
-      listEl.innerHTML     = '<div class="rx-empty">' + t.enterPatternAbove + '</div>';
-      wrapEl.classList.remove('rx-err');
-      return;
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    try {
-      var re = new RegExp(pattern, flags);
-      wrapEl.classList.remove('rx-err');
+    function truncate(s, max) {
+      return s.length > max ? s.slice(0, max) + '…' : s;
+    }
 
-      var matches = [];
-      if (activeFlags.g) {
-        var m;
-        re.lastIndex = 0;
-        while ((m = re.exec(text)) !== null) {
-          matches.push(m);
-          if (m[0].length === 0) re.lastIndex++;
-          if (matches.length > 500) break;
+    function getFlags() {
+      return Object.keys(activeFlags)
+        .filter(function (f) {
+          return activeFlags[f];
+        })
+        .join('');
+    }
+
+    function buildOutput(text, matches) {
+      if (!matches.length) return '<span class="rx-out-ph">' + esc(text) + '</span>';
+      var parts = [];
+      var last = 0;
+      for (var i = 0; i < matches.length; i++) {
+        var m = matches[i];
+        var idx = m.index;
+        if (idx < last) continue;
+        parts.push(esc(text.slice(last, idx)));
+        parts.push('<mark class="rx-hl rx-hl' + (i % 4) + '">' + esc(m[0]) + '</mark>');
+        last = idx + m[0].length;
+      }
+      parts.push(esc(text.slice(last)));
+      return parts.join('');
+    }
+
+    function renderMatches(matches) {
+      if (!matches.length) {
+        listEl.innerHTML = '<div class="rx-empty">' + t.noMatches + '</div>';
+        return;
+      }
+      listEl.innerHTML = matches
+        .map(function (m, i) {
+          var end = m.index + m[0].length;
+          var grps = m.slice(1).filter(function (g) {
+            return g !== undefined;
+          });
+          var grpStr = grps.length
+            ? ' ' +
+              t.groups +
+              ' ' +
+              grps
+                .map(function (g, gi) {
+                  return (
+                    '<span style="color:var(--ink-soft)">[' +
+                    (gi + 1) +
+                    '] "' +
+                    esc(truncate(g, 24)) +
+                    '"</span>'
+                  );
+                })
+                .join(' ')
+            : '';
+          return (
+            '<div class="rx-match-row">' +
+            '<span class="rx-match-n">' +
+            (i + 1) +
+            '</span>' +
+            '<span class="rx-match-val">"' +
+            esc(truncate(m[0], 40)) +
+            '"</span>' +
+            '<span class="rx-match-pos">' +
+            m.index +
+            '–' +
+            end +
+            '</span>' +
+            (grpStr ? '<span class="rx-match-grps">' + grpStr + '</span>' : '') +
+            '</div>'
+          );
+        })
+        .join('');
+    }
+
+    function process() {
+      var pattern = inputEl.value;
+      var text = textEl.value;
+      var flags = getFlags();
+
+      flagsEl.textContent = '/' + flags;
+
+      if (!pattern) {
+        outEl.innerHTML = text
+          ? esc(text)
+          : '<span class="rx-out-ph">// ' +
+            (document.documentElement.lang === 'ru'
+              ? 'совпадения появятся здесь'
+              : 'matches appear here') +
+            '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'rx-status';
+        listEl.innerHTML = '<div class="rx-empty">' + t.enterPatternAbove + '</div>';
+        wrapEl.classList.remove('rx-err');
+        return;
+      }
+
+      try {
+        var re = new RegExp(pattern, flags);
+        wrapEl.classList.remove('rx-err');
+
+        var matches = [];
+        if (activeFlags.g) {
+          var m;
+          re.lastIndex = 0;
+          while ((m = re.exec(text)) !== null) {
+            matches.push(m);
+            if (m[0].length === 0) re.lastIndex++;
+            if (matches.length > 500) break;
+          }
+        } else {
+          var m2 = re.exec(text);
+          if (m2) matches.push(m2);
         }
-      } else {
-        var m2 = re.exec(text);
-        if (m2) matches.push(m2);
+
+        outEl.innerHTML = buildOutput(text, matches);
+        renderMatches(matches);
+
+        if (matches.length === 0) {
+          statusEl.textContent = t.noMatches;
+          statusEl.className = 'rx-status none';
+        } else {
+          statusEl.textContent =
+            matches.length + (matches.length !== 1 ? t.matchesSuffix : t.matchSuffix);
+          statusEl.className = 'rx-status ok';
+          if (window.pushHistory)
+            window.pushHistory(
+              'regex tester',
+              statusEl.textContent +
+                ' · /' +
+                pattern.slice(0, 24) +
+                (pattern.length > 24 ? '…' : '') +
+                '/',
+              textEl.value.trim()
+            );
+          outEl.classList.remove('flash-ok');
+          void outEl.offsetWidth;
+          outEl.classList.add('flash-ok');
+        }
+      } catch (e) {
+        wrapEl.classList.add('rx-err');
+        outEl.innerHTML = text
+          ? esc(text)
+          : '<span class="rx-out-ph">// ' +
+            (document.documentElement.lang === 'ru'
+              ? 'совпадения появятся здесь'
+              : 'matches appear here') +
+            '</span>';
+        listEl.innerHTML = '<div class="rx-empty">' + esc(e.message) + '</div>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'rx-status err';
       }
+    }
 
-      outEl.innerHTML = buildOutput(text, matches);
-      renderMatches(matches);
+    inputEl.addEventListener('input', process);
+    textEl.addEventListener('input', process);
 
-      if (matches.length === 0) {
-        statusEl.textContent = t.noMatches;
-        statusEl.className   = 'rx-status none';
-      } else {
-        statusEl.textContent = matches.length + (matches.length !== 1 ? t.matchesSuffix : t.matchSuffix);
-        statusEl.className   = 'rx-status ok';
-        if (window.pushHistory) window.pushHistory('regex tester', statusEl.textContent + ' · /' + pattern.slice(0, 24) + (pattern.length > 24 ? '…' : '') + '/', textEl.value.trim());
-        outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
+    document.getElementById('rxFlagBtns').addEventListener('click', function (e) {
+      var btn = e.target.closest('.rx-flag');
+      if (!btn) return;
+      var f = btn.dataset.flag;
+      activeFlags[f] = !activeFlags[f];
+      btn.classList.toggle('active', activeFlags[f]);
+      process();
+    });
+
+    process();
+
+    document.getElementById('rxRefToggle').addEventListener('click', function () {
+      var body = document.getElementById('rxRefBody');
+      var arrow = document.getElementById('rxRefArrow');
+      var open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'grid';
+      arrow.textContent = open ? '+' : '−';
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.rx');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
       }
-    } catch (e) {
-      wrapEl.classList.add('rx-err');
-      outEl.innerHTML      = text ? esc(text) : '<span class="rx-out-ph">// ' + (document.documentElement.lang === 'ru' ? 'совпадения появятся здесь' : 'matches appear here') + '</span>';
-      listEl.innerHTML     = '<div class="rx-empty">' + esc(e.message) + '</div>';
-      statusEl.textContent = e.message;
-      statusEl.className   = 'rx-status err';
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        inputEl.value = '';
+        process();
+        inputEl.focus();
+      }
+    });
+
+    document.querySelector('.rx-ref').addEventListener('click', function (e) {
+      var tok = e.target.closest('.rx-ref-tok');
+      if (!tok) return;
+      var ins = tok.dataset.insert;
+      var s = inputEl.selectionStart;
+      var en = inputEl.selectionEnd;
+      inputEl.value = inputEl.value.slice(0, s) + ins + inputEl.value.slice(en);
+      inputEl.selectionStart = inputEl.selectionEnd = s + ins.length;
+      inputEl.focus();
+      process();
+    });
+
+    window.toolGetPreset = function () {
+      return { pattern: inputEl.value, flags: activeFlags, testText: textEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.pattern !== undefined) inputEl.value = cfg.pattern;
+      if (cfg.testText !== undefined) textEl.value = cfg.testText;
+      if (cfg.flags) {
+        Object.keys(cfg.flags).forEach(function (f) {
+          activeFlags[f] = cfg.flags[f];
+          var btn = document.querySelector('.rx-flag[data-flag="' + f + '"]');
+          if (btn) btn.classList.toggle('active', !!cfg.flags[f]);
+        });
+      }
+      runMatch();
+    };
+
+    function runMatch() {
+      process();
     }
-  }
-
-  inputEl.addEventListener('input', process);
-  textEl.addEventListener('input', process);
-
-  document.getElementById('rxFlagBtns').addEventListener('click', function (e) {
-    var btn = e.target.closest('.rx-flag');
-    if (!btn) return;
-    var f = btn.dataset.flag;
-    activeFlags[f] = !activeFlags[f];
-    btn.classList.toggle('active', activeFlags[f]);
-    process();
-  });
-
-  process();
-
-  document.getElementById('rxRefToggle').addEventListener('click', function () {
-    var body  = document.getElementById('rxRefBody');
-    var arrow = document.getElementById('rxRefArrow');
-    var open  = body.style.display !== 'none';
-    body.style.display = open ? 'none' : 'grid';
-    arrow.textContent  = open ? '+' : '−';
-  });
-
-  document.addEventListener('keydown', function(e) {
-    var toolEl = document.querySelector('.rx');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); process(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inputEl.value = ''; process(); inputEl.focus(); }
-  });
-
-  document.querySelector('.rx-ref').addEventListener('click', function (e) {
-    var tok = e.target.closest('.rx-ref-tok');
-    if (!tok) return;
-    var ins = tok.dataset.insert;
-    var s   = inputEl.selectionStart;
-    var en  = inputEl.selectionEnd;
-    inputEl.value = inputEl.value.slice(0, s) + ins + inputEl.value.slice(en);
-    inputEl.selectionStart = inputEl.selectionEnd = s + ins.length;
-    inputEl.focus();
-    process();
-  });
-
-  window.toolGetPreset = function () {
-    return { pattern: inputEl.value, flags: activeFlags, testText: textEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    if (cfg.pattern !== undefined) inputEl.value = cfg.pattern;
-    if (cfg.testText !== undefined) textEl.value = cfg.testText;
-    if (cfg.flags) {
-      Object.keys(cfg.flags).forEach(function (f) {
-        activeFlags[f] = cfg.flags[f];
-        var btn = document.querySelector('.rx-flag[data-flag="' + f + '"]');
-        if (btn) btn.classList.toggle('active', !!cfg.flags[f]);
-      });
-    }
-    runMatch();
-  };
-
-  function runMatch() { process(); }
-
-})();
+  })();
 </script>

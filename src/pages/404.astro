@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
+
 <style is:global>
   .nf {
     padding: 80px 0 120px;
@@ -46,10 +47,21 @@ import Base from '../layouts/Base.astro';
     transition: all 0.15s;
   }
 
-  .nf-link.filled { background: var(--accent); color: white; }
-  .nf-link.filled:hover { opacity: 0.85; }
-  .nf-link.outline { border: 0.5px solid var(--line-strong); color: var(--ink-soft); }
-  .nf-link.outline:hover { border-color: var(--accent); color: var(--accent); }
+  .nf-link.filled {
+    background: var(--accent);
+    color: white;
+  }
+  .nf-link.filled:hover {
+    opacity: 0.85;
+  }
+  .nf-link.outline {
+    border: 0.5px solid var(--line-strong);
+    color: var(--ink-soft);
+  }
+  .nf-link.outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
   .nf-path {
     margin-top: 40px;
@@ -65,14 +77,18 @@ import Base from '../layouts/Base.astro';
     gap: 10px;
   }
 
-  .nf-path .nf-path-url { color: var(--bad); }
+  .nf-path .nf-path-url {
+    color: var(--bad);
+  }
 </style>
 
 <Base title="404 — whittly">
   <div class="nf">
     <div class="nf-code">// error 404</div>
     <h1 id="nfTitle">page not found.</h1>
-    <p class="nf-sub" id="nfSub">the url you followed doesn't exist. it may have moved, or you may have mistyped something.</p>
+    <p class="nf-sub" id="nfSub">
+      the url you followed doesn't exist. it may have moved, or you may have mistyped something.
+    </p>
     <div class="nf-links">
       <a id="nfHome" class="nf-link filled" href="/">← home</a>
       <a class="nf-link outline" href="/tools/">browse tools</a>
@@ -88,13 +104,16 @@ import Base from '../layouts/Base.astro';
 <script is:inline>
   (function () {
     var path = location.pathname;
-    var isRu = path.startsWith('/ru') || /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/i.test(navigator.language || '');
+    var isRu =
+      path.startsWith('/ru') ||
+      /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/i.test(navigator.language || '');
 
     document.getElementById('nfUrl').textContent = path;
 
     if (isRu) {
       document.getElementById('nfTitle').textContent = 'страница не найдена.';
-      document.getElementById('nfSub').textContent = 'такой страницы не существует. возможно, адрес изменился или в нём опечатка.';
+      document.getElementById('nfSub').textContent =
+        'такой страницы не существует. возможно, адрес изменился или в нём опечатка.';
       var homeLink = document.getElementById('nfHome');
       homeLink.textContent = '← главная';
       homeLink.href = '/ru/';

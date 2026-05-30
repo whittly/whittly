@@ -10,15 +10,20 @@ import '../../styles/about.css';
   <header class="about-hero">
     <div class="badge"><span class="badge-dot"></span><span>политика конфиденциальности</span></div>
     <h1>твои данные — <em>твои</em>.</h1>
-    <p class="lede">мы создали whittly чтобы инструменты работали в браузере. вот что именно мы собираем и что не собираем.</p>
+    <p class="lede">
+      мы создали whittly чтобы инструменты работали в браузере. вот что именно мы собираем и что не
+      собираем.
+    </p>
   </header>
 
   <div class="about-content">
-
     <h2 class="h-section">// коротко</h2>
     <div class="stack">
-      <div class="stack-head"><span class="prompt">$</span><span>cat</span><span class="file">privacy.txt</span></div>
-      <pre class="stack-body"><span class="c"># что мы собираем</span>
+      <div class="stack-head">
+        <span class="prompt">$</span><span>cat</span><span class="file">privacy.txt</span>
+      </div>
+      <pre
+        class="stack-body"><span class="c"># что мы собираем</span>
 <span class="k">email</span>        <span class="p">·</span> только если создаёшь аккаунт
 <span class="k">пароль</span>       <span class="p">·</span> хранится как bcrypt-хеш, никогда в открытом виде
 <span class="k">api-ключи</span>    <span class="p">·</span> хранятся как sha-256 хеш, никогда в открытом виде
@@ -36,54 +41,112 @@ import '../../styles/about.css';
     <div class="faq-cluster">
       <div class="faq-cluster-head">использование инструментов</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">браузерные инструменты</span><span class="toggle">+</span></div>
-        <div class="faq-a">Все базовые инструменты (JSON-форматтер, JWT-декодер, Base64, регулярки, хеши и т.д.) работают исключительно в твоём браузере через JavaScript и WebCrypto API. Данные которые ты вставляешь или вводишь никогда не покидают твоё устройство и не передаются на наши серверы.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">браузерные инструменты</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          Все базовые инструменты (JSON-форматтер, JWT-декодер, Base64, регулярки, хеши и т.д.)
+          работают исключительно в твоём браузере через JavaScript и WebCrypto API. Данные которые
+          ты вставляешь или вводишь никогда не покидают твоё устройство и не передаются на наши
+          серверы.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">про облачные функции</span><span class="toggle">+</span></div>
-        <div class="faq-a">При использовании Pro облачных функций (пакетная обработка, большие файлы, REST API) данные передаются на наши серверы по HTTPS, обрабатываются в памяти и немедленно удаляются. Мы не логируем, не сохраняем и не просматриваем содержимое запросов.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">про облачные функции</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          При использовании Pro облачных функций (пакетная обработка, большие файлы, REST API)
+          данные передаются на наши серверы по HTTPS, обрабатываются в памяти и немедленно
+          удаляются. Мы не логируем, не сохраняем и не просматриваем содержимое запросов.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">данные аккаунта</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">что хранится</span><span class="toggle">+</span></div>
-        <div class="faq-a">При создании аккаунта мы храним email и bcrypt-хеш пароля. Мы храним статус плана (бесплатный или pro). API-ключи хранятся как SHA-256 хеши — сырой ключ показывается один раз и никогда не сохраняется. Мы не храним имя, телефон или данные банковской карты.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">что хранится</span><span class="toggle"
+            >+</span
+          >
+        </div>
+        <div class="faq-a">
+          При создании аккаунта мы храним email и bcrypt-хеш пароля. Мы храним статус плана
+          (бесплатный или pro). API-ключи хранятся как SHA-256 хеши — сырой ключ показывается один
+          раз и никогда не сохраняется. Мы не храним имя, телефон или данные банковской карты.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">как удалить аккаунт</span><span class="toggle">+</span></div>
-        <div class="faq-a">Удалить аккаунт можно в любой момент через настройки аккаунта. Все связанные данные (email, хеш пароля, API-ключи) удаляются безвозвратно. Никакого срока хранения нет — удаление мгновенное.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">как удалить аккаунт</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          Удалить аккаунт можно в любой момент через настройки аккаунта. Все связанные данные
+          (email, хеш пароля, API-ключи) удаляются безвозвратно. Никакого срока хранения нет —
+          удаление мгновенное.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">аналитика и сторонние сервисы</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">cloudflare web analytics</span><span class="toggle">+</span></div>
-        <div class="faq-a">Мы используем Cloudflare Web Analytics — без кукисов, только агрегированные данные: какие страницы открывают и примерная страна посетителя. Никакого доступа к использованию инструментов или содержимому запросов. Баннер с кукисами не нужен — кукисов нет.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">cloudflare web analytics</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          Мы используем Cloudflare Web Analytics — без кукисов, только агрегированные данные: какие
+          страницы открывают и примерная страна посетителя. Никакого доступа к использованию
+          инструментов или содержимому запросов. Баннер с кукисами не нужен — кукисов нет.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">никаких сторонних трекеров</span><span class="toggle">+</span></div>
-        <div class="faq-a">Мы не используем Google Analytics, Facebook Pixel, Hotjar, Mixpanel или другие сторонние системы слежения. Мы не продаём и не передаём данные третьим лицам. Никакого ретаргетинга или поведенческой рекламы.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">никаких сторонних трекеров</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          Мы не используем Google Analytics, Facebook Pixel, Hotjar, Mixpanel или другие сторонние
+          системы слежения. Мы не продаём и не передаём данные третьим лицам. Никакого ретаргетинга
+          или поведенческой рекламы.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">контакт</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">вопросы или запросы</span><span class="toggle">+</span></div>
-        <div class="faq-a">По вопросам конфиденциальности, запросам на удаление данных или любым другим вопросам — пиши на <a href="mailto:privacy@whittly.dev">privacy@whittly.dev</a>. Ответим в течение 5 рабочих дней.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">вопросы или запросы</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          По вопросам конфиденциальности, запросам на удаление данных или любым другим вопросам —
+          пиши на <a href="mailto:privacy@whittly.dev">privacy@whittly.dev</a>. Ответим в течение 5
+          рабочих дней.
+        </div>
       </div>
     </div>
 
-    <p style="margin-top:48px;font-size:13px;color:var(--ink-faint);">Последнее обновление: май 2026</p>
-
+    <p style="margin-top:48px;font-size:13px;color:var(--ink-faint);">
+      Последнее обновление: май 2026
+    </p>
   </div>
 </Base>
 
 <script>
-  document.querySelectorAll('.faq-q').forEach(q => {
+  document.querySelectorAll('.faq-q').forEach((q) => {
     q.addEventListener('click', () => q.parentElement?.classList.toggle('open'));
   });
 </script>

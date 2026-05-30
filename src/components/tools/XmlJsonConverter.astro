@@ -1,26 +1,29 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
 import FileLoader from '../FileLoader.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  xmlToJson:   'xml → json',
-  jsonToXml:   'json → xml',
-  pasteXml:    isRu ? '— вставьте xml'  : '— paste xml to convert',
-  pasteJson:   isRu ? '— вставьте json' : '— paste json to convert',
-  copy:        isRu ? 'копировать' : 'copy',
-  copied:      isRu ? 'скопировано': 'copied',
-  clear:       isRu ? 'очистить'   : 'clear',
-  swap:        isRu ? 'поменять'   : 'swap',
-  phXml:       isRu ? 'вставьте xml сюда…' : 'paste xml here…',
-  phJson:      isRu ? 'вставьте json сюда…': 'paste json here…',
-  outputPh:    isRu ? '// результат появится здесь' : '// output appears here',
-  converted:   isRu ? 'конвертировано'   : 'converted',
-  invalidXml:  isRu ? 'ошибка разбора xml' : 'xml parse error',
-  invalidJson: isRu ? 'ошибка разбора json': 'json parse error',
+  xmlToJson: 'xml → json',
+  jsonToXml: 'json → xml',
+  pasteXml: isRu ? '— вставьте xml' : '— paste xml to convert',
+  pasteJson: isRu ? '— вставьте json' : '— paste json to convert',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  swap: isRu ? 'поменять' : 'swap',
+  phXml: isRu ? 'вставьте xml сюда…' : 'paste xml here…',
+  phJson: isRu ? 'вставьте json сюда…' : 'paste json here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  converted: isRu ? 'конвертировано' : 'converted',
+  invalidXml: isRu ? 'ошибка разбора xml' : 'xml parse error',
+  invalidJson: isRu ? 'ошибка разбора json' : 'json parse error',
 };
 ---
+
 <style is:global>
   .xj {
     display: flex;
@@ -42,7 +45,10 @@ const t = {
     flex-shrink: 0;
     flex-wrap: wrap;
   }
-  .xj-modes { display: flex; gap: 4px; }
+  .xj-modes {
+    display: flex;
+    gap: 4px;
+  }
   .xj-mode {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -54,8 +60,15 @@ const t = {
     cursor: pointer;
     transition: all 0.12s;
   }
-  .xj-mode:hover  { color: var(--ink); border-color: var(--line-strong); }
-  .xj-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .xj-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .xj-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
   .xj-status {
     flex: 1;
     font-family: 'JetBrains Mono', monospace;
@@ -67,8 +80,12 @@ const t = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .xj-status.ok  { color: var(--good); }
-  .xj-status.err { color: var(--bad); }
+  .xj-status.ok {
+    color: var(--good);
+  }
+  .xj-status.err {
+    color: var(--bad);
+  }
   .xj-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -83,8 +100,14 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .xj-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .xj-action.done  { color: var(--good); border-color: var(--good); }
+  .xj-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .xj-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
   .xj-swap {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -99,7 +122,10 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .xj-swap:hover { color: var(--accent); border-color: var(--accent); }
+  .xj-swap:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
   .xj-panels {
     display: grid;
     grid-template-columns: 1fr 1px 1fr;
@@ -121,7 +147,9 @@ const t = {
     box-sizing: border-box;
     overflow: auto;
   }
-  .xj-sep { background: var(--line); }
+  .xj-sep {
+    background: var(--line);
+  }
   .xj-out {
     padding: 16px;
     font-family: 'JetBrains Mono', monospace;
@@ -132,14 +160,32 @@ const t = {
     background: var(--surface-sunken);
     white-space: pre;
   }
-  .xj-out .ok { color: var(--ink); }
-  .xj-out .ph { color: var(--ink-faint); }
-  .xj-out .er { color: var(--bad); }
+  .xj-out .ok {
+    color: var(--ink);
+  }
+  .xj-out .ph {
+    color: var(--ink-faint);
+  }
+  .xj-out .er {
+    color: var(--bad);
+  }
   @media (max-width: 760px) {
-    .xj { height: auto; min-height: 0; }
-    .xj-panels { grid-template-columns: 1fr; grid-template-rows: 240px 1px 240px; }
-    .xj-sep { width: 100%; height: 1px; }
-    .xj-in, .xj-out { height: 240px; }
+    .xj {
+      height: auto;
+      min-height: 0;
+    }
+    .xj-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 240px 1px 240px;
+    }
+    .xj-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .xj-in,
+    .xj-out {
+      height: 240px;
+    }
   }
 </style>
 
@@ -149,206 +195,256 @@ const t = {
   <div class="xj-bar">
     <div class="xj-modes">
       <button class="xj-mode active" data-mode="xml2json" id="xjModeA">{t.xmlToJson}</button>
-      <button class="xj-mode"        data-mode="json2xml" id="xjModeB">{t.jsonToXml}</button>
+      <button class="xj-mode" data-mode="json2xml" id="xjModeB">{t.jsonToXml}</button>
     </div>
     <span class="xj-status" id="xjStatus">{t.pasteXml}</span>
     <span class="local-badge">// client-only</span>
     <button class="xj-swap" id="xjSwap"><i class="ti ti-transfer-vertical"></i>{t.swap}</button>
-    <button class="xj-action" id="xjCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="xj-action" id="xjClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="xj-action" id="xjCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="xj-action" id="xjClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="xj-panels">
-    <textarea class="xj-in" id="xjIn" data-hist-main-input spellcheck="false" placeholder={t.phXml}></textarea>
+    <textarea class="xj-in" id="xjIn" data-hist-main-input spellcheck="false" placeholder={t.phXml}
+    ></textarea>
     <div class="xj-sep"></div>
     <pre class="xj-out" id="xjOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inEl     = document.getElementById('xjIn');
-  var outEl    = document.getElementById('xjOut');
-  var statusEl = document.getElementById('xjStatus');
-  var modeA    = document.getElementById('xjModeA');
-  var modeB    = document.getElementById('xjModeB');
-  var swapBtn  = document.getElementById('xjSwap');
-  var copyBtn  = document.getElementById('xjCopy');
-  var clearBtn = document.getElementById('xjClear');
+  (function () {
+    var inEl = document.getElementById('xjIn');
+    var outEl = document.getElementById('xjOut');
+    var statusEl = document.getElementById('xjStatus');
+    var modeA = document.getElementById('xjModeA');
+    var modeB = document.getElementById('xjModeB');
+    var swapBtn = document.getElementById('xjSwap');
+    var copyBtn = document.getElementById('xjCopy');
+    var clearBtn = document.getElementById('xjClear');
 
-  var mode       = 'xml2json';
-  var lastOutput = '';
+    var mode = 'xml2json';
+    var lastOutput = '';
 
-  function esc(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  /* XML → JSON */
-  function nodeToObj(node) {
-    /* text-only node */
-    var children = Array.from(node.childNodes);
-    var elemChildren = children.filter(function (n) { return n.nodeType === 1; });
-    var textContent  = children
-      .filter(function (n) { return n.nodeType === 3 || n.nodeType === 4; })
-      .map(function (n) { return n.nodeValue; })
-      .join('').trim();
-
-    if (elemChildren.length === 0 && node.attributes.length === 0) {
-      return textContent || '';
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    var obj = {};
-    /* attributes */
-    Array.from(node.attributes).forEach(function (a) {
-      obj['@' + a.name] = a.value;
-    });
-    /* text */
-    if (textContent) obj['#text'] = textContent;
-    /* children */
-    elemChildren.forEach(function (child) {
-      var val = nodeToObj(child);
-      var tag = child.tagName;
-      if (obj[tag] !== undefined) {
-        if (!Array.isArray(obj[tag])) obj[tag] = [obj[tag]];
-        obj[tag].push(val);
-      } else {
-        obj[tag] = val;
+    /* XML → JSON */
+    function nodeToObj(node) {
+      /* text-only node */
+      var children = Array.from(node.childNodes);
+      var elemChildren = children.filter(function (n) {
+        return n.nodeType === 1;
+      });
+      var textContent = children
+        .filter(function (n) {
+          return n.nodeType === 3 || n.nodeType === 4;
+        })
+        .map(function (n) {
+          return n.nodeValue;
+        })
+        .join('')
+        .trim();
+
+      if (elemChildren.length === 0 && node.attributes.length === 0) {
+        return textContent || '';
       }
-    });
-    return obj;
-  }
 
-  function xmlToJson(xmlStr) {
-    var parser = new DOMParser();
-    var doc    = parser.parseFromString(xmlStr.trim(), 'text/xml');
-    var err    = doc.getElementsByTagName('parsererror');
-    if (err.length > 0) throw new Error(err[0].textContent.split('\n')[0].trim());
-    var result = {};
-    result[doc.documentElement.tagName] = nodeToObj(doc.documentElement);
-    return JSON.stringify(result, null, 2);
-  }
-
-  /* JSON → XML */
-  function buildXml(tag, value, depth) {
-    var indent = '  '.repeat(depth);
-    if (value === null || value === undefined) return indent + '<' + tag + ' />';
-    if (typeof value !== 'object') {
-      return indent + '<' + tag + '>' + String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</' + tag + '>';
-    }
-    if (Array.isArray(value)) {
-      return value.map(function (v) { return buildXml(tag, v, depth); }).join('\n');
-    }
-    var attrs = '', children = [], text = '';
-    Object.keys(value).forEach(function (k) {
-      if (k.charAt(0) === '@') {
-        attrs += ' ' + k.slice(1) + '="' + String(value[k]).replace(/"/g, '&quot;') + '"';
-      } else if (k === '#text') {
-        text = String(value[k]).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      } else {
-        if (Array.isArray(value[k])) {
-          value[k].forEach(function (item) { children.push(buildXml(k, item, depth + 1)); });
+      var obj = {};
+      /* attributes */
+      Array.from(node.attributes).forEach(function (a) {
+        obj['@' + a.name] = a.value;
+      });
+      /* text */
+      if (textContent) obj['#text'] = textContent;
+      /* children */
+      elemChildren.forEach(function (child) {
+        var val = nodeToObj(child);
+        var tag = child.tagName;
+        if (obj[tag] !== undefined) {
+          if (!Array.isArray(obj[tag])) obj[tag] = [obj[tag]];
+          obj[tag].push(val);
         } else {
-          children.push(buildXml(k, value[k], depth + 1));
+          obj[tag] = val;
         }
+      });
+      return obj;
+    }
+
+    function xmlToJson(xmlStr) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(xmlStr.trim(), 'text/xml');
+      var err = doc.getElementsByTagName('parsererror');
+      if (err.length > 0) throw new Error(err[0].textContent.split('\n')[0].trim());
+      var result = {};
+      result[doc.documentElement.tagName] = nodeToObj(doc.documentElement);
+      return JSON.stringify(result, null, 2);
+    }
+
+    /* JSON → XML */
+    function buildXml(tag, value, depth) {
+      var indent = '  '.repeat(depth);
+      if (value === null || value === undefined) return indent + '<' + tag + ' />';
+      if (typeof value !== 'object') {
+        return (
+          indent +
+          '<' +
+          tag +
+          '>' +
+          String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+          '</' +
+          tag +
+          '>'
+        );
       }
+      if (Array.isArray(value)) {
+        return value
+          .map(function (v) {
+            return buildXml(tag, v, depth);
+          })
+          .join('\n');
+      }
+      var attrs = '',
+        children = [],
+        text = '';
+      Object.keys(value).forEach(function (k) {
+        if (k.charAt(0) === '@') {
+          attrs += ' ' + k.slice(1) + '="' + String(value[k]).replace(/"/g, '&quot;') + '"';
+        } else if (k === '#text') {
+          text = String(value[k])
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        } else {
+          if (Array.isArray(value[k])) {
+            value[k].forEach(function (item) {
+              children.push(buildXml(k, item, depth + 1));
+            });
+          } else {
+            children.push(buildXml(k, value[k], depth + 1));
+          }
+        }
+      });
+      if (children.length === 0 && !text) return indent + '<' + tag + attrs + ' />';
+      if (children.length === 0) return indent + '<' + tag + attrs + '>' + text + '</' + tag + '>';
+      return (
+        indent + '<' + tag + attrs + '>\n' + children.join('\n') + '\n' + indent + '</' + tag + '>'
+      );
+    }
+
+    function jsonToXml(jsonStr) {
+      var obj = JSON.parse(jsonStr);
+      var keys = Object.keys(obj);
+      if (keys.length === 0) return '<root />';
+      return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        keys
+          .map(function (k) {
+            return buildXml(k, obj[k], 0);
+          })
+          .join('\n')
+      );
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = mode === 'xml2json' ? t.pasteXml : t.pasteJson;
+        statusEl.className = 'xj-status';
+        lastOutput = '';
+        return;
+      }
+      try {
+        var result = mode === 'xml2json' ? xmlToJson(raw) : jsonToXml(raw);
+        lastOutput = result;
+        outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+        var lines = result.split('\n').length;
+        statusEl.textContent = t.converted + ' · ' + lines + ' lines';
+        statusEl.className = 'xj-status ok';
+        if (window.pushHistory)
+          window.pushHistory('xml ↔ json', statusEl.textContent, inEl.value.trim());
+        outEl.classList.remove('flash-ok');
+        void outEl.offsetWidth;
+        outEl.classList.add('flash-ok');
+      } catch (e) {
+        lastOutput = '';
+        var errMsg = (mode === 'xml2json' ? t.invalidXml : t.invalidJson) + ': ' + e.message;
+        outEl.innerHTML = '<span class="er">// ' + esc(errMsg) + '</span>';
+        statusEl.textContent = errMsg;
+        statusEl.className = 'xj-status err';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+
+    [modeA, modeB].forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        mode = btn.dataset.mode;
+        modeA.classList.toggle('active', mode === 'xml2json');
+        modeB.classList.toggle('active', mode === 'json2xml');
+        inEl.placeholder = mode === 'xml2json' ? t.phXml : t.phJson;
+        statusEl.textContent = mode === 'xml2json' ? t.pasteXml : t.pasteJson;
+        statusEl.className = 'xj-status';
+        process();
+      });
     });
-    if (children.length === 0 && !text) return indent + '<' + tag + attrs + ' />';
-    if (children.length === 0) return indent + '<' + tag + attrs + '>' + text + '</' + tag + '>';
-    return indent + '<' + tag + attrs + '>\n' + children.join('\n') + '\n' + indent + '</' + tag + '>';
-  }
 
-  function jsonToXml(jsonStr) {
-    var obj = JSON.parse(jsonStr);
-    var keys = Object.keys(obj);
-    if (keys.length === 0) return '<root />';
-    return '<?xml version="1.0" encoding="UTF-8"?>\n' +
-      keys.map(function (k) { return buildXml(k, obj[k], 0); }).join('\n');
-  }
-
-  function process() {
-    var raw = inEl.value;
-    if (!raw.trim()) {
-      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
-      statusEl.textContent = mode === 'xml2json' ? t.pasteXml : t.pasteJson;
-      statusEl.className   = 'xj-status';
-      lastOutput           = '';
-      return;
-    }
-    try {
-      var result = mode === 'xml2json' ? xmlToJson(raw) : jsonToXml(raw);
-      lastOutput = result;
-      outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
-      var lines = result.split('\n').length;
-      statusEl.textContent = t.converted + ' · ' + lines + ' lines';
-      statusEl.className   = 'xj-status ok';
-      if (window.pushHistory) window.pushHistory('xml ↔ json', statusEl.textContent, inEl.value.trim());
-      outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
-    } catch (e) {
-      lastOutput           = '';
-      var errMsg           = (mode === 'xml2json' ? t.invalidXml : t.invalidJson) + ': ' + e.message;
-      outEl.innerHTML      = '<span class="er">// ' + esc(errMsg) + '</span>';
-      statusEl.textContent = errMsg;
-      statusEl.className   = 'xj-status err';
-    }
-  }
-
-  inEl.addEventListener('input', process);
-
-  [modeA, modeB].forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      mode = btn.dataset.mode;
+    swapBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      inEl.value = lastOutput;
+      mode = mode === 'xml2json' ? 'json2xml' : 'xml2json';
       modeA.classList.toggle('active', mode === 'xml2json');
       modeB.classList.toggle('active', mode === 'json2xml');
       inEl.placeholder = mode === 'xml2json' ? t.phXml : t.phJson;
-      statusEl.textContent = mode === 'xml2json' ? t.pasteXml : t.pasteJson;
-      statusEl.className   = 'xj-status';
       process();
     });
-  });
 
-  swapBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    inEl.value = lastOutput;
-    mode = mode === 'xml2json' ? 'json2xml' : 'xml2json';
-    modeA.classList.toggle('active', mode === 'xml2json');
-    modeB.classList.toggle('active', mode === 'json2xml');
-    inEl.placeholder = mode === 'xml2json' ? t.phXml : t.phJson;
-    process();
-  });
-
-  copyBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    navigator.clipboard.writeText(lastOutput).then(function () {
-      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
-      copyBtn.classList.add('done');
-      setTimeout(function () {
-        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
-        copyBtn.classList.remove('done');
-      }, 1600);
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
     });
-  });
 
-  clearBtn.addEventListener('click', function () {
-    inEl.value = '';
-    process();
-    inEl.focus();
-  });
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
 
-  window.toolGetPreset = function () {
-    return { input: inEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inEl.value = cfg.input ?? '';
-    inEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inEl.value = cfg.input ?? '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
 
-  document.addEventListener('keydown', function (e) {
-    var toolEl = document.querySelector('.xj');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
-  });
-})();
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.xj');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        inEl.value = '';
+        process();
+        inEl.focus();
+      }
+    });
+  })();
 </script>

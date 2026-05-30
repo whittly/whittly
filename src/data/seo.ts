@@ -1,34 +1,34 @@
 // SEO titles and meta descriptions (~150 chars) per tool slug
 
 export const SEO_TITLE: Record<string, string> = {
-  'json-formatter':        'JSON Formatter & Validator',
-  'base64':                'Base64 Encoder & Decoder',
-  'jwt-decoder':           'JWT Decoder & Inspector',
-  'uuid-generator':        'UUID Generator — v4, v7, NanoID',
-  'regex-tester':          'Regex Tester with Live Highlighting',
-  'cron-parser':           'Cron Expression Parser & Explainer',
-  'timestamp-converter':   'Unix Timestamp Converter',
-  'url-encoder':           'URL Encoder & Decoder',
-  'hash-generator':        'SHA Hash Generator — SHA-256, SHA-512',
-  'password-generator':    'Secure Password Generator',
-  'slug-generator':        'URL Slug Generator',
-  'bcrypt':                'Bcrypt Hash Generator & Verifier',
-  'text-diff':             'Text Diff — Line-by-Line Comparison',
-  'case-normalizer':       'Case Converter — camelCase, snake_case & more',
-  'curl-converter':        'Curl to Fetch / Axios / Python Converter',
-  'query-string-parser':   'Query String Parser & Builder',
-  'xml-json':              'XML ↔ JSON Converter',
-  'html-entity-encoder':   'HTML Entity Encoder & Decoder',
-  'mime-lookup':           'MIME Type Lookup',
+  'json-formatter': 'JSON Formatter & Validator',
+  base64: 'Base64 Encoder & Decoder',
+  'jwt-decoder': 'JWT Decoder & Inspector',
+  'uuid-generator': 'UUID Generator — v4, v7, NanoID',
+  'regex-tester': 'Regex Tester with Live Highlighting',
+  'cron-parser': 'Cron Expression Parser & Explainer',
+  'timestamp-converter': 'Unix Timestamp Converter',
+  'url-encoder': 'URL Encoder & Decoder',
+  'hash-generator': 'SHA Hash Generator — SHA-256, SHA-512',
+  'password-generator': 'Secure Password Generator',
+  'slug-generator': 'URL Slug Generator',
+  bcrypt: 'Bcrypt Hash Generator & Verifier',
+  'text-diff': 'Text Diff — Line-by-Line Comparison',
+  'case-normalizer': 'Case Converter — camelCase, snake_case & more',
+  'curl-converter': 'Curl to Fetch / Axios / Python Converter',
+  'query-string-parser': 'Query String Parser & Builder',
+  'xml-json': 'XML ↔ JSON Converter',
+  'html-entity-encoder': 'HTML Entity Encoder & Decoder',
+  'mime-lookup': 'MIME Type Lookup',
   'number-base-converter': 'Number Base Converter — Binary, Hex, Octal',
-  'string-inspector':      'String Inspector — Length, Bytes, Entropy',
-  'csv-json':              'CSV ↔ JSON Converter',
+  'string-inspector': 'String Inspector — Length, Bytes, Entropy',
+  'csv-json': 'CSV ↔ JSON Converter',
 };
 
 export const SEO_DESC: Record<string, string> = {
   'json-formatter':
     'Free online JSON formatter and validator. Prettify, minify, and validate JSON instantly in your browser. No upload, no signup required.',
-  'base64':
+  base64:
     'Free online Base64 encoder and decoder. Encode text or files to Base64, decode Base64 strings instantly. URL-safe mode supported. No data leaves your browser.',
   'jwt-decoder':
     'Free online JWT decoder. Inspect header, payload, and signature of any JWT token. View claims, check expiration — runs entirely in your browser.',
@@ -48,7 +48,7 @@ export const SEO_DESC: Record<string, string> = {
     'Free secure password generator. Configurable length, uppercase, lowercase, digits, symbols. Shows entropy score. Runs locally — never sent to a server.',
   'slug-generator':
     'Free online URL slug generator. Convert any text to URL-safe slugs. Supports Cyrillic transliteration, special characters, and custom separators.',
-  'bcrypt':
+  bcrypt:
     'Free online bcrypt tool. Hash passwords with configurable cost factor (4–14) and verify bcrypt hashes. Runs entirely in your browser via bcryptjs.',
   'text-diff':
     'Free online text diff tool. Compare two texts line by line and see exactly what changed. Color-coded additions and deletions — no files uploaded.',
@@ -75,7 +75,7 @@ export const SEO_DESC: Record<string, string> = {
 export const SEO_DESC_RU: Record<string, string> = {
   'json-formatter':
     'Бесплатный онлайн-форматтер JSON. Форматирование, минификация и валидация JSON прямо в браузере. Без загрузки и регистрации.',
-  'base64':
+  base64:
     'Бесплатный Base64-кодировщик и декодировщик онлайн. Кодируй текст и файлы в Base64, декодируй строки. Поддержка URL-safe режима.',
   'jwt-decoder':
     'Бесплатный декодер JWT токенов онлайн. Просматривай заголовок, payload и подпись. Проверяй срок действия — всё работает в браузере.',
@@ -95,7 +95,7 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный генератор паролей онлайн. Настраиваемая длина, наборы символов, оценка энтропии. Работает локально — пароль не отправляется на сервер.',
   'slug-generator':
     'Бесплатный генератор URL-slug онлайн. Конвертируй любой текст в URL-безопасные slug. Поддержка транслитерации кириллицы.',
-  'bcrypt':
+  bcrypt:
     'Бесплатный инструмент bcrypt онлайн. Хешируй пароли с настраиваемым cost-фактором и проверяй bcrypt-хеши. Работает в браузере.',
   'text-diff':
     'Бесплатное сравнение текстов онлайн. Построчное сравнение двух текстов с подсветкой добавлений и удалений. Без загрузки файлов.',

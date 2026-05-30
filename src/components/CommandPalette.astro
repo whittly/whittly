@@ -1,0 +1,243 @@
+---
+interface Props {
+  isRu: boolean;
+  catalog: any[];
+}
+const { isRu, catalog } = Astro.props;
+---
+
+<style is:global>
+  /* ─── Cmd+K Palette ─────────────────────────────────── */
+  .palette-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 18vh;
+  }
+  .palette-overlay.active {
+    display: flex;
+  }
+
+  .palette-modal {
+    background: var(--surface);
+    border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    width: calc(100% - 32px);
+    max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+
+  .palette-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .palette-bar .pi {
+    font-size: 15px;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
+  .palette-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .palette-bar input::placeholder {
+    color: var(--ink-faint);
+  }
+  .palette-esc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    border: 0.5px solid var(--line-strong);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+  }
+
+  .palette-list {
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  .pl-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.1s;
+  }
+  .pl-item:hover,
+  .pl-item.pl-on {
+    background: var(--accent-soft);
+  }
+  .pl-icon {
+    font-size: 15px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    width: 20px;
+  }
+  .pl-name {
+    font-size: 13.5px;
+    flex: 1;
+  }
+  .pl-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .pl-empty {
+    padding: 22px 18px;
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+
+<div
+  id="whPalette"
+  class="palette-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-label="command palette"
+>
+  <div class="palette-modal">
+    <div class="palette-bar">
+      <i class="ti ti-search pi"></i>
+      <input
+        id="paletteInput"
+        type="text"
+        placeholder={isRu ? 'поиск инструментов…' : 'search tools…'}
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd class="palette-esc">esc</kbd>
+    </div>
+    <div class="palette-list" id="paletteList"></div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ isRu, catalog }}>
+  (function () {
+    var palette = document.getElementById('whPalette');
+    var pInput = document.getElementById('paletteInput');
+    var pList = document.getElementById('paletteList');
+
+    function renderPalette(q) {
+      q = (q || '').toLowerCase().trim();
+      var items = q
+        ? catalog.filter(function (t) {
+            return t.name.indexOf(q) !== -1 || t.desc.indexOf(q) !== -1 || t.cat.indexOf(q) !== -1;
+          })
+        : catalog;
+      if (!items.length) {
+        pList.innerHTML =
+          '<div class="pl-empty">// ' +
+          (isRu ? 'инструменты не найдены' : 'no tools found') +
+          '</div>';
+        return;
+      }
+      pList.innerHTML = items
+        .map(function (t, i) {
+          return (
+            '<a class="pl-item' +
+            (i === 0 ? ' pl-on' : '') +
+            '" href="' +
+            (isRu ? '/ru/tools/' : '/tools/') +
+            t.slug +
+            '/">' +
+            '<i class="ti ' +
+            t.icon +
+            ' pl-icon"></i>' +
+            '<span class="pl-name">' +
+            t.name +
+            '</span>' +
+            '<span class="pl-cat">' +
+            t.cat +
+            '</span>' +
+            '</a>'
+          );
+        })
+        .join('');
+    }
+
+    var isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+    var kbdHint = document.getElementById('kbdHint');
+    if (kbdHint) kbdHint.textContent = isMac ? '⌘K' : 'Ctrl K';
+
+    function openPalette() {
+      palette.classList.add('active');
+      pInput.value = '';
+      renderPalette('');
+      requestAnimationFrame(function () {
+        pInput.focus();
+      });
+    }
+
+    function closePalette() {
+      palette.classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        palette.classList.contains('active') ? closePalette() : openPalette();
+      }
+      if (e.key === 'Escape' && palette.classList.contains('active')) closePalette();
+    });
+
+    pInput &&
+      pInput.addEventListener('input', function () {
+        renderPalette(pInput.value);
+      });
+
+    pInput &&
+      pInput.addEventListener('keydown', function (e) {
+        var items = pList.querySelectorAll('.pl-item');
+        var active = pList.querySelector('.pl-item.pl-on');
+        var idx = Array.prototype.indexOf.call(items, active);
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (active) active.classList.remove('pl-on');
+          var nxt = items[(idx + 1) % items.length];
+          if (nxt) {
+            nxt.classList.add('pl-on');
+            nxt.scrollIntoView({ block: 'nearest' });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (active) active.classList.remove('pl-on');
+          var prv = items[(idx - 1 + items.length) % items.length];
+          if (prv) {
+            prv.classList.add('pl-on');
+            prv.scrollIntoView({ block: 'nearest' });
+          }
+        } else if (e.key === 'Enter') {
+          var cur = pList.querySelector('.pl-item.pl-on');
+          if (cur) window.location.href = cur.getAttribute('href');
+        }
+      });
+
+    palette &&
+      palette.addEventListener('click', function (e) {
+        if (e.target === palette) closePalette();
+      });
+
+    var navCmdK = document.getElementById('navCmdK');
+    navCmdK && navCmdK.addEventListener('click', openPalette);
+  })();
+</script>

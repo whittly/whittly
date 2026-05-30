@@ -1,24 +1,27 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
 import FileLoader from '../FileLoader.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  btn2:        '2 spaces',
-  btn4:        '4 spaces',
-  btnMin:      isRu ? 'минифицировать' : 'minify',
+  btn2: '2 spaces',
+  btn4: '4 spaces',
+  btnMin: isRu ? 'минифицировать' : 'minify',
   statusEmpty: isRu ? '— вставьте json' : '— paste json to start',
-  copy:        isRu ? 'копировать'  : 'copy',
-  copied:      isRu ? 'скопировано' : 'copied',
-  clear:       isRu ? 'очистить'    : 'clear',
-  ph:          isRu ? 'вставьте или введите json…' : 'paste or type json here…',
-  outputPh:    isRu ? '// результат появится здесь' : '// output appears here',
-  valid:       isRu ? 'валидный' : 'valid',
-  array:       isRu ? 'массив'   : 'array',
-  object:      isRu ? 'объект'   : 'object',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu ? 'вставьте или введите json…' : 'paste or type json here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  valid: isRu ? 'валидный' : 'valid',
+  array: isRu ? 'массив' : 'array',
+  object: isRu ? 'объект' : 'object',
 };
 ---
+
 <style is:global>
   .jf {
     display: flex;
@@ -42,7 +45,10 @@ const t = {
     flex-wrap: wrap;
   }
 
-  .jf-modes { display: flex; gap: 4px; }
+  .jf-modes {
+    display: flex;
+    gap: 4px;
+  }
 
   .jf-mode {
     font-family: 'JetBrains Mono', monospace;
@@ -56,8 +62,15 @@ const t = {
     transition: all 0.12s;
   }
 
-  .jf-mode:hover { color: var(--ink); border-color: var(--line-strong); }
-  .jf-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .jf-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jf-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
 
   .jf-status {
     flex: 1;
@@ -71,8 +84,12 @@ const t = {
     white-space: nowrap;
   }
 
-  .jf-status.ok  { color: var(--good); }
-  .jf-status.err { color: var(--bad); }
+  .jf-status.ok {
+    color: var(--good);
+  }
+  .jf-status.err {
+    color: var(--bad);
+  }
 
   .jf-action {
     font-family: 'JetBrains Mono', monospace;
@@ -89,8 +106,14 @@ const t = {
     gap: 5px;
   }
 
-  .jf-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .jf-action.done  { color: var(--good); border-color: var(--good); }
+  .jf-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jf-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   .jf-panels {
     display: grid;
@@ -115,7 +138,9 @@ const t = {
     overflow: auto;
   }
 
-  .jf-sep { background: var(--line); }
+  .jf-sep {
+    background: var(--line);
+  }
 
   .jf-out {
     padding: 16px;
@@ -128,19 +153,45 @@ const t = {
     white-space: pre;
   }
 
-  .jf-out .k  { color: var(--accent); }
-  .jf-out .s  { color: var(--good); }
-  .jf-out .n  { color: var(--ink); }
-  .jf-out .b  { color: var(--ink-soft); }
-  .jf-out .nl { color: var(--ink-soft); }
-  .jf-out .er { color: var(--bad); }
-  .jf-out .ph { color: var(--ink-faint); }
+  .jf-out .k {
+    color: var(--accent);
+  }
+  .jf-out .s {
+    color: var(--good);
+  }
+  .jf-out .n {
+    color: var(--ink);
+  }
+  .jf-out .b {
+    color: var(--ink-soft);
+  }
+  .jf-out .nl {
+    color: var(--ink-soft);
+  }
+  .jf-out .er {
+    color: var(--bad);
+  }
+  .jf-out .ph {
+    color: var(--ink-faint);
+  }
 
   @media (max-width: 760px) {
-    .jf { height: auto; min-height: 0; }
-    .jf-panels { grid-template-columns: 1fr; grid-template-rows: 300px 1px 300px; }
-    .jf-sep { width: 100%; height: 1px; }
-    .jf-in, .jf-out { height: 300px; }
+    .jf {
+      height: auto;
+      min-height: 0;
+    }
+    .jf-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 300px 1px 300px;
+    }
+    .jf-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .jf-in,
+    .jf-out {
+      height: 300px;
+    }
   }
 </style>
 
@@ -155,168 +206,193 @@ const t = {
     </div>
     <span class="jf-status" id="jfStatus">{t.statusEmpty}</span>
     <span class="local-badge">// client-only</span>
-    <button class="jf-action" id="jfCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="jf-action" id="jfClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="jf-action" id="jfCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="jf-action" id="jfClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="jf-panels">
-    <textarea class="jf-in" id="jfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}></textarea>
+    <textarea class="jf-in" id="jfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+    ></textarea>
     <div class="jf-sep"></div>
     <pre class="jf-out" id="jfOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
 </div>
 
 <script is:inline define:vars={{ t, isRu }}>
-(function () {
-  const inEl     = document.getElementById('jfIn');
-  const outEl    = document.getElementById('jfOut');
-  const statusEl = document.getElementById('jfStatus');
-  const copyBtn  = document.getElementById('jfCopy');
-  const clearBtn = document.getElementById('jfClear');
+  (function () {
+    const inEl = document.getElementById('jfIn');
+    const outEl = document.getElementById('jfOut');
+    const statusEl = document.getElementById('jfStatus');
+    const copyBtn = document.getElementById('jfCopy');
+    const clearBtn = document.getElementById('jfClear');
 
-  let indent     = 2;
-  let lastOutput = '';
+    let indent = 2;
+    let lastOutput = '';
 
-  function esc(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
-  function highlight(json) {
-    return json.replace(
-      /("(?:\\u[0-9a-fA-F]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-      function (m) {
-        let c;
-        if (m[0] === '"') {
-          c = m.trimEnd().endsWith(':') ? 'k' : 's';
-        } else if (m === 'true' || m === 'false') {
-          c = 'b';
-        } else if (m === 'null') {
-          c = 'nl';
-        } else {
-          c = 'n';
+    function highlight(json) {
+      return json.replace(
+        /("(?:\\u[0-9a-fA-F]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function (m) {
+          let c;
+          if (m[0] === '"') {
+            c = m.trimEnd().endsWith(':') ? 'k' : 's';
+          } else if (m === 'true' || m === 'false') {
+            c = 'b';
+          } else if (m === 'null') {
+            c = 'nl';
+          } else {
+            c = 'n';
+          }
+          return '<span class="' + c + '">' + esc(m) + '</span>';
         }
-        return '<span class="' + c + '">' + esc(m) + '</span>';
+      );
+    }
+
+    function formatSize(bytes) {
+      return bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+    }
+
+    function ru_pl(n, one, few, many) {
+      var m10 = n % 10,
+        m100 = n % 100;
+      if (m100 >= 11 && m100 <= 19) return n + ' ' + many;
+      if (m10 === 1) return n + ' ' + one;
+      if (m10 >= 2 && m10 <= 4) return n + ' ' + few;
+      return n + ' ' + many;
+    }
+
+    function describeRoot(v) {
+      if (Array.isArray(v)) {
+        if (isRu) return t.array + ' · ' + ru_pl(v.length, 'элемент', 'элемента', 'элементов');
+        return t.array + ' · ' + v.length + ' item' + (v.length !== 1 ? 's' : '');
       }
-    );
-  }
-
-  function formatSize(bytes) {
-    return bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
-  }
-
-  function ru_pl(n, one, few, many) {
-    var m10 = n % 10, m100 = n % 100;
-    if (m100 >= 11 && m100 <= 19) return n + ' ' + many;
-    if (m10 === 1) return n + ' ' + one;
-    if (m10 >= 2 && m10 <= 4) return n + ' ' + few;
-    return n + ' ' + many;
-  }
-
-  function describeRoot(v) {
-    if (Array.isArray(v)) {
-      if (isRu) return t.array + ' · ' + ru_pl(v.length, 'элемент', 'элемента', 'элементов');
-      return t.array + ' · ' + v.length + ' item' + (v.length !== 1 ? 's' : '');
-    }
-    if (v !== null && typeof v === 'object') {
-      const k = Object.keys(v).length;
-      if (isRu) return t.object + ' · ' + ru_pl(k, 'ключ', 'ключа', 'ключей');
-      return t.object + ' · ' + k + ' key' + (k !== 1 ? 's' : '');
-    }
-    return typeof v;
-  }
-
-  function process() {
-    const raw = inEl.value;
-    if (!raw.trim()) {
-      outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
-      statusEl.textContent = t.statusEmpty;
-      statusEl.className = 'jf-status';
-      lastOutput = '';
-      return;
+      if (v !== null && typeof v === 'object') {
+        const k = Object.keys(v).length;
+        if (isRu) return t.object + ' · ' + ru_pl(k, 'ключ', 'ключа', 'ключей');
+        return t.object + ' · ' + k + ' key' + (k !== 1 ? 's' : '');
+      }
+      return typeof v;
     }
 
-    try {
-      const parsed    = JSON.parse(raw);
-      const formatted = JSON.stringify(parsed, null, indent || undefined);
-      lastOutput      = formatted;
-      outEl.innerHTML = highlight(formatted);
+    function process() {
+      const raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'jf-status';
+        lastOutput = '';
+        return;
+      }
 
-      const size = new Blob([formatted]).size;
-      statusEl.textContent = t.valid + ' · ' + describeRoot(parsed) + ' · ' + formatSize(size);
-      statusEl.className   = 'jf-status ok';
-      if (window.pushHistory) window.pushHistory('json formatter', statusEl.textContent, inEl.value.trim());
-      flashOutput(outEl);
-    } catch (e) {
-      lastOutput          = '';
-      outEl.innerHTML     = '<span class="er">// ' + esc(e.message) + '</span>';
-      statusEl.textContent = e.message;
-      statusEl.className  = 'jf-status err';
+      try {
+        const parsed = JSON.parse(raw);
+        const formatted = JSON.stringify(parsed, null, indent || undefined);
+        lastOutput = formatted;
+        outEl.innerHTML = highlight(formatted);
+
+        const size = new Blob([formatted]).size;
+        statusEl.textContent = t.valid + ' · ' + describeRoot(parsed) + ' · ' + formatSize(size);
+        statusEl.className = 'jf-status ok';
+        if (window.pushHistory)
+          window.pushHistory('json formatter', statusEl.textContent, inEl.value.trim());
+        flashOutput(outEl);
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span class="er">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'jf-status err';
+      }
     }
-  }
 
-  inEl.addEventListener('input', process);
+    inEl.addEventListener('input', process);
 
-  document.querySelectorAll('.jf-mode').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.jf-mode').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      indent = parseInt(btn.dataset.indent, 10);
-      process();
-    });
-  });
-
-  copyBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    navigator.clipboard.writeText(lastOutput).then(function () {
-      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
-      copyBtn.classList.add('done');
-      setTimeout(function () {
-        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
-        copyBtn.classList.remove('done');
-      }, 1600);
-    });
-  });
-
-  clearBtn.addEventListener('click', function () {
-    inEl.value = '';
-    process();
-    inEl.focus();
-  });
-
-  var jfPreload = sessionStorage.getItem('json_payload');
-  if (jfPreload) { inEl.value = jfPreload; sessionStorage.removeItem('json_payload'); process(); }
-  var jfMagic = sessionStorage.getItem('magic_box_payload');
-  if (jfMagic && !inEl.value) { inEl.value = jfMagic; sessionStorage.removeItem('magic_box_payload'); process(); }
-
-  function flashOutput(el) {
-    if (!el) return;
-    el.classList.remove('flash-ok');
-    void el.offsetWidth;
-    el.classList.add('flash-ok');
-  }
-
-  window.toolGetPreset = function () {
-    return { input: inEl.value, indent: indent };
-  };
-  window.toolSetPreset = function (cfg) {
-    if (cfg.input !== undefined) inEl.value = cfg.input;
-    if (cfg.indent !== undefined) {
-      indent = cfg.indent;
-      document.querySelectorAll('.jf-mode').forEach(function (b) {
-        b.classList.toggle('active', parseInt(b.dataset.indent, 10) === indent);
+    document.querySelectorAll('.jf-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.jf-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        indent = parseInt(btn.dataset.indent, 10);
+        process();
       });
-    }
-    process();
-  };
+    });
 
-  document.addEventListener('keydown', function(e) {
-    var toolEl = document.querySelector('.jf');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && !e.shiftKey && e.key === 'Enter') { e.preventDefault(); process(); }
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
-  });
-})();
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    var jfPreload = sessionStorage.getItem('json_payload');
+    if (jfPreload) {
+      inEl.value = jfPreload;
+      sessionStorage.removeItem('json_payload');
+      process();
+    }
+    var jfMagic = sessionStorage.getItem('magic_box_payload');
+    if (jfMagic && !inEl.value) {
+      inEl.value = jfMagic;
+      sessionStorage.removeItem('magic_box_payload');
+      process();
+    }
+
+    function flashOutput(el) {
+      if (!el) return;
+      el.classList.remove('flash-ok');
+      void el.offsetWidth;
+      el.classList.add('flash-ok');
+    }
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, indent: indent };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.indent !== undefined) {
+        indent = cfg.indent;
+        document.querySelectorAll('.jf-mode').forEach(function (b) {
+          b.classList.toggle('active', parseInt(b.dataset.indent, 10) === indent);
+        });
+      }
+      process();
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.jf');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+  })();
 </script>

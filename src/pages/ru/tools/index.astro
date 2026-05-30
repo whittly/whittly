@@ -1,12 +1,17 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import { CATALOG, CAT_META, CAT_ORDER, toolSlug } from '../../../data/catalog';
-import { toolNameRu as nameRu, toolDescRu as descRu, catLabelRu, catDescRu } from '../../../data/ru';
+import {
+  toolNameRu as nameRu,
+  toolDescRu as descRu,
+  catLabelRu,
+  catDescRu,
+} from '../../../data/ru';
 import '../../../styles/tools-index.css';
 import pkg from '../../../../package.json';
 
-const catalogWithSlugs = CATALOG.map(t => ({ ...t, slug: toolSlug(t) }));
-const totalTools = CATALOG.filter(t => !t.soon).length;
+const catalogWithSlugs = CATALOG.map((t) => ({ ...t, slug: toolSlug(t) }));
+const totalTools = CATALOG.filter((t) => !t.soon).length;
 const version = pkg.version;
 ---
 
@@ -16,10 +21,15 @@ const version = pkg.version;
 >
   <header class="tools-header">
     <div>
-      <div class="badge"><span class="badge-dot"></span><span>{`${totalTools} инструментов · v${version}`}</span></div>
+      <div class="badge">
+        <span class="badge-dot"></span><span>{`${totalTools} инструментов · v${version}`}</span>
+      </div>
       <h1>все инструменты — <em>один клик</em>.</h1>
     </div>
-    <p class="subhead">полный каталог. все инструменты работают прямо в браузере. нажми <span class="kbd">/</span> чтобы быстро перейти к нужному.</p>
+    <p class="subhead">
+      полный каталог. все инструменты работают прямо в браузере. нажми <span class="kbd">/</span> чтобы
+      быстро перейти к нужному.
+    </p>
   </header>
 
   <div class="filter-bar">
@@ -29,12 +39,21 @@ const version = pkg.version;
       <span class="kbd">/</span>
     </div>
     <div class="filter-chips" id="filterChips">
-      <div class="filter-chip active" data-cat="all">все<span class="count">{totalTools}</span></div>
-      {CAT_ORDER.filter(cat => CATALOG.some(t => t.cat === cat)).map(cat => {
-        const count = CATALOG.filter(t => t.cat === cat && !t.soon).length;
-        const label = CAT_META[cat].label;
-        return <div class="filter-chip" data-cat={cat}>{label}<span class="count">{count}</span></div>;
-      })}
+      <div class="filter-chip active" data-cat="all">
+        все<span class="count">{totalTools}</span>
+      </div>
+      {
+        CAT_ORDER.filter((cat) => CATALOG.some((t) => t.cat === cat)).map((cat) => {
+          const count = CATALOG.filter((t) => t.cat === cat && !t.soon).length;
+          const label = CAT_META[cat].label;
+          return (
+            <div class="filter-chip" data-cat={cat}>
+              {label}
+              <span class="count">{count}</span>
+            </div>
+          );
+        })
+      }
     </div>
   </div>
 
@@ -46,9 +65,20 @@ const version = pkg.version;
   </div>
 </Base>
 
-<script is:inline define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER, nameRu, descRu, catLabelRu, catDescRu }}>
-  const catalogEl  = document.getElementById('catalog');
-  const emptyEl    = document.getElementById('empty');
+<script
+  is:inline
+  define:vars={{
+    catalog: catalogWithSlugs,
+    catMeta: CAT_META,
+    catOrder: CAT_ORDER,
+    nameRu,
+    descRu,
+    catLabelRu,
+    catDescRu,
+  }}
+>
+  const catalogEl = document.getElementById('catalog');
+  const emptyEl = document.getElementById('empty');
   const searchInput = document.getElementById('toolSearch');
   let activeCat = 'all';
   let query = '';
@@ -57,7 +87,7 @@ const version = pkg.version;
   const urlCat = urlParams.get('cat');
   if (urlCat) {
     activeCat = urlCat;
-    document.querySelectorAll('.filter-chip').forEach(c => {
+    document.querySelectorAll('.filter-chip').forEach((c) => {
       c.classList.toggle('active', c.dataset.cat === urlCat);
     });
   }
@@ -67,18 +97,27 @@ const version = pkg.version;
     searchInput.value = urlQ;
   }
 
-  function getDisplayName(t) { return nameRu[t.name] || t.name; }
-  function getDisplayDesc(t) { return descRu[t.name] || t.desc; }
-  function getCatLabel(cat)  { return catMeta[cat].label; }
-  function getCatDesc(cat)   { return catDescRu[cat] || catMeta[cat].desc; }
+  function getDisplayName(t) {
+    return nameRu[t.name] || t.name;
+  }
+  function getDisplayDesc(t) {
+    return descRu[t.name] || t.desc;
+  }
+  function getCatLabel(cat) {
+    return catMeta[cat].label;
+  }
+  function getCatDesc(cat) {
+    return catDescRu[cat] || catMeta[cat].desc;
+  }
 
   function render() {
     const q = query.toLowerCase().trim();
-    const filtered = catalog.filter(t => {
+    const filtered = catalog.filter((t) => {
       const matchesCat = activeCat === 'all' || t.cat === activeCat;
       const ruName = (nameRu[t.name] || '').toLowerCase();
       const ruDesc = (descRu[t.name] || '').toLowerCase();
-      const matchesQ = !q ||
+      const matchesQ =
+        !q ||
         t.name.toLowerCase().includes(q) ||
         t.desc.toLowerCase().includes(q) ||
         t.cat.toLowerCase().includes(q) ||
@@ -95,11 +134,18 @@ const version = pkg.version;
     emptyEl.style.display = 'none';
 
     const groups = {};
-    filtered.forEach(t => { (groups[t.cat] = groups[t.cat] || []).push(t); });
+    filtered.forEach((t) => {
+      (groups[t.cat] = groups[t.cat] || []).push(t);
+    });
 
-    catalogEl.innerHTML = catOrder.filter(c => groups[c]).map(c => {
-      const tools = groups[c];
-      const rows = tools.map(t => t.soon ? `
+    catalogEl.innerHTML = catOrder
+      .filter((c) => groups[c])
+      .map((c) => {
+        const tools = groups[c];
+        const rows = tools
+          .map((t) =>
+            t.soon
+              ? `
         <div class="tool-row soon">
           <i class="ti ${t.icon} icon"></i>
           <div class="body">
@@ -107,7 +153,8 @@ const version = pkg.version;
             <div class="desc">${getDisplayDesc(t)}</div>
           </div>
         </div>
-      ` : `
+      `
+              : `
         <a class="tool-row" href="/ru/tools/${t.slug}/">
           <i class="ti ${t.icon} icon"></i>
           <div class="body">
@@ -115,12 +162,14 @@ const version = pkg.version;
             <div class="desc">${getDisplayDesc(t)}</div>
           </div>
         </a>
-      `).join('');
+      `
+          )
+          .join('');
 
-      const toolCount = tools.length;
-      const countLabel = toolCount === 1 ? '1 инструмент' : toolCount + ' инструмента';
+        const toolCount = tools.length;
+        const countLabel = toolCount === 1 ? '1 инструмент' : toolCount + ' инструмента';
 
-      return `
+        return `
         <section class="cat-section">
           <div class="cat-head">
             <span class="cat-name">${getCatLabel(c)}</span>
@@ -130,13 +179,14 @@ const version = pkg.version;
           <div class="tool-list">${rows}</div>
         </section>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   document.getElementById('filterChips').addEventListener('click', (e) => {
     const chip = e.target.closest('.filter-chip');
     if (!chip) return;
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
     chip.classList.add('active');
     activeCat = chip.dataset.cat;
     render();
@@ -155,7 +205,11 @@ const version = pkg.version;
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    if (
+      e.key === '/' &&
+      document.activeElement.tagName !== 'INPUT' &&
+      document.activeElement.tagName !== 'TEXTAREA'
+    ) {
       e.preventDefault();
       searchInput.focus();
     }

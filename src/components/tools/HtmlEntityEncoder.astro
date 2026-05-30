@@ -1,27 +1,30 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
 import BatchPanel from '../BatchPanel.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  encode:      isRu ? 'кодировать'   : 'encode',
-  decode:      isRu ? 'декодировать' : 'decode',
+  encode: isRu ? 'кодировать' : 'encode',
+  decode: isRu ? 'декодировать' : 'decode',
   pasteEncode: isRu ? '— вставьте html' : '— paste html to start',
   pasteDecode: isRu ? '— вставьте текст с entities' : '— paste text with entities to start',
-  swap:        isRu ? 'поменять'     : 'swap',
-  copy:        isRu ? 'копировать'   : 'copy',
-  copied:      isRu ? 'скопировано'  : 'copied',
-  clear:       isRu ? 'очистить'     : 'clear',
-  phEncode:    isRu ? 'вставьте html сюда…' : 'paste html or text here…',
-  phDecode:    isRu ? 'вставьте текст с entities…' : 'paste text with entities here…',
-  outputPh:    isRu ? '// результат появится здесь' : '// output appears here',
-  encoded:     isRu ? 'закодировано' : 'encoded',
-  decoded:     isRu ? 'декодировано' : 'decoded',
+  swap: isRu ? 'поменять' : 'swap',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  phEncode: isRu ? 'вставьте html сюда…' : 'paste html or text here…',
+  phDecode: isRu ? 'вставьте текст с entities…' : 'paste text with entities here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  encoded: isRu ? 'закодировано' : 'encoded',
+  decoded: isRu ? 'декодировано' : 'decoded',
   allNonAscii: isRu ? 'все non-ASCII' : 'all non-ASCII',
-  sequences:   isRu ? ' символов' : ' entities',
+  sequences: isRu ? ' символов' : ' entities',
 };
 ---
+
 <style is:global>
   .he {
     display: flex;
@@ -43,7 +46,10 @@ const t = {
     flex-shrink: 0;
     flex-wrap: wrap;
   }
-  .he-modes { display: flex; gap: 4px; }
+  .he-modes {
+    display: flex;
+    gap: 4px;
+  }
   .he-mode {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -55,8 +61,15 @@ const t = {
     cursor: pointer;
     transition: all 0.12s;
   }
-  .he-mode:hover  { color: var(--ink); border-color: var(--line-strong); }
-  .he-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .he-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .he-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
   .he-check {
     display: flex;
     align-items: center;
@@ -71,8 +84,14 @@ const t = {
     border-radius: 5px;
     transition: all 0.12s;
   }
-  .he-check:hover { color: var(--ink); border-color: var(--line); }
-  .he-check input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+  .he-check:hover {
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .he-check input[type='checkbox'] {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
   .he-status {
     flex: 1;
     font-family: 'JetBrains Mono', monospace;
@@ -84,8 +103,12 @@ const t = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .he-status.ok  { color: var(--good); }
-  .he-status.err { color: var(--bad); }
+  .he-status.ok {
+    color: var(--good);
+  }
+  .he-status.err {
+    color: var(--bad);
+  }
   .he-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -100,8 +123,14 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .he-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .he-action.done  { color: var(--good); border-color: var(--good); }
+  .he-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .he-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
   .he-swap {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -116,7 +145,10 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .he-swap:hover { color: var(--accent); border-color: var(--accent); }
+  .he-swap:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
   .he-panels {
     display: grid;
     grid-template-columns: 1fr 1px 1fr;
@@ -138,7 +170,9 @@ const t = {
     box-sizing: border-box;
     overflow: auto;
   }
-  .he-sep { background: var(--line); }
+  .he-sep {
+    background: var(--line);
+  }
   .he-out {
     padding: 16px;
     font-family: 'JetBrains Mono', monospace;
@@ -150,14 +184,32 @@ const t = {
     white-space: pre-wrap;
     word-break: break-all;
   }
-  .he-out .ok { color: var(--ink); }
-  .he-out .ph { color: var(--ink-faint); }
-  .he-out .er { color: var(--bad); }
+  .he-out .ok {
+    color: var(--ink);
+  }
+  .he-out .ph {
+    color: var(--ink-faint);
+  }
+  .he-out .er {
+    color: var(--bad);
+  }
   @media (max-width: 760px) {
-    .he { height: auto; min-height: 0; }
-    .he-panels { grid-template-columns: 1fr; grid-template-rows: 240px 1px 240px; }
-    .he-sep { width: 100%; height: 1px; }
-    .he-in, .he-out { height: 240px; }
+    .he {
+      height: auto;
+      min-height: 0;
+    }
+    .he-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 240px 1px 240px;
+    }
+    .he-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .he-in,
+    .he-out {
+      height: 240px;
+    }
   }
 </style>
 
@@ -176,160 +228,181 @@ const t = {
     <span class="he-status" id="heStatus">{t.pasteEncode}</span>
     <span class="local-badge">// client-only</span>
     <button class="he-swap" id="heSwap"><i class="ti ti-transfer-vertical"></i>{t.swap}</button>
-    <button class="he-action" id="heCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="he-action" id="heClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="he-action" id="heCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="he-action" id="heClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="he-panels">
-    <textarea class="he-in" id="heIn" data-hist-main-input spellcheck="false" placeholder={t.phEncode}></textarea>
+    <textarea
+      class="he-in"
+      id="heIn"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.phEncode}></textarea>
     <div class="he-sep"></div>
     <pre class="he-out" id="heOut"><span class="ph">{t.outputPh}</span></pre>
   </div>
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inEl        = document.getElementById('heIn');
-  var outEl       = document.getElementById('heOut');
-  var statusEl    = document.getElementById('heStatus');
-  var allNonAscii = document.getElementById('heAllNonAscii');
-  var swapBtn     = document.getElementById('heSwap');
-  var copyBtn     = document.getElementById('heCopy');
-  var clearBtn    = document.getElementById('heClear');
+  (function () {
+    var inEl = document.getElementById('heIn');
+    var outEl = document.getElementById('heOut');
+    var statusEl = document.getElementById('heStatus');
+    var allNonAscii = document.getElementById('heAllNonAscii');
+    var swapBtn = document.getElementById('heSwap');
+    var copyBtn = document.getElementById('heCopy');
+    var clearBtn = document.getElementById('heClear');
 
-  var mode       = 'encode';
-  var lastOutput = '';
+    var mode = 'encode';
+    var lastOutput = '';
 
-  function esc(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  function encodeEntities(str, all) {
-    var result = '';
-    for (var i = 0; i < str.length; i++) {
-      var ch = str[i];
-      var cp = str.codePointAt(i);
-      if (cp > 0xFFFF) i++; /* surrogate pair */
-      if      (ch === '&')  result += '&amp;';
-      else if (ch === '<')  result += '&lt;';
-      else if (ch === '>')  result += '&gt;';
-      else if (ch === '"')  result += '&quot;';
-      else if (ch === "'")  result += '&#39;';
-      else if (all && cp > 127) result += '&#' + cp + ';';
-      else result += ch;
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
-    return result;
-  }
 
-  function decodeEntities(str) {
-    var ta = document.createElement('textarea');
-    ta.innerHTML = str;
-    return ta.value;
-  }
-
-  function countEntities(encoded) {
-    return (encoded.match(/&[^;]+;/g) || []).length;
-  }
-
-  function process() {
-    var raw = inEl.value;
-    if (!raw) {
-      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
-      statusEl.textContent = mode === 'encode' ? t.pasteEncode : t.pasteDecode;
-      statusEl.className   = 'he-status';
-      lastOutput           = '';
-      return;
-    }
-    try {
-      var result;
-      if (mode === 'encode') {
-        result = encodeEntities(raw, allNonAscii.checked);
-        var n  = countEntities(result);
-        statusEl.textContent = t.encoded + ' · ' + n + t.sequences;
-      } else {
-        result = decodeEntities(raw);
-        statusEl.textContent = t.decoded + ' · ' + result.length + ' chars';
+    function encodeEntities(str, all) {
+      var result = '';
+      for (var i = 0; i < str.length; i++) {
+        var ch = str[i];
+        var cp = str.codePointAt(i);
+        if (cp > 0xffff) i++; /* surrogate pair */
+        if (ch === '&') result += '&amp;';
+        else if (ch === '<') result += '&lt;';
+        else if (ch === '>') result += '&gt;';
+        else if (ch === '"') result += '&quot;';
+        else if (ch === "'") result += '&#39;';
+        else if (all && cp > 127) result += '&#' + cp + ';';
+        else result += ch;
       }
-      lastOutput      = result;
-      outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
-      statusEl.className = 'he-status ok';
-      if (window.pushHistory) window.pushHistory('html entity encoder', statusEl.textContent, inEl.value.trim());
-      outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
-    } catch (e) {
-      lastOutput           = '';
-      outEl.innerHTML      = '<span class="er">// ' + esc(e.message) + '</span>';
-      statusEl.textContent = e.message;
-      statusEl.className   = 'he-status err';
+      return result;
     }
-  }
 
-  inEl.addEventListener('input', process);
-  allNonAscii.addEventListener('change', process);
+    function decodeEntities(str) {
+      var ta = document.createElement('textarea');
+      ta.innerHTML = str;
+      return ta.value;
+    }
 
-  document.querySelectorAll('.he-mode').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.he-mode').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      mode = btn.dataset.mode;
-      inEl.placeholder = mode === 'encode' ? t.phEncode : t.phDecode;
+    function countEntities(encoded) {
+      return (encoded.match(/&[^;]+;/g) || []).length;
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = mode === 'encode' ? t.pasteEncode : t.pasteDecode;
+        statusEl.className = 'he-status';
+        lastOutput = '';
+        return;
+      }
+      try {
+        var result;
+        if (mode === 'encode') {
+          result = encodeEntities(raw, allNonAscii.checked);
+          var n = countEntities(result);
+          statusEl.textContent = t.encoded + ' · ' + n + t.sequences;
+        } else {
+          result = decodeEntities(raw);
+          statusEl.textContent = t.decoded + ' · ' + result.length + ' chars';
+        }
+        lastOutput = result;
+        outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
+        statusEl.className = 'he-status ok';
+        if (window.pushHistory)
+          window.pushHistory('html entity encoder', statusEl.textContent, inEl.value.trim());
+        outEl.classList.remove('flash-ok');
+        void outEl.offsetWidth;
+        outEl.classList.add('flash-ok');
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span class="er">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'he-status err';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+    allNonAscii.addEventListener('change', process);
+
+    document.querySelectorAll('.he-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.he-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+        inEl.placeholder = mode === 'encode' ? t.phEncode : t.phDecode;
+        process();
+      });
+    });
+
+    swapBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      inEl.value = lastOutput;
+      mode = mode === 'encode' ? 'decode' : 'encode';
+      document.querySelectorAll('.he-mode').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
       process();
     });
-  });
 
-  swapBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    inEl.value = lastOutput;
-    mode       = mode === 'encode' ? 'decode' : 'encode';
-    document.querySelectorAll('.he-mode').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.mode === mode);
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
     });
-    process();
-  });
 
-  copyBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    navigator.clipboard.writeText(lastOutput).then(function () {
-      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
-      copyBtn.classList.add('done');
-      setTimeout(function () {
-        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
-        copyBtn.classList.remove('done');
-      }, 1600);
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
     });
-  });
 
-  clearBtn.addEventListener('click', function () {
-    inEl.value = '';
-    process();
-    inEl.focus();
-  });
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inEl.value = cfg.input ?? '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
 
-  window.toolGetPreset = function () {
-    return { input: inEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inEl.value = cfg.input ?? '';
-    inEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
-  document.addEventListener('keydown', function (e) {
-    var toolEl = document.querySelector('.he');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); if (lastOutput) copyBtn.click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { inEl.value = ''; process(); inEl.focus(); }
-  });
-
-  window.toolBatchProcess = function(lines) {
-    var encodeAll = allNonAscii.checked;
-    return lines.map(function(line) {
-      try {
-        return mode === 'decode'
-          ? decodeEntities(line)
-          : encodeEntities(line, encodeAll);
-      } catch(e) { return '// error: ' + e.message; }
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.he');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        inEl.value = '';
+        process();
+        inEl.focus();
+      }
     });
-  };
-})();
+
+    window.toolBatchProcess = function (lines) {
+      var encodeAll = allNonAscii.checked;
+      return lines.map(function (line) {
+        try {
+          return mode === 'decode' ? decodeEntities(line) : encodeEntities(line, encodeAll);
+        } catch (e) {
+          return '// error: ' + e.message;
+        }
+      });
+    };
+  })();
 </script>

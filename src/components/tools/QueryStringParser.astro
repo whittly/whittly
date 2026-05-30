@@ -1,25 +1,32 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  parse:      isRu ? 'разобрать'   : 'parse',
-  build:      isRu ? 'собрать'     : 'build',
-  copy:       isRu ? 'копировать'  : 'copy',
-  copied:     isRu ? 'скопировано' : 'copied',
-  clear:      isRu ? 'очистить'    : 'clear',
+  parse: isRu ? 'разобрать' : 'parse',
+  build: isRu ? 'собрать' : 'build',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
   pasteParse: isRu ? '— вставьте URL или query string' : '— paste a URL or query string',
-  pasteBuild: isRu ? '— введите пары key=value'       : '— enter key=value pairs to build',
-  phParse:    isRu ? 'https://example.com?key=value&other=hello+world' : 'https://example.com?key=value&other=hello+world',
-  phBuild:    isRu ? 'key=value\nother=hello world\n(по одной паре на строку)' : 'key=value\nother=hello world\n(one pair per line)',
-  outputPh:   isRu ? '// результат появится здесь' : '// output appears here',
-  key:        isRu ? 'ключ'        : 'key',
-  value:      isRu ? 'значение'    : 'value',
-  params:     isRu ? ' параметров' : ' params',
-  built:      isRu ? 'собрано'     : 'built',
+  pasteBuild: isRu ? '— введите пары key=value' : '— enter key=value pairs to build',
+  phParse: isRu
+    ? 'https://example.com?key=value&other=hello+world'
+    : 'https://example.com?key=value&other=hello+world',
+  phBuild: isRu
+    ? 'key=value\nother=hello world\n(по одной паре на строку)'
+    : 'key=value\nother=hello world\n(one pair per line)',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  key: isRu ? 'ключ' : 'key',
+  value: isRu ? 'значение' : 'value',
+  params: isRu ? ' параметров' : ' params',
+  built: isRu ? 'собрано' : 'built',
 };
 ---
+
 <style is:global>
   .qs {
     display: flex;
@@ -38,7 +45,10 @@ const t = {
     background: var(--surface-sunken);
     flex-wrap: wrap;
   }
-  .qs-modes { display: flex; gap: 4px; }
+  .qs-modes {
+    display: flex;
+    gap: 4px;
+  }
   .qs-mode {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -50,8 +60,15 @@ const t = {
     cursor: pointer;
     transition: all 0.12s;
   }
-  .qs-mode:hover  { color: var(--ink); border-color: var(--line-strong); }
-  .qs-mode.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .qs-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .qs-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
   .qs-status {
     flex: 1;
     font-family: 'JetBrains Mono', monospace;
@@ -62,8 +79,12 @@ const t = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .qs-status.ok  { color: var(--good); }
-  .qs-status.err { color: var(--bad); }
+  .qs-status.ok {
+    color: var(--good);
+  }
+  .qs-status.err {
+    color: var(--bad);
+  }
   .qs-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -78,10 +99,21 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .qs-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .qs-action.done  { color: var(--good); border-color: var(--good); }
+  .qs-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .qs-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
-  .qs-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .qs-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
   .qs-input {
     width: 100%;
@@ -98,7 +130,9 @@ const t = {
     resize: vertical;
     min-height: 44px;
   }
-  .qs-input:focus { border-color: var(--line-strong); }
+  .qs-input:focus {
+    border-color: var(--line-strong);
+  }
 
   /* parse mode: table */
   .qs-table {
@@ -130,9 +164,14 @@ const t = {
     border-bottom: 0.5px solid var(--line);
     background: var(--surface-sunken);
   }
-  .qs-trow:last-child { border-bottom: none; }
-  .qs-trow:nth-child(even) { background: var(--surface); }
-  .qs-tkey, .qs-tval {
+  .qs-trow:last-child {
+    border-bottom: none;
+  }
+  .qs-trow:nth-child(even) {
+    background: var(--surface);
+  }
+  .qs-tkey,
+  .qs-tval {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13.5px;
     color: var(--ink);
@@ -141,17 +180,32 @@ const t = {
     text-overflow: ellipsis;
     min-width: 0;
   }
-  .qs-tkey { color: var(--accent); }
-  .qs-copy-btn {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14.5px;
-    border: 0.5px solid var(--line); border-radius: 4px;
-    background: var(--bg); color: var(--ink-faint);
-    cursor: pointer; transition: all 0.12s; flex-shrink: 0;
+  .qs-tkey {
+    color: var(--accent);
   }
-  .qs-copy-btn:hover { color: var(--ink); border-color: var(--line-strong); }
-  .qs-copy-btn.done  { color: var(--good); border-color: var(--good); }
+  .qs-copy-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14.5px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .qs-copy-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .qs-copy-btn.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   /* build mode: output */
   .qs-out {
@@ -169,11 +223,18 @@ const t = {
     cursor: default;
     white-space: pre-wrap;
   }
-  .qs-out.ph { color: var(--ink-faint); }
+  .qs-out.ph {
+    color: var(--ink-faint);
+  }
 
   @media (max-width: 640px) {
-    .qs-body { padding: 16px; }
-    .qs-thead, .qs-trow { grid-template-columns: 1fr 1fr 28px; }
+    .qs-body {
+      padding: 16px;
+    }
+    .qs-thead,
+    .qs-trow {
+      grid-template-columns: 1fr 1fr 28px;
+    }
   }
 </style>
 
@@ -186,13 +247,23 @@ const t = {
     </div>
     <span class="qs-status" id="qsStatus">{t.pasteParse}</span>
     <span class="local-badge">// client-only</span>
-    <button class="qs-action" id="qsCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="qs-action" id="qsClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="qs-action" id="qsCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="qs-action" id="qsClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
 
   <!-- parse mode -->
   <div class="qs-body" id="qsParseBody">
-    <input class="qs-input" id="qsParseInput" data-hist-main-input spellcheck="false" placeholder={t.phParse} />
+    <input
+      class="qs-input"
+      id="qsParseInput"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.phParse}
+    />
     <div id="qsTableWrap" style="display:none">
       <div class="qs-table" id="qsTable">
         <div class="qs-thead">
@@ -207,184 +278,215 @@ const t = {
 
   <!-- build mode -->
   <div class="qs-body" id="qsBuildBody" style="display:none">
-    <textarea class="qs-input" id="qsBuildInput" spellcheck="false" rows="6" placeholder={t.phBuild}></textarea>
+    <textarea class="qs-input" id="qsBuildInput" spellcheck="false" rows="6" placeholder={t.phBuild}
+    ></textarea>
     <div class="qs-out ph" id="qsOut">{t.outputPh}</div>
   </div>
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var parseModeBtn  = document.getElementById('qsModeParse');
-  var buildModeBtn  = document.getElementById('qsModeBuild');
-  var parseBody     = document.getElementById('qsParseBody');
-  var buildBody     = document.getElementById('qsBuildBody');
-  var parseInput    = document.getElementById('qsParseInput');
-  var buildInput    = document.getElementById('qsBuildInput');
-  var tableWrap     = document.getElementById('qsTableWrap');
-  var rowsEl        = document.getElementById('qsRows');
-  var outEl         = document.getElementById('qsOut');
-  var statusEl      = document.getElementById('qsStatus');
-  var copyBtn       = document.getElementById('qsCopy');
-  var clearBtn      = document.getElementById('qsClear');
+  (function () {
+    var parseModeBtn = document.getElementById('qsModeParse');
+    var buildModeBtn = document.getElementById('qsModeBuild');
+    var parseBody = document.getElementById('qsParseBody');
+    var buildBody = document.getElementById('qsBuildBody');
+    var parseInput = document.getElementById('qsParseInput');
+    var buildInput = document.getElementById('qsBuildInput');
+    var tableWrap = document.getElementById('qsTableWrap');
+    var rowsEl = document.getElementById('qsRows');
+    var outEl = document.getElementById('qsOut');
+    var statusEl = document.getElementById('qsStatus');
+    var copyBtn = document.getElementById('qsCopy');
+    var clearBtn = document.getElementById('qsClear');
 
-  var mode       = 'parse';
-  var lastOutput = '';
+    var mode = 'parse';
+    var lastOutput = '';
 
-  function setMode(m) {
-    mode = m;
-    parseModeBtn.classList.toggle('active', m === 'parse');
-    buildModeBtn.classList.toggle('active', m === 'build');
-    parseBody.style.display = m === 'parse' ? '' : 'none';
-    buildBody.style.display = m === 'build' ? '' : 'none';
-    statusEl.textContent = m === 'parse' ? t.pasteParse : t.pasteBuild;
-    statusEl.className   = 'qs-status';
-    lastOutput = '';
-  }
+    function setMode(m) {
+      mode = m;
+      parseModeBtn.classList.toggle('active', m === 'parse');
+      buildModeBtn.classList.toggle('active', m === 'build');
+      parseBody.style.display = m === 'parse' ? '' : 'none';
+      buildBody.style.display = m === 'build' ? '' : 'none';
+      statusEl.textContent = m === 'parse' ? t.pasteParse : t.pasteBuild;
+      statusEl.className = 'qs-status';
+      lastOutput = '';
+    }
 
-  parseModeBtn.addEventListener('click', function () { setMode('parse'); });
-  buildModeBtn.addEventListener('click', function () { setMode('build'); });
-
-  function extractQuery(str) {
-    str = str.trim();
-    var qi = str.indexOf('?');
-    if (qi !== -1) str = str.slice(qi + 1);
-    var hi = str.indexOf('#');
-    if (hi !== -1) str = str.slice(0, hi);
-    return str;
-  }
-
-  function copyValue(val, btn) {
-    navigator.clipboard.writeText(val).then(function () {
-      btn.innerHTML = '<i class="ti ti-check"></i>';
-      btn.classList.add('done');
-      setTimeout(function () {
-        btn.innerHTML = '<i class="ti ti-copy"></i>';
-        btn.classList.remove('done');
-      }, 1400);
+    parseModeBtn.addEventListener('click', function () {
+      setMode('parse');
     });
-  }
-
-  function processParse() {
-    var raw = parseInput.value.trim();
-    if (!raw) {
-      tableWrap.style.display = 'none';
-      statusEl.textContent = t.pasteParse;
-      statusEl.className   = 'qs-status';
-      lastOutput = '';
-      return;
-    }
-    var qs = extractQuery(raw);
-    var params;
-    try { params = new URLSearchParams(qs); } catch (e) { params = new URLSearchParams(); }
-
-    var entries = Array.from(params.entries());
-    if (entries.length === 0) {
-      tableWrap.style.display = 'none';
-      statusEl.textContent = '0' + t.params;
-      statusEl.className   = 'qs-status';
-      lastOutput = '';
-      return;
-    }
-
-    rowsEl.innerHTML = '';
-    entries.forEach(function (pair) {
-      var row = document.createElement('div');
-      row.className = 'qs-trow';
-      var keyEl = document.createElement('span'); keyEl.className = 'qs-tkey'; keyEl.textContent = pair[0]; keyEl.title = pair[0];
-      var valEl = document.createElement('span'); valEl.className = 'qs-tval'; valEl.textContent = pair[1]; valEl.title = pair[1];
-      var btn   = document.createElement('button'); btn.className = 'qs-copy-btn'; btn.title = t.copy; btn.innerHTML = '<i class="ti ti-copy"></i>';
-      var val   = pair[1];
-      btn.addEventListener('click', function () { copyValue(val, btn); });
-      row.appendChild(keyEl); row.appendChild(valEl); row.appendChild(btn);
-      rowsEl.appendChild(row);
+    buildModeBtn.addEventListener('click', function () {
+      setMode('build');
     });
 
-    tableWrap.style.display = '';
-    lastOutput = '?' + params.toString();
-    statusEl.textContent = entries.length + t.params;
-    statusEl.className   = 'qs-status ok';
-    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent, parseInput.value.trim());
-    document.getElementById('qsTable').classList.remove('flash-ok');
-    void document.getElementById('qsTable').offsetWidth;
-    document.getElementById('qsTable').classList.add('flash-ok');
-  }
-
-  function processBuild() {
-    var raw = buildInput.value;
-    if (!raw.trim()) {
-      outEl.textContent = t.outputPh;
-      outEl.className   = 'qs-out ph';
-      statusEl.textContent = t.pasteBuild;
-      statusEl.className   = 'qs-status';
-      lastOutput = '';
-      return;
+    function extractQuery(str) {
+      str = str.trim();
+      var qi = str.indexOf('?');
+      if (qi !== -1) str = str.slice(qi + 1);
+      var hi = str.indexOf('#');
+      if (hi !== -1) str = str.slice(0, hi);
+      return str;
     }
-    var params = new URLSearchParams();
-    var count  = 0;
-    raw.split('\n').forEach(function (line) {
-      line = line.trim();
-      if (!line) return;
-      var eq = line.indexOf('=');
-      if (eq === -1) {
-        params.append(line, '');
-      } else {
-        params.append(line.slice(0, eq), line.slice(eq + 1));
+
+    function copyValue(val, btn) {
+      navigator.clipboard.writeText(val).then(function () {
+        btn.innerHTML = '<i class="ti ti-check"></i>';
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.innerHTML = '<i class="ti ti-copy"></i>';
+          btn.classList.remove('done');
+        }, 1400);
+      });
+    }
+
+    function processParse() {
+      var raw = parseInput.value.trim();
+      if (!raw) {
+        tableWrap.style.display = 'none';
+        statusEl.textContent = t.pasteParse;
+        statusEl.className = 'qs-status';
+        lastOutput = '';
+        return;
       }
-      count++;
-    });
-    var result = '?' + params.toString();
-    lastOutput = result;
-    outEl.textContent = result;
-    outEl.className   = 'qs-out';
-    statusEl.textContent = t.built + ' · ' + count + t.params;
-    statusEl.className   = 'qs-status ok';
-    if (window.pushHistory) window.pushHistory('query string parser', statusEl.textContent, buildInput.value.trim());
-    outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
-  }
+      var qs = extractQuery(raw);
+      var params;
+      try {
+        params = new URLSearchParams(qs);
+      } catch (e) {
+        params = new URLSearchParams();
+      }
 
-  parseInput.addEventListener('input', processParse);
-  buildInput.addEventListener('input', processBuild);
+      var entries = Array.from(params.entries());
+      if (entries.length === 0) {
+        tableWrap.style.display = 'none';
+        statusEl.textContent = '0' + t.params;
+        statusEl.className = 'qs-status';
+        lastOutput = '';
+        return;
+      }
 
-  copyBtn.addEventListener('click', function () {
-    if (!lastOutput) return;
-    navigator.clipboard.writeText(lastOutput).then(function () {
-      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
-      copyBtn.classList.add('done');
-      setTimeout(function () {
-        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
-        copyBtn.classList.remove('done');
-      }, 1600);
-    });
-  });
+      rowsEl.innerHTML = '';
+      entries.forEach(function (pair) {
+        var row = document.createElement('div');
+        row.className = 'qs-trow';
+        var keyEl = document.createElement('span');
+        keyEl.className = 'qs-tkey';
+        keyEl.textContent = pair[0];
+        keyEl.title = pair[0];
+        var valEl = document.createElement('span');
+        valEl.className = 'qs-tval';
+        valEl.textContent = pair[1];
+        valEl.title = pair[1];
+        var btn = document.createElement('button');
+        btn.className = 'qs-copy-btn';
+        btn.title = t.copy;
+        btn.innerHTML = '<i class="ti ti-copy"></i>';
+        var val = pair[1];
+        btn.addEventListener('click', function () {
+          copyValue(val, btn);
+        });
+        row.appendChild(keyEl);
+        row.appendChild(valEl);
+        row.appendChild(btn);
+        rowsEl.appendChild(row);
+      });
 
-  clearBtn.addEventListener('click', function () {
-    if (mode === 'parse') {
-      parseInput.value = '';
-      processParse();
-      parseInput.focus();
-    } else {
-      buildInput.value = '';
-      processBuild();
-      buildInput.focus();
+      tableWrap.style.display = '';
+      lastOutput = '?' + params.toString();
+      statusEl.textContent = entries.length + t.params;
+      statusEl.className = 'qs-status ok';
+      if (window.pushHistory)
+        window.pushHistory('query string parser', statusEl.textContent, parseInput.value.trim());
+      document.getElementById('qsTable').classList.remove('flash-ok');
+      void document.getElementById('qsTable').offsetWidth;
+      document.getElementById('qsTable').classList.add('flash-ok');
     }
-  });
 
-  window.toolGetPreset = function () {
-    return { input: parseInput.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    parseInput.value = cfg.input ?? '';
-    parseInput.dispatchEvent(new Event('input', { bubbles: true }));
-  };
+    function processBuild() {
+      var raw = buildInput.value;
+      if (!raw.trim()) {
+        outEl.textContent = t.outputPh;
+        outEl.className = 'qs-out ph';
+        statusEl.textContent = t.pasteBuild;
+        statusEl.className = 'qs-status';
+        lastOutput = '';
+        return;
+      }
+      var params = new URLSearchParams();
+      var count = 0;
+      raw.split('\n').forEach(function (line) {
+        line = line.trim();
+        if (!line) return;
+        var eq = line.indexOf('=');
+        if (eq === -1) {
+          params.append(line, '');
+        } else {
+          params.append(line.slice(0, eq), line.slice(eq + 1));
+        }
+        count++;
+      });
+      var result = '?' + params.toString();
+      lastOutput = result;
+      outEl.textContent = result;
+      outEl.className = 'qs-out';
+      statusEl.textContent = t.built + ' · ' + count + t.params;
+      statusEl.className = 'qs-status ok';
+      if (window.pushHistory)
+        window.pushHistory('query string parser', statusEl.textContent, buildInput.value.trim());
+      outEl.classList.remove('flash-ok');
+      void outEl.offsetWidth;
+      outEl.classList.add('flash-ok');
+    }
 
-  document.addEventListener('keydown', function (e) {
-    var toolEl = document.querySelector('.qs');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); copyBtn.click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
-  });
-})();
+    parseInput.addEventListener('input', processParse);
+    buildInput.addEventListener('input', processBuild);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      if (mode === 'parse') {
+        parseInput.value = '';
+        processParse();
+        parseInput.focus();
+      } else {
+        buildInput.value = '';
+        processBuild();
+        buildInput.focus();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: parseInput.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      parseInput.value = cfg.input ?? '';
+      parseInput.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.qs');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+  })();
 </script>

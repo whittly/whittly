@@ -10,15 +10,20 @@ import '../styles/about.css';
   <header class="about-hero">
     <div class="badge"><span class="badge-dot"></span><span>privacy policy</span></div>
     <h1>your data is <em>yours</em>.</h1>
-    <p class="lede">we built whittly so your tools run in your browser. here is exactly what we collect and what we don't.</p>
+    <p class="lede">
+      we built whittly so your tools run in your browser. here is exactly what we collect and what
+      we don't.
+    </p>
   </header>
 
   <div class="about-content">
-
     <h2 class="h-section">// the short version</h2>
     <div class="stack">
-      <div class="stack-head"><span class="prompt">$</span><span>cat</span><span class="file">privacy.txt</span></div>
-      <pre class="stack-body"><span class="c"># what we collect</span>
+      <div class="stack-head">
+        <span class="prompt">$</span><span>cat</span><span class="file">privacy.txt</span>
+      </div>
+      <pre
+        class="stack-body"><span class="c"># what we collect</span>
 <span class="k">email</span>        <span class="p">·</span> only if you create an account
 <span class="k">password</span>     <span class="p">·</span> stored as bcrypt hash, never in plaintext
 <span class="k">api keys</span>     <span class="p">·</span> stored as sha-256 hash, never in plaintext
@@ -36,54 +41,112 @@ import '../styles/about.css';
     <div class="faq-cluster">
       <div class="faq-cluster-head">tool usage</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">browser-based tools</span><span class="toggle">+</span></div>
-        <div class="faq-a">All core tools (JSON formatter, JWT decoder, Base64, regex, hash, etc.) run entirely in your browser using JavaScript and the WebCrypto API. The data you paste or type never leaves your device and is never transmitted to our servers. We have no technical means of accessing it.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">browser-based tools</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          All core tools (JSON formatter, JWT decoder, Base64, regex, hash, etc.) run entirely in
+          your browser using JavaScript and the WebCrypto API. The data you paste or type never
+          leaves your device and is never transmitted to our servers. We have no technical means of
+          accessing it.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">pro cloud features</span><span class="toggle">+</span></div>
-        <div class="faq-a">If you use Pro cloud features (batch processing, large file handling, REST API), your data is transmitted to our servers over HTTPS, processed in memory, and immediately discarded. We do not log, store, or inspect the content of your requests.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">pro cloud features</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          If you use Pro cloud features (batch processing, large file handling, REST API), your data
+          is transmitted to our servers over HTTPS, processed in memory, and immediately discarded.
+          We do not log, store, or inspect the content of your requests.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">account data</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">what is stored</span><span class="toggle">+</span></div>
-        <div class="faq-a">If you create an account, we store your email address and a bcrypt hash of your password. We store your plan status (free or pro). We store API keys as SHA-256 hashes — the raw key is shown to you once and never stored. We do not store your name, phone number, or payment card details.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">what is stored</span><span class="toggle"
+            >+</span
+          >
+        </div>
+        <div class="faq-a">
+          If you create an account, we store your email address and a bcrypt hash of your password.
+          We store your plan status (free or pro). We store API keys as SHA-256 hashes — the raw key
+          is shown to you once and never stored. We do not store your name, phone number, or payment
+          card details.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">how to delete your account</span><span class="toggle">+</span></div>
-        <div class="faq-a">You can delete your account at any time from your account settings. All associated data (email, hashed password, API keys) is permanently deleted. There is no retention period — deletion is immediate and irreversible.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">how to delete your account</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          You can delete your account at any time from your account settings. All associated data
+          (email, hashed password, API keys) is permanently deleted. There is no retention period —
+          deletion is immediate and irreversible.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">analytics & third parties</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">cloudflare web analytics</span><span class="toggle">+</span></div>
-        <div class="faq-a">We use Cloudflare Web Analytics, which is cookieless and privacy-first. It collects aggregate data only: which pages are loaded and approximate visitor country. It has no access to your tool usage, the content of your requests, or your account. No cookie consent banner is needed because no cookies are set.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">cloudflare web analytics</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          We use Cloudflare Web Analytics, which is cookieless and privacy-first. It collects
+          aggregate data only: which pages are loaded and approximate visitor country. It has no
+          access to your tool usage, the content of your requests, or your account. No cookie
+          consent banner is needed because no cookies are set.
+        </div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><span class="marker">§</span><span class="text">no third-party trackers</span><span class="toggle">+</span></div>
-        <div class="faq-a">We do not use Google Analytics, Facebook Pixel, Hotjar, Mixpanel, or any other third-party tracking service. We do not sell or share your data with any third party. We do not use retargeting or behavioral advertising.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">no third-party trackers</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          We do not use Google Analytics, Facebook Pixel, Hotjar, Mixpanel, or any other third-party
+          tracking service. We do not sell or share your data with any third party. We do not use
+          retargeting or behavioral advertising.
+        </div>
       </div>
     </div>
 
     <div class="faq-cluster">
       <div class="faq-cluster-head">contact</div>
       <div class="faq-item open">
-        <div class="faq-q"><span class="marker">§</span><span class="text">questions or requests</span><span class="toggle">+</span></div>
-        <div class="faq-a">For any privacy-related questions, data deletion requests, or concerns, email us at <a href="mailto:privacy@whittly.dev">privacy@whittly.dev</a>. We will respond within 5 business days.</div>
+        <div class="faq-q">
+          <span class="marker">§</span><span class="text">questions or requests</span><span
+            class="toggle">+</span
+          >
+        </div>
+        <div class="faq-a">
+          For any privacy-related questions, data deletion requests, or concerns, email us at <a
+            href="mailto:privacy@whittly.dev">privacy@whittly.dev</a
+          >. We will respond within 5 business days.
+        </div>
       </div>
     </div>
 
     <p style="margin-top:48px;font-size:13px;color:var(--ink-faint);">Last updated: May 2026</p>
-
   </div>
 </Base>
 
 <script>
-  document.querySelectorAll('.faq-q').forEach(q => {
+  document.querySelectorAll('.faq-q').forEach((q) => {
     q.addEventListener('click', () => q.parentElement?.classList.toggle('open'));
   });
 </script>

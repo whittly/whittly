@@ -1,31 +1,36 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
 import BatchPanel from '../BatchPanel.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  paste:    isRu ? '— введите текст или идентификатор' : '— paste text or identifier to start',
-  clear:    isRu ? 'очистить'     : 'clear',
-  ph:       isRu ? 'введите текст, camelCase, snake_case, kebab-case…' : 'type or paste any text, camelCase, snake_case…',
-  words:    isRu ? ' слов'        : ' words',
-  copy:     isRu ? 'копировать'   : 'copy',
-  copied:   isRu ? 'скопировано'  : 'copied',
+  paste: isRu ? '— введите текст или идентификатор' : '— paste text or identifier to start',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu
+    ? 'введите текст, camelCase, snake_case, kebab-case…'
+    : 'type or paste any text, camelCase, snake_case…',
+  words: isRu ? ' слов' : ' words',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
 };
 const CASES = [
-  { key: 'camel',    label: 'camelCase'          },
-  { key: 'pascal',   label: 'PascalCase'         },
-  { key: 'snake',    label: 'snake_case'         },
-  { key: 'screaming',label: 'SCREAMING_SNAKE'    },
-  { key: 'kebab',    label: 'kebab-case'         },
-  { key: 'cobol',    label: 'COBOL-CASE'         },
-  { key: 'dot',      label: 'dot.case'           },
-  { key: 'title',    label: 'Title Case'         },
-  { key: 'sentence', label: 'Sentence case'      },
-  { key: 'lower',    label: 'lowercase'          },
-  { key: 'upper',    label: 'UPPERCASE'          },
+  { key: 'camel', label: 'camelCase' },
+  { key: 'pascal', label: 'PascalCase' },
+  { key: 'snake', label: 'snake_case' },
+  { key: 'screaming', label: 'SCREAMING_SNAKE' },
+  { key: 'kebab', label: 'kebab-case' },
+  { key: 'cobol', label: 'COBOL-CASE' },
+  { key: 'dot', label: 'dot.case' },
+  { key: 'title', label: 'Title Case' },
+  { key: 'sentence', label: 'Sentence case' },
+  { key: 'lower', label: 'lowercase' },
+  { key: 'upper', label: 'UPPERCASE' },
 ];
 ---
+
 <style is:global>
   .cn {
     background: var(--surface);
@@ -52,7 +57,9 @@ const CASES = [
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .cn-status.ok { color: var(--good); }
+  .cn-status.ok {
+    color: var(--good);
+  }
   .cn-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -67,8 +74,16 @@ const CASES = [
     align-items: center;
     gap: 5px;
   }
-  .cn-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .cn-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .cn-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .cn-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
   .cn-input {
     width: 100%;
     font-family: 'JetBrains Mono', monospace;
@@ -82,7 +97,9 @@ const CASES = [
     box-sizing: border-box;
     transition: border-color 0.12s;
   }
-  .cn-input:focus { border-color: var(--line-strong); }
+  .cn-input:focus {
+    border-color: var(--line-strong);
+  }
   .cn-table {
     border: 0.5px solid var(--line);
     border-radius: var(--radius-md);
@@ -97,8 +114,12 @@ const CASES = [
     background: var(--surface-sunken);
     border-bottom: 0.5px solid var(--line);
   }
-  .cn-row:last-child { border-bottom: none; }
-  .cn-row:nth-child(even) { background: var(--surface); }
+  .cn-row:last-child {
+    border-bottom: none;
+  }
+  .cn-row:nth-child(even) {
+    background: var(--surface);
+  }
   .cn-lbl {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -114,7 +135,9 @@ const CASES = [
     text-overflow: ellipsis;
     min-width: 0;
   }
-  .cn-val.ph { color: var(--ink-faint); }
+  .cn-val.ph {
+    color: var(--ink-faint);
+  }
   .cn-copy-btn {
     width: 28px;
     height: 28px;
@@ -130,11 +153,21 @@ const CASES = [
     transition: all 0.12s;
     flex-shrink: 0;
   }
-  .cn-copy-btn:hover { color: var(--ink); border-color: var(--line-strong); }
-  .cn-copy-btn.done  { color: var(--good); border-color: var(--good); }
+  .cn-copy-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .cn-copy-btn.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
   @media (max-width: 640px) {
-    .cn-body { padding: 16px; }
-    .cn-row  { grid-template-columns: 110px 1fr 28px; }
+    .cn-body {
+      padding: 16px;
+    }
+    .cn-row {
+      grid-template-columns: 110px 1fr 28px;
+    }
   }
 </style>
 
@@ -144,136 +177,202 @@ const CASES = [
   <div class="cn-bar">
     <span class="cn-status" id="cnStatus">{t.paste}</span>
     <span class="local-badge">// client-only</span>
-    <button class="cn-action" id="cnClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="cn-action" id="cnClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="cn-body">
-    <input class="cn-input" id="cnInput" data-hist-main-input spellcheck="false" placeholder={t.ph} />
+    <input
+      class="cn-input"
+      id="cnInput"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.ph}
+    />
     <div class="cn-table" id="cnTable">
-      {CASES.map(c => (
-        <div class="cn-row" id={`cnRow-${c.key}`}>
-          <span class="cn-lbl">{c.label}</span>
-          <span class="cn-val ph" id={`cnVal-${c.key}`}>—</span>
-          <button class="cn-copy-btn" id={`cnCopy-${c.key}`} title={t.copy}><i class="ti ti-copy"></i></button>
-        </div>
-      ))}
+      {
+        CASES.map((c) => (
+          <div class="cn-row" id={`cnRow-${c.key}`}>
+            <span class="cn-lbl">{c.label}</span>
+            <span class="cn-val ph" id={`cnVal-${c.key}`}>
+              —
+            </span>
+            <button class="cn-copy-btn" id={`cnCopy-${c.key}`} title={t.copy}>
+              <i class="ti ti-copy" />
+            </button>
+          </div>
+        ))
+      }
     </div>
   </div>
 </div>
 
 <script is:inline define:vars={{ t, CASES }}>
-(function () {
-  var inputEl  = document.getElementById('cnInput');
-  var statusEl = document.getElementById('cnStatus');
-  var clearBtn = document.getElementById('cnClear');
+  (function () {
+    var inputEl = document.getElementById('cnInput');
+    var statusEl = document.getElementById('cnStatus');
+    var clearBtn = document.getElementById('cnClear');
 
-  function splitWords(str) {
-    var s = str;
-    s = s.replace(/([a-z\d])([A-Z])/g, '$1 $2');
-    s = s.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
-    s = s.replace(/[\-_.\/\s]+/g, ' ');
-    return s.trim().split(/\s+/).filter(Boolean);
-  }
+    function splitWords(str) {
+      var s = str;
+      s = s.replace(/([a-z\d])([A-Z])/g, '$1 $2');
+      s = s.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+      s = s.replace(/[\-_.\/\s]+/g, ' ');
+      return s.trim().split(/\s+/).filter(Boolean);
+    }
 
-  function cap(w)  { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }
-  function lo(w)   { return w.toLowerCase(); }
-  function up(w)   { return w.toUpperCase(); }
+    function cap(w) {
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }
+    function lo(w) {
+      return w.toLowerCase();
+    }
+    function up(w) {
+      return w.toUpperCase();
+    }
 
-  var CONVERTERS = {
-    camel:     function(ws) { return ws.length ? lo(ws[0]) + ws.slice(1).map(cap).join('') : ''; },
-    pascal:    function(ws) { return ws.map(cap).join(''); },
-    snake:     function(ws) { return ws.map(lo).join('_'); },
-    screaming: function(ws) { return ws.map(up).join('_'); },
-    kebab:     function(ws) { return ws.map(lo).join('-'); },
-    cobol:     function(ws) { return ws.map(up).join('-'); },
-    dot:       function(ws) { return ws.map(lo).join('.'); },
-    title:     function(ws) { return ws.map(cap).join(' '); },
-    sentence:  function(ws) { return ws.length ? cap(ws[0]) + (ws.length > 1 ? ' ' + ws.slice(1).map(lo).join(' ') : '') : ''; },
-    lower:     function(ws) { return ws.map(lo).join(' '); },
-    upper:     function(ws) { return ws.map(up).join(' '); },
-  };
+    var CONVERTERS = {
+      camel: function (ws) {
+        return ws.length ? lo(ws[0]) + ws.slice(1).map(cap).join('') : '';
+      },
+      pascal: function (ws) {
+        return ws.map(cap).join('');
+      },
+      snake: function (ws) {
+        return ws.map(lo).join('_');
+      },
+      screaming: function (ws) {
+        return ws.map(up).join('_');
+      },
+      kebab: function (ws) {
+        return ws.map(lo).join('-');
+      },
+      cobol: function (ws) {
+        return ws.map(up).join('-');
+      },
+      dot: function (ws) {
+        return ws.map(lo).join('.');
+      },
+      title: function (ws) {
+        return ws.map(cap).join(' ');
+      },
+      sentence: function (ws) {
+        return ws.length
+          ? cap(ws[0]) + (ws.length > 1 ? ' ' + ws.slice(1).map(lo).join(' ') : '')
+          : '';
+      },
+      lower: function (ws) {
+        return ws.map(lo).join(' ');
+      },
+      upper: function (ws) {
+        return ws.map(up).join(' ');
+      },
+    };
 
-  function copyValue(key) {
-    var el  = document.getElementById('cnVal-' + key);
-    var btn = document.getElementById('cnCopy-' + key);
-    var val = el && el.textContent;
-    if (!val || val === '—') return;
-    navigator.clipboard.writeText(val).then(function () {
-      btn.innerHTML = '<i class="ti ti-check"></i>';
-      btn.classList.add('done');
-      setTimeout(function () {
-        btn.innerHTML = '<i class="ti ti-copy"></i>';
-        btn.classList.remove('done');
-      }, 1400);
-    });
-  }
+    function copyValue(key) {
+      var el = document.getElementById('cnVal-' + key);
+      var btn = document.getElementById('cnCopy-' + key);
+      var val = el && el.textContent;
+      if (!val || val === '—') return;
+      navigator.clipboard.writeText(val).then(function () {
+        btn.innerHTML = '<i class="ti ti-check"></i>';
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.innerHTML = '<i class="ti ti-copy"></i>';
+          btn.classList.remove('done');
+        }, 1400);
+      });
+    }
 
-  CASES.forEach(function (c) {
-    var btn = document.getElementById('cnCopy-' + c.key);
-    if (btn) btn.addEventListener('click', function () { copyValue(c.key); });
-  });
-
-  function reset() {
     CASES.forEach(function (c) {
-      var el = document.getElementById('cnVal-' + c.key);
-      if (el) { el.textContent = '—'; el.className = 'cn-val ph'; }
-    });
-    statusEl.textContent = t.paste;
-    statusEl.className   = 'cn-status';
-  }
-
-  function process() {
-    var raw = inputEl.value;
-    if (!raw.trim()) { reset(); return; }
-
-    var words = splitWords(raw);
-    if (!words.length) { reset(); return; }
-
-    CASES.forEach(function (c) {
-      var el  = document.getElementById('cnVal-' + c.key);
-      var val = CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '—';
-      if (el) { el.textContent = val; el.className = 'cn-val'; }
+      var btn = document.getElementById('cnCopy-' + c.key);
+      if (btn)
+        btn.addEventListener('click', function () {
+          copyValue(c.key);
+        });
     });
 
-    statusEl.textContent = words.length + t.words;
-    statusEl.className   = 'cn-status ok';
+    function reset() {
+      CASES.forEach(function (c) {
+        var el = document.getElementById('cnVal-' + c.key);
+        if (el) {
+          el.textContent = '—';
+          el.className = 'cn-val ph';
+        }
+      });
+      statusEl.textContent = t.paste;
+      statusEl.className = 'cn-status';
+    }
 
-    var tableEl = document.getElementById('cnTable');
-    if (tableEl) { tableEl.classList.remove('flash-ok'); void tableEl.offsetWidth; tableEl.classList.add('flash-ok'); }
-    if (window.pushHistory) window.pushHistory('case normalizer', words.length + t.words, inputEl.value.trim());
-  }
+    function process() {
+      var raw = inputEl.value;
+      if (!raw.trim()) {
+        reset();
+        return;
+      }
 
-  inputEl.addEventListener('input', process);
+      var words = splitWords(raw);
+      if (!words.length) {
+        reset();
+        return;
+      }
 
-  clearBtn.addEventListener('click', function () {
-    inputEl.value = '';
-    reset();
-    inputEl.focus();
-  });
+      CASES.forEach(function (c) {
+        var el = document.getElementById('cnVal-' + c.key);
+        var val = CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '—';
+        if (el) {
+          el.textContent = val;
+          el.className = 'cn-val';
+        }
+      });
 
-  window.toolGetPreset = function () {
-    return { input: inputEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inputEl.value = cfg.input ?? '';
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
+      statusEl.textContent = words.length + t.words;
+      statusEl.className = 'cn-status ok';
 
-  document.addEventListener('keydown', function (e) {
-    var toolEl = document.querySelector('.cn');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
-  });
+      var tableEl = document.getElementById('cnTable');
+      if (tableEl) {
+        tableEl.classList.remove('flash-ok');
+        void tableEl.offsetWidth;
+        tableEl.classList.add('flash-ok');
+      }
+      if (window.pushHistory)
+        window.pushHistory('case normalizer', words.length + t.words, inputEl.value.trim());
+    }
 
-  window.toolBatchProcess = function(lines) {
-    return lines.map(function(line) {
-      var words = splitWords(line);
-      return CASES.map(function(c) {
-        return c.key + ': ' + (CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '');
-      }).join('\n');
+    inputEl.addEventListener('input', process);
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      reset();
+      inputEl.focus();
     });
-  };
-})();
+
+    window.toolGetPreset = function () {
+      return { input: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inputEl.value = cfg.input ?? '';
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.cn');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolBatchProcess = function (lines) {
+      return lines.map(function (line) {
+        var words = splitWords(line);
+        return CASES.map(function (c) {
+          return c.key + ': ' + (CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '');
+        }).join('\n');
+      });
+    };
+  })();
 </script>

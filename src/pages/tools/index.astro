@@ -4,8 +4,8 @@ import { CATALOG, CAT_META, CAT_ORDER, toolSlug } from '../../data/catalog';
 import '../../styles/tools-index.css';
 import pkg from '../../../package.json';
 
-const catalogWithSlugs = CATALOG.map(t => ({ ...t, slug: toolSlug(t) }));
-const totalTools = CATALOG.filter(t => !t.soon).length;
+const catalogWithSlugs = CATALOG.map((t) => ({ ...t, slug: toolSlug(t) }));
+const totalTools = CATALOG.filter((t) => !t.soon).length;
 const version = pkg.version;
 ---
 
@@ -15,10 +15,16 @@ const version = pkg.version;
 >
   <header class="tools-header">
     <div>
-      <div class="badge"><span class="badge-dot"></span><span>{`${totalTools} tools · v${version}`}</span></div>
+      <div class="badge">
+        <span class="badge-dot"></span><span>{`${totalTools} tools · v${version}`}</span>
+      </div>
       <h1>every <em>tool</em>, one keystroke away.</h1>
     </div>
-    <p class="subhead">browse the full catalog. all tools run locally — pick one and start. press <span class="kbd">/</span> from anywhere to jump.</p>
+    <p class="subhead">
+      browse the full catalog. all tools run locally — pick one and start. press <span class="kbd"
+        >/</span
+      > from anywhere to jump.
+    </p>
   </header>
 
   <div class="filter-bar">
@@ -28,11 +34,20 @@ const version = pkg.version;
       <span class="kbd">/</span>
     </div>
     <div class="filter-chips" id="filterChips">
-      <div class="filter-chip active" data-cat="all">all<span class="count">{totalTools}</span></div>
-      {CAT_ORDER.filter(cat => CATALOG.some(t => t.cat === cat)).map(cat => {
-        const count = CATALOG.filter(t => t.cat === cat && !t.soon).length;
-        return <div class="filter-chip" data-cat={cat}>{CAT_META[cat].label}<span class="count">{count}</span></div>;
-      })}
+      <div class="filter-chip active" data-cat="all">
+        all<span class="count">{totalTools}</span>
+      </div>
+      {
+        CAT_ORDER.filter((cat) => CATALOG.some((t) => t.cat === cat)).map((cat) => {
+          const count = CATALOG.filter((t) => t.cat === cat && !t.soon).length;
+          return (
+            <div class="filter-chip" data-cat={cat}>
+              {CAT_META[cat].label}
+              <span class="count">{count}</span>
+            </div>
+          );
+        })
+      }
     </div>
   </div>
 
@@ -44,7 +59,10 @@ const version = pkg.version;
   </div>
 </Base>
 
-<script is:inline define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER }}>
+<script
+  is:inline
+  define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER }}
+>
   const catalogEl = document.getElementById('catalog');
   const emptyEl = document.getElementById('empty');
   const searchInput = document.getElementById('toolSearch');
@@ -56,7 +74,7 @@ const version = pkg.version;
   const urlCat = urlParams.get('cat');
   if (urlCat) {
     activeCat = urlCat;
-    document.querySelectorAll('.filter-chip').forEach(c => {
+    document.querySelectorAll('.filter-chip').forEach((c) => {
       c.classList.toggle('active', c.dataset.cat === urlCat);
     });
   }
@@ -68,10 +86,14 @@ const version = pkg.version;
   }
 
   function render() {
-    const filtered = catalog.filter(t => {
+    const filtered = catalog.filter((t) => {
       const matchesCat = activeCat === 'all' || t.cat === activeCat;
       const q = query.toLowerCase().trim();
-      const matchesQ = !q || t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
+      const matchesQ =
+        !q ||
+        t.name.toLowerCase().includes(q) ||
+        t.desc.toLowerCase().includes(q) ||
+        t.cat.toLowerCase().includes(q);
       return matchesCat && matchesQ;
     });
 
@@ -83,12 +105,19 @@ const version = pkg.version;
     emptyEl.style.display = 'none';
 
     const groups = {};
-    filtered.forEach(t => { (groups[t.cat] = groups[t.cat] || []).push(t); });
+    filtered.forEach((t) => {
+      (groups[t.cat] = groups[t.cat] || []).push(t);
+    });
 
-    catalogEl.innerHTML = catOrder.filter(c => groups[c]).map(c => {
-      const tools = groups[c];
-      const meta = catMeta[c];
-      const rows = tools.map(t => t.soon ? `
+    catalogEl.innerHTML = catOrder
+      .filter((c) => groups[c])
+      .map((c) => {
+        const tools = groups[c];
+        const meta = catMeta[c];
+        const rows = tools
+          .map((t) =>
+            t.soon
+              ? `
         <div class="tool-row soon">
           <i class="ti ${t.icon} icon"></i>
           <div class="body">
@@ -96,7 +125,8 @@ const version = pkg.version;
             <div class="desc">${t.desc}</div>
           </div>
         </div>
-      ` : `
+      `
+              : `
         <a class="tool-row" href="/tools/${t.slug}/">
           <i class="ti ${t.icon} icon"></i>
           <div class="body">
@@ -104,9 +134,11 @@ const version = pkg.version;
             <div class="desc">${t.desc}</div>
           </div>
         </a>
-      `).join('');
+      `
+          )
+          .join('');
 
-      return `
+        return `
         <section class="cat-section">
           <div class="cat-head">
             <span class="cat-name">${meta.label}</span>
@@ -116,13 +148,14 @@ const version = pkg.version;
           <div class="tool-list">${rows}</div>
         </section>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   document.getElementById('filterChips').addEventListener('click', (e) => {
     const chip = e.target.closest('.filter-chip');
     if (!chip) return;
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
     chip.classList.add('active');
     activeCat = chip.dataset.cat;
     render();
@@ -140,13 +173,15 @@ const version = pkg.version;
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    if (
+      e.key === '/' &&
+      document.activeElement.tagName !== 'INPUT' &&
+      document.activeElement.tagName !== 'TEXTAREA'
+    ) {
       e.preventDefault();
       searchInput.focus();
     }
   });
-
-
 
   render();
 </script>

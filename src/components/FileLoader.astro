@@ -5,138 +5,181 @@ interface Props {
   lang?: 'en' | 'ru';
   accept?: string;
 }
-const { targetId, secondTargetId, lang = 'en', accept = '.txt,.json,.xml,.csv,.html,.js,.ts,.md,text/*' } = Astro.props;
+const {
+  targetId,
+  secondTargetId,
+  lang = 'en',
+  accept = '.txt,.json,.xml,.csv,.html,.js,.ts,.md,text/*',
+} = Astro.props;
 const isRu = lang === 'ru';
-const FREE_MB  = 5;
-const PRO_MB   = 100;
+const FREE_MB = 5;
+const PRO_MB = 100;
 const uid = targetId; // used for element IDs
 ---
 
-<div class="fl" id={"fl-" + uid}>
-  <label class="fl-open" for={"fl-inp-" + uid}>
+<div class="fl" id={'fl-' + uid}>
+  <label class="fl-open" for={'fl-inp-' + uid}>
     <i class="ti ti-file-upload"></i>
     {isRu ? 'открыть файл' : 'open file'}
   </label>
-  <input class="fl-hidden" id={"fl-inp-" + uid} type="file" accept={accept} />
-  <span class="fl-info" id={"fl-info-" + uid}></span>
-  <span class="fl-hint">{isRu ? `drag & drop · до ${FREE_MB} МБ (Pro: ${PRO_MB} МБ)` : `drag & drop · up to ${FREE_MB} MB (Pro: ${PRO_MB} MB)`}</span>
+  <input class="fl-hidden" id={'fl-inp-' + uid} type="file" accept={accept} />
+  <span class="fl-info" id={'fl-info-' + uid}></span>
+  <span class="fl-hint"
+    >{
+      isRu
+        ? `drag & drop · до ${FREE_MB} МБ (Pro: ${PRO_MB} МБ)`
+        : `drag & drop · up to ${FREE_MB} MB (Pro: ${PRO_MB} MB)`
+    }</span
+  >
 </div>
 
 <style is:global>
-.fl {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 0 10px;
-  font-family: 'JetBrains Mono', monospace; font-size: 13px;
-}
-.fl-open {
-  display: flex; align-items: center; gap: 5px;
-  padding: 3px 10px;
-  border: 0.5px solid var(--line); border-radius: 5px;
-  color: var(--ink-faint); cursor: pointer;
-  transition: color 0.12s, border-color 0.12s;
-  white-space: nowrap;
-}
-.fl-open:hover { color: var(--accent); border-color: var(--accent); }
-.fl-hidden { display: none; }
-.fl-info { color: var(--ink-soft); font-size: 12.5px; }
-.fl-hint { color: var(--ink-faint); font-size: 12px; margin-left: auto; }
-.fl-error { color: var(--bad, #c0392b); }
+  .fl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .fl-open {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition:
+      color 0.12s,
+      border-color 0.12s;
+    white-space: nowrap;
+  }
+  .fl-open:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .fl-hidden {
+    display: none;
+  }
+  .fl-info {
+    color: var(--ink-soft);
+    font-size: 12.5px;
+  }
+  .fl-hint {
+    color: var(--ink-faint);
+    font-size: 12px;
+    margin-left: auto;
+  }
+  .fl-error {
+    color: var(--bad, #c0392b);
+  }
 
-/* drag-over state on target textareas */
-.fl-drop-active {
-  outline: 2px dashed var(--accent) !important;
-  outline-offset: -2px;
-  background: var(--accent-soft) !important;
-}
+  /* drag-over state on target textareas */
+  .fl-drop-active {
+    outline: 2px dashed var(--accent) !important;
+    outline-offset: -2px;
+    background: var(--accent-soft) !important;
+  }
 </style>
 
 <script is:inline define:vars={{ targetId, secondTargetId, isRu, FREE_MB, PRO_MB }}>
-(function () {
-  function init() {
-  var infoEl  = document.getElementById('fl-info-' + targetId);
-  var fileInp = document.getElementById('fl-inp-'  + targetId);
-  var target  = document.getElementById(targetId);
-  var target2 = secondTargetId ? document.getElementById(secondTargetId) : null;
+  (function () {
+    function init() {
+      var infoEl = document.getElementById('fl-info-' + targetId);
+      var fileInp = document.getElementById('fl-inp-' + targetId);
+      var target = document.getElementById(targetId);
+      var target2 = secondTargetId ? document.getElementById(secondTargetId) : null;
 
-  if (!target) return;
+      if (!target) return;
 
-  function getPlan() {
-    try {
-      var t = localStorage.getItem('wh_access'); if (!t) return 'free';
-      return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).plan || 'free';
-    } catch(e) { return 'free'; }
-  }
+      function getPlan() {
+        try {
+          var t = localStorage.getItem('wh_access');
+          if (!t) return 'free';
+          return (
+            JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).plan || 'free'
+          );
+        } catch (e) {
+          return 'free';
+        }
+      }
 
-  function maxBytes() {
-    var plan = getPlan();
-    return (plan === 'pro' || plan === 'api' ? PRO_MB : FREE_MB) * 1024 * 1024;
-  }
+      function maxBytes() {
+        var plan = getPlan();
+        return (plan === 'pro' || plan === 'api' ? PRO_MB : FREE_MB) * 1024 * 1024;
+      }
 
-  function fmtSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
-  }
+      function fmtSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+      }
 
-  function loadFile(file, el) {
-    var limit = maxBytes();
-    var plan  = getPlan();
-    if (file.size > limit) {
-      var isPro = plan === 'pro' || plan === 'api';
-      infoEl.className = 'fl-info fl-error';
-      infoEl.textContent = isRu
-        ? (isPro ? 'файл слишком большой (макс. ' + PRO_MB + ' МБ)' : 'файл слишком большой — макс. ' + FREE_MB + ' МБ (Pro: ' + PRO_MB + ' МБ)')
-        : (isPro ? 'file too large (max ' + PRO_MB + ' MB)'           : 'file too large — max ' + FREE_MB + ' MB (Pro: ' + PRO_MB + ' MB)');
-      return;
+      function loadFile(file, el) {
+        var limit = maxBytes();
+        var plan = getPlan();
+        if (file.size > limit) {
+          var isPro = plan === 'pro' || plan === 'api';
+          infoEl.className = 'fl-info fl-error';
+          infoEl.textContent = isRu
+            ? isPro
+              ? 'файл слишком большой (макс. ' + PRO_MB + ' МБ)'
+              : 'файл слишком большой — макс. ' + FREE_MB + ' МБ (Pro: ' + PRO_MB + ' МБ)'
+            : isPro
+              ? 'file too large (max ' + PRO_MB + ' MB)'
+              : 'file too large — max ' + FREE_MB + ' MB (Pro: ' + PRO_MB + ' MB)';
+          return;
+        }
+
+        infoEl.className = 'fl-info';
+        infoEl.textContent = isRu ? 'читаю…' : 'reading…';
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          el.value = e.target.result;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          infoEl.textContent = file.name + ' · ' + fmtSize(file.size);
+        };
+        reader.onerror = function () {
+          infoEl.className = 'fl-info fl-error';
+          infoEl.textContent = isRu ? 'ошибка чтения файла' : 'error reading file';
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+
+      // File input change
+      fileInp.addEventListener('change', function () {
+        if (fileInp.files[0]) loadFile(fileInp.files[0], target);
+        fileInp.value = '';
+      });
+
+      // Drag & drop on target(s)
+      function addDrop(el, isSnd) {
+        el.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          el.classList.add('fl-drop-active');
+        });
+        el.addEventListener('dragleave', function () {
+          el.classList.remove('fl-drop-active');
+        });
+        el.addEventListener('drop', function (e) {
+          e.preventDefault();
+          el.classList.remove('fl-drop-active');
+          var file = e.dataTransfer.files[0];
+          if (file) loadFile(file, el);
+        });
+      }
+
+      addDrop(target, false);
+      if (target2) addDrop(target2, true);
+    } // end init
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
     }
-
-    infoEl.className = 'fl-info';
-    infoEl.textContent = (isRu ? 'читаю…' : 'reading…');
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      el.value = e.target.result;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      infoEl.textContent = file.name + ' · ' + fmtSize(file.size);
-    };
-    reader.onerror = function() {
-      infoEl.className = 'fl-info fl-error';
-      infoEl.textContent = isRu ? 'ошибка чтения файла' : 'error reading file';
-    };
-    reader.readAsText(file, 'utf-8');
-  }
-
-  // File input change
-  fileInp.addEventListener('change', function() {
-    if (fileInp.files[0]) loadFile(fileInp.files[0], target);
-    fileInp.value = '';
-  });
-
-  // Drag & drop on target(s)
-  function addDrop(el, isSnd) {
-    el.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      el.classList.add('fl-drop-active');
-    });
-    el.addEventListener('dragleave', function() {
-      el.classList.remove('fl-drop-active');
-    });
-    el.addEventListener('drop', function(e) {
-      e.preventDefault();
-      el.classList.remove('fl-drop-active');
-      var file = e.dataTransfer.files[0];
-      if (file) loadFile(file, el);
-    });
-  }
-
-  addDrop(target, false);
-  if (target2) addDrop(target2, true);
-  } // end init
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+  })();
 </script>

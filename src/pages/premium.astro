@@ -10,7 +10,10 @@ import '../styles/premium.css';
   <header class="premium-hero">
     <div class="badge"><span class="badge-dot"></span><span>support &amp; pro plans</span></div>
     <h1>simple, <em>honest</em> pricing.</h1>
-    <p class="lede">core tools are free and ad-free, always. pro features — cloud api, batch processing, large file handling — are coming soon with transparent, infrastructure-only pricing.</p>
+    <p class="lede">
+      core tools are free and ad-free, always. pro features — cloud api, batch processing, large
+      file handling — are coming soon with transparent, infrastructure-only pricing.
+    </p>
   </header>
 
   <h2 class="h-section">// plans</h2>
@@ -23,7 +26,6 @@ import '../styles/premium.css';
   </div>
 
   <div class="plans-grid">
-
     <div class="plan-card">
       <div>
         <div class="plan-tier">free · always</div>
@@ -83,13 +85,14 @@ import '../styles/premium.css';
       </ul>
       <span class="plan-cta ghost plan-cta-cs">coming soon</span>
     </div>
-
   </div>
 
   <h2 class="h-section">// what runs where</h2>
   <div class="runs-grid">
     <div class="runs-col">
-      <div class="runs-col-head local"><i class="ti ti-device-laptop"></i>in your browser — always free</div>
+      <div class="runs-col-head local">
+        <i class="ti ti-device-laptop"></i>in your browser — always free
+      </div>
       <ul class="runs-list">
         <li>JSON formatting &amp; validation</li>
         <li>Base64 encode / decode</li>
@@ -103,7 +106,9 @@ import '../styles/premium.css';
       </ul>
     </div>
     <div class="runs-col">
-      <div class="runs-col-head cloud"><i class="ti ti-cloud"></i>on our servers — pro &amp; api</div>
+      <div class="runs-col-head cloud">
+        <i class="ti ti-cloud"></i>on our servers — pro &amp; api
+      </div>
       <ul class="runs-list">
         <li>Batch jobs — hundreds of files at once</li>
         <li>Large file processing (&gt; 5 MB)</li>
@@ -117,12 +122,18 @@ import '../styles/premium.css';
 
   <h2 class="h-section">// while you wait</h2>
   <div class="free-grid">
-
-    <a class="free-card" href="https://github.com/whittly/whittly/issues" target="_blank" rel="noopener">
+    <a
+      class="free-card"
+      href="https://github.com/whittly/whittly/issues"
+      target="_blank"
+      rel="noopener"
+    >
       <i class="ti ti-bug"></i>
       <div>
         <div class="title">report a bug</div>
-        <div class="desc">found something broken or confusing? open an issue — it genuinely helps.</div>
+        <div class="desc">
+          found something broken or confusing? open an issue — it genuinely helps.
+        </div>
       </div>
     </a>
 
@@ -133,14 +144,15 @@ import '../styles/premium.css';
         <div class="desc">that one person who keeps using sketchy json sites. you know who.</div>
       </div>
     </a>
-
   </div>
 
   <div class="thanks">
     <span class="thanks-icon"><i class="ti ti-heart"></i></span>
-    <div class="thanks-body">if you find a bug, have a feature idea, or just use the tools daily and share them with teammates — <strong>thank you</strong>. it matters more than you'd think.</div>
+    <div class="thanks-body">
+      if you find a bug, have a feature idea, or just use the tools daily and share them with
+      teammates — <strong>thank you</strong>. it matters more than you'd think.
+    </div>
   </div>
-
 </Base>
 
 <script>
@@ -150,19 +162,19 @@ import '../styles/premium.css';
     const btn = (e.target as HTMLElement).closest('.bt-opt') as HTMLElement | null;
     if (!btn) return;
     const period = btn.dataset.period!;
-    toggle.querySelectorAll('.bt-opt').forEach(b => b.classList.remove('active'));
+    toggle.querySelectorAll('.bt-opt').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     const isAnnual = period === 'yr';
 
-    document.querySelectorAll('.plan-price .amount[data-mo]').forEach(el => {
+    document.querySelectorAll('.plan-price .amount[data-mo]').forEach((el) => {
       const e = el as HTMLElement;
       e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
     });
-    document.querySelectorAll('.plan-price .period[data-mo]').forEach(el => {
+    document.querySelectorAll('.plan-price .period[data-mo]').forEach((el) => {
       const e = el as HTMLElement;
       e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
     });
-    ['proAnnualNote', 'apiAnnualNote'].forEach(id => {
+    ['proAnnualNote', 'apiAnnualNote'].forEach((id) => {
       const el = document.getElementById(id)!;
       el.style.display = isAnnual ? 'inline' : 'none';
     });
@@ -171,19 +183,26 @@ import '../styles/premium.css';
   // Share button
   document.getElementById('shareBtn')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    const card = (e.currentTarget as HTMLElement);
+    const card = e.currentTarget as HTMLElement;
     const titleEl = card.querySelector('.title') as HTMLElement;
-    const data = { title: 'whittly', text: 'small sharp tools for developers', url: 'https://whittly.dev' };
+    const data = {
+      title: 'whittly',
+      text: 'small sharp tools for developers',
+      url: 'https://whittly.dev',
+    };
     if (navigator.share) {
-      try { await navigator.share(data); } catch {}
+      try {
+        await navigator.share(data);
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(data.url);
         const original = titleEl.textContent!;
         titleEl.textContent = 'link copied!';
-        setTimeout(() => { titleEl.textContent = original; }, 1600);
+        setTimeout(() => {
+          titleEl.textContent = original;
+        }, 1600);
       } catch {}
     }
   });
-
 </script>

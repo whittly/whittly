@@ -23,40 +23,51 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 </Base>
 
 <script is:inline define:vars={{ API }}>
-(function () {
-  var errEl     = document.getElementById('errMsg');
-  var okEl      = document.getElementById('okMsg');
-  var loadingEl = document.getElementById('loadingMsg');
+  (function () {
+    var errEl = document.getElementById('errMsg');
+    var okEl = document.getElementById('okMsg');
+    var loadingEl = document.getElementById('loadingMsg');
 
-  function showError(msg) {
-    loadingEl.style.display = 'none';
-    errEl.textContent = msg;
-    errEl.classList.add('visible');
-  }
+    function showError(msg) {
+      loadingEl.style.display = 'none';
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+    }
 
-  function showOk(msg) {
-    loadingEl.style.display = 'none';
-    okEl.textContent = msg;
-    okEl.classList.add('visible');
-  }
+    function showOk(msg) {
+      loadingEl.style.display = 'none';
+      okEl.textContent = msg;
+      okEl.classList.add('visible');
+    }
 
-  var token = new URLSearchParams(window.location.search).get('token');
-  if (!token) { showError('missing verification token'); return; }
+    var token = new URLSearchParams(window.location.search).get('token');
+    if (!token) {
+      showError('missing verification token');
+      return;
+    }
 
-  fetch(API + '/auth/verify-email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token }),
-  })
-    .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, data: d }; }); })
-    .then(function (r) {
-      if (r.ok) {
-        showOk('email verified! redirecting…');
-        setTimeout(function () { location.replace('/account/'); }, 1500);
-      } else {
-        showError(r.data.error ?? 'verification failed — the link may have expired');
-      }
+    fetch(API + '/auth/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
     })
-    .catch(function () { showError('server unavailable — please try again in a moment'); });
-})();
+      .then(function (res) {
+        return res.json().then(function (d) {
+          return { ok: res.ok, data: d };
+        });
+      })
+      .then(function (r) {
+        if (r.ok) {
+          showOk('email verified! redirecting…');
+          setTimeout(function () {
+            location.replace('/account/');
+          }, 1500);
+        } else {
+          showError(r.data.error ?? 'verification failed — the link may have expired');
+        }
+      })
+      .catch(function () {
+        showError('server unavailable — please try again in a moment');
+      });
+  })();
 </script>

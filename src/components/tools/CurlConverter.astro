@@ -1,21 +1,26 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
 import FileLoader from '../FileLoader.astro';
-interface Props { lang?: 'en' | 'ru'; }
+interface Props {
+  lang?: 'en' | 'ru';
+}
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
-  copy:      isRu ? 'копировать'  : 'copy',
-  copied:    isRu ? 'скопировано' : 'copied',
-  clear:     isRu ? 'очистить'    : 'clear',
-  paste:     isRu ? '— вставьте curl-команду'  : '— paste a curl command',
-  phIn:      isRu ? 'вставьте curl-команду…'   : "paste curl command here…\ncurl -X POST 'https://api.example.com/v1/chat' \\\n  -H 'Authorization: Bearer $TOKEN' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"message\":\"hello\"}'",
-  outputPh:  isRu ? '// результат появится здесь' : '// converted output appears here',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  paste: isRu ? '— вставьте curl-команду' : '— paste a curl command',
+  phIn: isRu
+    ? 'вставьте curl-команду…'
+    : "paste curl command here…\ncurl -X POST 'https://api.example.com/v1/chat' \\\n  -H 'Authorization: Bearer $TOKEN' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"message\":\"hello\"}'",
+  outputPh: isRu ? '// результат появится здесь' : '// converted output appears here',
   converted: isRu ? 'конвертировано' : 'converted',
-  error:     isRu ? 'ошибка разбора' : 'parse error',
-  noUrl:     isRu ? 'URL не найден'  : 'no URL found in command',
+  error: isRu ? 'ошибка разбора' : 'parse error',
+  noUrl: isRu ? 'URL не найден' : 'no URL found in command',
 };
 ---
+
 <style is:global>
   .cc {
     display: flex;
@@ -44,8 +49,12 @@ const t = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .cc-status.ok  { color: var(--good); }
-  .cc-status.err { color: var(--bad); }
+  .cc-status.ok {
+    color: var(--good);
+  }
+  .cc-status.err {
+    color: var(--bad);
+  }
   .cc-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -60,8 +69,14 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .cc-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .cc-action.done  { color: var(--good); border-color: var(--good); }
+  .cc-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .cc-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   .cc-input-wrap {
     border-bottom: 0.5px solid var(--line);
@@ -107,8 +122,13 @@ const t = {
     transition: color 0.12s;
     margin-bottom: -1px;
   }
-  .cc-tab:hover  { color: var(--ink); }
-  .cc-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .cc-tab:hover {
+    color: var(--ink);
+  }
+  .cc-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
 
   .cc-out {
     flex: 1;
@@ -122,13 +142,23 @@ const t = {
     white-space: pre;
     min-height: 220px;
   }
-  .cc-out .ok { color: var(--ink); }
-  .cc-out .ph { color: var(--ink-faint); }
-  .cc-out .er { color: var(--bad); }
+  .cc-out .ok {
+    color: var(--ink);
+  }
+  .cc-out .ph {
+    color: var(--ink-faint);
+  }
+  .cc-out .er {
+    color: var(--bad);
+  }
 
   @media (max-width: 640px) {
-    .cc-in { height: 120px; }
-    .cc-out { min-height: 160px; }
+    .cc-in {
+      height: 120px;
+    }
+    .cc-out {
+      min-height: 160px;
+    }
   }
 </style>
 
@@ -138,11 +168,16 @@ const t = {
   <div class="cc-bar">
     <span class="cc-status" id="ccStatus">{t.paste}</span>
     <span class="local-badge">// client-only</span>
-    <button class="cc-action" id="ccCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="cc-action" id="ccClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="cc-action" id="ccCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="cc-action" id="ccClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="cc-input-wrap">
-    <textarea class="cc-in" id="ccIn" data-hist-main-input spellcheck="false" placeholder={t.phIn}></textarea>
+    <textarea class="cc-in" id="ccIn" data-hist-main-input spellcheck="false" placeholder={t.phIn}
+    ></textarea>
   </div>
   <div class="cc-out-wrap">
     <div class="cc-tabs" id="ccTabs">
@@ -156,313 +191,454 @@ const t = {
 </div>
 
 <script is:inline define:vars={{ t }}>
-(function () {
-  var inEl     = document.getElementById('ccIn');
-  var outEl    = document.getElementById('ccOut');
-  var statusEl = document.getElementById('ccStatus');
-  var tabsEl   = document.getElementById('ccTabs');
-  var copyBtn  = document.getElementById('ccCopy');
-  var clearBtn = document.getElementById('ccClear');
+  (function () {
+    var inEl = document.getElementById('ccIn');
+    var outEl = document.getElementById('ccOut');
+    var statusEl = document.getElementById('ccStatus');
+    var tabsEl = document.getElementById('ccTabs');
+    var copyBtn = document.getElementById('ccCopy');
+    var clearBtn = document.getElementById('ccClear');
 
-  var activeTab = 'fetch';
-  var snippets  = {};
+    var activeTab = 'fetch';
+    var snippets = {};
 
-  function esc(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
-  /* ── Tokeniser ──────────────────────────────────────── */
-  function tokenize(cmd) {
-    var s = cmd.replace(/\\\n/g, ' ').replace(/\\\r\n/g, ' ').trim();
-    var tokens = [];
-    var i = 0;
-    while (i < s.length) {
-      while (i < s.length && /\s/.test(s[i])) i++;
-      if (i >= s.length) break;
-      if (s[i] === "'" || s[i] === '"') {
-        var q = s[i++], val = '';
-        while (i < s.length && s[i] !== q) {
-          if (s[i] === '\\' && i + 1 < s.length) { val += s[i + 1]; i += 2; }
-          else val += s[i++];
+    /* ── Tokeniser ──────────────────────────────────────── */
+    function tokenize(cmd) {
+      var s = cmd
+        .replace(/\\\n/g, ' ')
+        .replace(/\\\r\n/g, ' ')
+        .trim();
+      var tokens = [];
+      var i = 0;
+      while (i < s.length) {
+        while (i < s.length && /\s/.test(s[i])) i++;
+        if (i >= s.length) break;
+        if (s[i] === "'" || s[i] === '"') {
+          var q = s[i++],
+            val = '';
+          while (i < s.length && s[i] !== q) {
+            if (s[i] === '\\' && i + 1 < s.length) {
+              val += s[i + 1];
+              i += 2;
+            } else val += s[i++];
+          }
+          i++;
+          tokens.push(val);
+        } else if (s[i] === '$' && s[i + 1] === "'") {
+          /* $'...' ANSI-C quoting */
+          i += 2;
+          var val = '';
+          while (i < s.length && s[i] !== "'") {
+            if (s[i] === '\\' && i + 1 < s.length) {
+              val += s[i + 1];
+              i += 2;
+            } else val += s[i++];
+          }
+          i++;
+          tokens.push(val);
+        } else {
+          var val = '';
+          while (i < s.length && !/\s/.test(s[i])) val += s[i++];
+          tokens.push(val);
+        }
+      }
+      return tokens;
+    }
+
+    var NO_VAL_FLAGS = new Set([
+      '-L',
+      '--location',
+      '-s',
+      '--silent',
+      '-S',
+      '--show-error',
+      '-v',
+      '--verbose',
+      '-i',
+      '--include',
+      '-k',
+      '--insecure',
+      '-g',
+      '--globoff',
+      '-f',
+      '--fail',
+      '--compressed',
+      '--http1.1',
+      '--http2',
+      '--no-keepalive',
+      '--digest',
+      '--ntlm',
+      '-I',
+      '--head',
+      '-G',
+      '--get',
+    ]);
+
+    function parseCurl(cmd) {
+      var tokens = tokenize(cmd);
+      var i = 0;
+      if (tokens[0] && tokens[0].toLowerCase() === 'curl') i = 1;
+
+      var url = '',
+        method = '',
+        headers = [],
+        data = '',
+        auth = '',
+        cookies = '';
+      var isForm = false;
+      var formPairs = [];
+
+      while (i < tokens.length) {
+        var tok = tokens[i];
+        if (NO_VAL_FLAGS.has(tok)) {
+          i++;
+          continue;
+        }
+
+        /* flags that take the next token as value */
+        if (tok === '-X' || tok === '--request') {
+          method = tokens[++i];
+        } else if (tok === '-H' || tok === '--header') {
+          headers.push(tokens[++i]);
+        } else if (
+          tok === '-d' ||
+          tok === '--data' ||
+          tok === '--data-raw' ||
+          tok === '--data-ascii' ||
+          tok === '--data-binary'
+        ) {
+          data = tokens[++i];
+        } else if (tok === '--data-urlencode') {
+          data = tokens[++i];
+        } else if (tok === '--json') {
+          data = tokens[++i];
+          if (!method) method = 'POST';
+          headers.push('Content-Type: application/json');
+          headers.push('Accept: application/json');
+        } else if (tok === '-u' || tok === '--user') {
+          auth = tokens[++i];
+        } else if (tok === '-b' || tok === '--cookie') {
+          cookies = tokens[++i];
+        } else if (tok === '--url') {
+          url = tokens[++i];
+        } else if (tok === '-F' || tok === '--form') {
+          isForm = true;
+          formPairs.push(tokens[++i]);
+        } else if (tok === '-A' || tok === '--user-agent') {
+          headers.push('User-Agent: ' + tokens[++i]);
+          i++;
+          continue;
+        } else if (tok === '-e' || tok === '--referer') {
+          headers.push('Referer: ' + tokens[++i]);
+          i++;
+          continue;
+        } else if (tok.startsWith('--')) {
+          /* unknown long flag, skip value if looks like one */ i++;
+          continue;
+        } else if (tok.startsWith('-') && tok.length > 1) {
+          /* short combined flags */
+          var consumed = false;
+          if (tok.includes('X') && i + 1 < tokens.length) {
+            method = tokens[++i];
+            consumed = true;
+          }
+          if (tok.includes('H') && i + 1 < tokens.length) {
+            headers.push(tokens[++i]);
+            consumed = true;
+          }
+          if (tok.includes('d') && i + 1 < tokens.length) {
+            data = tokens[++i];
+            consumed = true;
+          }
+          if (tok.includes('u') && i + 1 < tokens.length) {
+            auth = tokens[++i];
+            consumed = true;
+          }
+          if (tok.includes('b') && i + 1 < tokens.length) {
+            cookies = tokens[++i];
+            consumed = true;
+          }
+          if (tok.includes('F') && i + 1 < tokens.length) {
+            isForm = true;
+            formPairs.push(tokens[++i]);
+            consumed = true;
+          }
+          if (!consumed) {
+            /* single no-value flag */
+          }
+        } else if (!tok.startsWith('-')) {
+          url = tok;
         }
         i++;
-        tokens.push(val);
-      } else if (s[i] === '$' && s[i + 1] === "'") {
-        /* $'...' ANSI-C quoting */
-        i += 2; var val = '';
-        while (i < s.length && s[i] !== "'") {
-          if (s[i] === '\\' && i + 1 < s.length) { val += s[i + 1]; i += 2; }
-          else val += s[i++];
-        }
-        i++;
-        tokens.push(val);
-      } else {
-        var val = '';
-        while (i < s.length && !/\s/.test(s[i])) val += s[i++];
-        tokens.push(val);
       }
-    }
-    return tokens;
-  }
 
-  var NO_VAL_FLAGS = new Set([
-    '-L','--location','-s','--silent','-S','--show-error',
-    '-v','--verbose','-i','--include','-k','--insecure',
-    '-g','--globoff','-f','--fail','--compressed','--http1.1',
-    '--http2','--no-keepalive','--digest','--ntlm','-I','--head',
-    '-G','--get',
-  ]);
+      if (!method) method = data || isForm ? 'POST' : 'GET';
+      else method = method.toUpperCase();
 
-  function parseCurl(cmd) {
-    var tokens = tokenize(cmd);
-    var i = 0;
-    if (tokens[0] && tokens[0].toLowerCase() === 'curl') i = 1;
-
-    var url = '', method = '', headers = [], data = '', auth = '', cookies = '';
-    var isForm = false;
-    var formPairs = [];
-
-    while (i < tokens.length) {
-      var tok = tokens[i];
-      if (NO_VAL_FLAGS.has(tok)) { i++; continue; }
-
-      /* flags that take the next token as value */
-      if (tok === '-X' || tok === '--request')                 { method  = tokens[++i]; }
-      else if (tok === '-H' || tok === '--header')             { headers.push(tokens[++i]); }
-      else if (tok === '-d' || tok === '--data' || tok === '--data-raw' || tok === '--data-ascii' || tok === '--data-binary') {
-        data = tokens[++i];
+      /* add auth header */
+      if (auth) {
+        var encoded = btoa(auth);
+        headers.push('Authorization: Basic ' + encoded);
       }
-      else if (tok === '--data-urlencode')                     { data = tokens[++i]; }
-      else if (tok === '--json')                               { data = tokens[++i]; if (!method) method = 'POST'; headers.push('Content-Type: application/json'); headers.push('Accept: application/json'); }
-      else if (tok === '-u' || tok === '--user')               { auth = tokens[++i]; }
-      else if (tok === '-b' || tok === '--cookie')             { cookies = tokens[++i]; }
-      else if (tok === '--url')                                { url = tokens[++i]; }
-      else if (tok === '-F' || tok === '--form')               { isForm = true; formPairs.push(tokens[++i]); }
-      else if (tok === '-A' || tok === '--user-agent')         { headers.push('User-Agent: ' + tokens[++i]); i++; continue; }
-      else if (tok === '-e' || tok === '--referer')            { headers.push('Referer: ' + tokens[++i]); i++; continue; }
-      else if (tok.startsWith('--')) { /* unknown long flag, skip value if looks like one */ i++; continue; }
-      else if (tok.startsWith('-') && tok.length > 1) {
-        /* short combined flags */
-        var consumed = false;
-        if (tok.includes('X') && i + 1 < tokens.length) { method = tokens[++i]; consumed = true; }
-        if (tok.includes('H') && i + 1 < tokens.length) { headers.push(tokens[++i]); consumed = true; }
-        if (tok.includes('d') && i + 1 < tokens.length) { data = tokens[++i]; consumed = true; }
-        if (tok.includes('u') && i + 1 < tokens.length) { auth = tokens[++i]; consumed = true; }
-        if (tok.includes('b') && i + 1 < tokens.length) { cookies = tokens[++i]; consumed = true; }
-        if (tok.includes('F') && i + 1 < tokens.length) { isForm = true; formPairs.push(tokens[++i]); consumed = true; }
-        if (!consumed) { /* single no-value flag */ }
-      } else if (!tok.startsWith('-')) {
-        url = tok;
-      }
-      i++;
-    }
+      if (cookies) headers.push('Cookie: ' + cookies);
 
-    if (!method) method = (data || isForm) ? 'POST' : 'GET';
-    else method = method.toUpperCase();
-
-    /* add auth header */
-    if (auth) {
-      var encoded = btoa(auth);
-      headers.push('Authorization: Basic ' + encoded);
-    }
-    if (cookies) headers.push('Cookie: ' + cookies);
-
-    return { url: url, method: method, headers: headers, data: data, isForm: isForm, formPairs: formPairs };
-  }
-
-  /* ── Code generators ────────────────────────────────── */
-  function headersObj(headers) {
-    return headers.map(function (h) {
-      var ci = h.indexOf(':');
-      if (ci === -1) return '  ' + JSON.stringify(h) + ': ""';
-      return '  ' + JSON.stringify(h.slice(0, ci).trim()) + ': ' + JSON.stringify(h.slice(ci + 1).trim());
-    }).join(',\n');
-  }
-
-  function genFetch(p) {
-    var lines = [];
-    var hasBody = p.data || p.isForm;
-    lines.push("const res = await fetch(" + JSON.stringify(p.url) + ", {");
-    lines.push("  method: " + JSON.stringify(p.method) + ",");
-    if (p.headers.length) {
-      lines.push("  headers: {");
-      lines.push(headersObj(p.headers) + ',');
-      lines.push("  },");
-    }
-    if (p.data) lines.push("  body: " + JSON.stringify(p.data) + ",");
-    lines.push("});");
-    lines.push("const data = await res.json();");
-    return lines.join('\n');
-  }
-
-  function genAxios(p) {
-    var method = p.method.toLowerCase();
-    var lines  = [];
-    var hasBody = p.data && (method === 'post' || method === 'put' || method === 'patch');
-    var headersStr = p.headers.length ? ('{\n' + headersObj(p.headers) + '\n}') : null;
-
-    if (hasBody) {
-      lines.push("const { data } = await axios." + method + "(");
-      lines.push("  " + JSON.stringify(p.url) + ",");
-      var bodyLiteral;
-      try { JSON.parse(p.data); bodyLiteral = p.data; } catch(e) { bodyLiteral = JSON.stringify(p.data); }
-      lines.push("  " + bodyLiteral + ",");
-      if (headersStr) lines.push("  { headers: " + headersStr + " },");
-      lines.push(");" );
-    } else {
-      if (headersStr) {
-        lines.push("const { data } = await axios." + method + "(");
-        lines.push("  " + JSON.stringify(p.url) + ",");
-        lines.push("  { headers: " + headersStr + " },");
-        lines.push(");");
-      } else {
-        lines.push("const { data } = await axios." + method + "(" + JSON.stringify(p.url) + ");");
-      }
-    }
-    return lines.join('\n');
-  }
-
-  function genPython(p) {
-    var lines = ["import requests", ""];
-    var method = p.method.toLowerCase();
-    var headersDict = '';
-    if (p.headers.length) {
-      headersDict = '{\n' + p.headers.map(function (h) {
-        var ci = h.indexOf(':');
-        if (ci === -1) return '    ' + JSON.stringify(h) + ': ""';
-        return '    ' + JSON.stringify(h.slice(0, ci).trim()) + ': ' + JSON.stringify(h.slice(ci + 1).trim());
-      }).join(',\n') + '\n}';
-    }
-
-    var args = [JSON.stringify(p.url)];
-    if (p.headers.length) args.push('headers=' + headersDict);
-    if (p.data) {
-      try { JSON.parse(p.data); args.push('json=' + pythonJson(JSON.parse(p.data))); }
-      catch (e) { args.push('data=' + JSON.stringify(p.data)); }
-    }
-
-    lines.push('response = requests.' + method + '(');
-    args.forEach(function (a, i) { lines.push('    ' + a + (i < args.length - 1 ? ',' : '')); });
-    lines.push(')');
-    return lines.join('\n');
-  }
-
-  function pythonJson(obj) {
-    if (obj === null) return 'None';
-    if (typeof obj === 'boolean') return obj ? 'True' : 'False';
-    if (typeof obj !== 'object') return JSON.stringify(obj);
-    if (Array.isArray(obj)) return '[' + obj.map(pythonJson).join(', ') + ']';
-    return '{' + Object.keys(obj).map(function (k) {
-      return JSON.stringify(k) + ': ' + pythonJson(obj[k]);
-    }).join(', ') + '}';
-  }
-
-  function genHttpie(p) {
-    var parts = ['http', p.method, p.url];
-    p.headers.forEach(function (h) {
-      var ci = h.indexOf(':');
-      if (ci !== -1) {
-        parts.push(JSON.stringify(h.slice(0, ci).trim() + ':' + h.slice(ci + 1).trim()));
-      }
-    });
-    if (p.data) {
-      try {
-        var obj = JSON.parse(p.data);
-        Object.keys(obj).forEach(function (k) {
-          var v = obj[k];
-          parts.push(k + ':=' + (typeof v === 'string' ? JSON.stringify(v) : JSON.stringify(v)));
-        });
-      } catch (e) {
-        parts.push("'" + p.data.replace(/'/g, "\\'") + "'");
-      }
-    }
-    return parts.join(' ');
-  }
-
-  function process() {
-    var raw = inEl.value.trim();
-    if (!raw) {
-      outEl.innerHTML      = '<span class="ph">' + t.outputPh + '</span>';
-      statusEl.textContent = t.paste;
-      statusEl.className   = 'cc-status';
-      snippets = {};
-      return;
-    }
-    try {
-      var p = parseCurl(raw);
-      if (!p.url) throw new Error(t.noUrl);
-
-      snippets = {
-        fetch:  genFetch(p),
-        axios:  genAxios(p),
-        python: genPython(p),
-        httpie: genHttpie(p),
+      return {
+        url: url,
+        method: method,
+        headers: headers,
+        data: data,
+        isForm: isForm,
+        formPairs: formPairs,
       };
-
-      statusEl.textContent = t.converted + ' · ' + p.method + ' ' + p.url.slice(0, 40) + (p.url.length > 40 ? '…' : '');
-      statusEl.className   = 'cc-status ok';
-      renderTab();
-      if (window.pushHistory) window.pushHistory('curl converter', p.method + ' ' + p.url, inEl.value.trim());
-    } catch (e) {
-      snippets = {};
-      outEl.innerHTML      = '<span class="er">// ' + esc(e.message) + '</span>';
-      statusEl.textContent = t.error + ': ' + e.message;
-      statusEl.className   = 'cc-status err';
     }
-  }
 
-  function renderTab() {
-    if (!snippets[activeTab]) return;
-    outEl.innerHTML = '<span class="ok">' + esc(snippets[activeTab]) + '</span>';
-    outEl.classList.remove('flash-ok'); void outEl.offsetWidth; outEl.classList.add('flash-ok');
-  }
+    /* ── Code generators ────────────────────────────────── */
+    function headersObj(headers) {
+      return headers
+        .map(function (h) {
+          var ci = h.indexOf(':');
+          if (ci === -1) return '  ' + JSON.stringify(h) + ': ""';
+          return (
+            '  ' +
+            JSON.stringify(h.slice(0, ci).trim()) +
+            ': ' +
+            JSON.stringify(h.slice(ci + 1).trim())
+          );
+        })
+        .join(',\n');
+    }
 
-  inEl.addEventListener('input', process);
+    function genFetch(p) {
+      var lines = [];
+      var hasBody = p.data || p.isForm;
+      lines.push('const res = await fetch(' + JSON.stringify(p.url) + ', {');
+      lines.push('  method: ' + JSON.stringify(p.method) + ',');
+      if (p.headers.length) {
+        lines.push('  headers: {');
+        lines.push(headersObj(p.headers) + ',');
+        lines.push('  },');
+      }
+      if (p.data) lines.push('  body: ' + JSON.stringify(p.data) + ',');
+      lines.push('});');
+      lines.push('const data = await res.json();');
+      return lines.join('\n');
+    }
 
-  tabsEl.addEventListener('click', function (e) {
-    var btn = e.target.closest('.cc-tab');
-    if (!btn) return;
-    tabsEl.querySelectorAll('.cc-tab').forEach(function (b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    activeTab = btn.dataset.tab;
-    renderTab();
-  });
+    function genAxios(p) {
+      var method = p.method.toLowerCase();
+      var lines = [];
+      var hasBody = p.data && (method === 'post' || method === 'put' || method === 'patch');
+      var headersStr = p.headers.length ? '{\n' + headersObj(p.headers) + '\n}' : null;
 
-  copyBtn.addEventListener('click', function () {
-    var text = snippets[activeTab];
-    if (!text) return;
-    navigator.clipboard.writeText(text).then(function () {
-      copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
-      copyBtn.classList.add('done');
-      setTimeout(function () {
-        copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
-        copyBtn.classList.remove('done');
-      }, 1600);
+      if (hasBody) {
+        lines.push('const { data } = await axios.' + method + '(');
+        lines.push('  ' + JSON.stringify(p.url) + ',');
+        var bodyLiteral;
+        try {
+          JSON.parse(p.data);
+          bodyLiteral = p.data;
+        } catch (e) {
+          bodyLiteral = JSON.stringify(p.data);
+        }
+        lines.push('  ' + bodyLiteral + ',');
+        if (headersStr) lines.push('  { headers: ' + headersStr + ' },');
+        lines.push(');');
+      } else {
+        if (headersStr) {
+          lines.push('const { data } = await axios.' + method + '(');
+          lines.push('  ' + JSON.stringify(p.url) + ',');
+          lines.push('  { headers: ' + headersStr + ' },');
+          lines.push(');');
+        } else {
+          lines.push('const { data } = await axios.' + method + '(' + JSON.stringify(p.url) + ');');
+        }
+      }
+      return lines.join('\n');
+    }
+
+    function genPython(p) {
+      var lines = ['import requests', ''];
+      var method = p.method.toLowerCase();
+      var headersDict = '';
+      if (p.headers.length) {
+        headersDict =
+          '{\n' +
+          p.headers
+            .map(function (h) {
+              var ci = h.indexOf(':');
+              if (ci === -1) return '    ' + JSON.stringify(h) + ': ""';
+              return (
+                '    ' +
+                JSON.stringify(h.slice(0, ci).trim()) +
+                ': ' +
+                JSON.stringify(h.slice(ci + 1).trim())
+              );
+            })
+            .join(',\n') +
+          '\n}';
+      }
+
+      var args = [JSON.stringify(p.url)];
+      if (p.headers.length) args.push('headers=' + headersDict);
+      if (p.data) {
+        try {
+          JSON.parse(p.data);
+          args.push('json=' + pythonJson(JSON.parse(p.data)));
+        } catch (e) {
+          args.push('data=' + JSON.stringify(p.data));
+        }
+      }
+
+      lines.push('response = requests.' + method + '(');
+      args.forEach(function (a, i) {
+        lines.push('    ' + a + (i < args.length - 1 ? ',' : ''));
+      });
+      lines.push(')');
+      return lines.join('\n');
+    }
+
+    function pythonJson(obj) {
+      if (obj === null) return 'None';
+      if (typeof obj === 'boolean') return obj ? 'True' : 'False';
+      if (typeof obj !== 'object') return JSON.stringify(obj);
+      if (Array.isArray(obj)) return '[' + obj.map(pythonJson).join(', ') + ']';
+      return (
+        '{' +
+        Object.keys(obj)
+          .map(function (k) {
+            return JSON.stringify(k) + ': ' + pythonJson(obj[k]);
+          })
+          .join(', ') +
+        '}'
+      );
+    }
+
+    function genHttpie(p) {
+      var parts = ['http', p.method, p.url];
+      p.headers.forEach(function (h) {
+        var ci = h.indexOf(':');
+        if (ci !== -1) {
+          parts.push(JSON.stringify(h.slice(0, ci).trim() + ':' + h.slice(ci + 1).trim()));
+        }
+      });
+      if (p.data) {
+        try {
+          var obj = JSON.parse(p.data);
+          Object.keys(obj).forEach(function (k) {
+            var v = obj[k];
+            parts.push(k + ':=' + (typeof v === 'string' ? JSON.stringify(v) : JSON.stringify(v)));
+          });
+        } catch (e) {
+          parts.push("'" + p.data.replace(/'/g, "\\'") + "'");
+        }
+      }
+      return parts.join(' ');
+    }
+
+    function process() {
+      var raw = inEl.value.trim();
+      if (!raw) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.paste;
+        statusEl.className = 'cc-status';
+        snippets = {};
+        return;
+      }
+      try {
+        var p = parseCurl(raw);
+        if (!p.url) throw new Error(t.noUrl);
+
+        snippets = {
+          fetch: genFetch(p),
+          axios: genAxios(p),
+          python: genPython(p),
+          httpie: genHttpie(p),
+        };
+
+        statusEl.textContent =
+          t.converted +
+          ' · ' +
+          p.method +
+          ' ' +
+          p.url.slice(0, 40) +
+          (p.url.length > 40 ? '…' : '');
+        statusEl.className = 'cc-status ok';
+        renderTab();
+        if (window.pushHistory)
+          window.pushHistory('curl converter', p.method + ' ' + p.url, inEl.value.trim());
+      } catch (e) {
+        snippets = {};
+        outEl.innerHTML = '<span class="er">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = t.error + ': ' + e.message;
+        statusEl.className = 'cc-status err';
+      }
+    }
+
+    function renderTab() {
+      if (!snippets[activeTab]) return;
+      outEl.innerHTML = '<span class="ok">' + esc(snippets[activeTab]) + '</span>';
+      outEl.classList.remove('flash-ok');
+      void outEl.offsetWidth;
+      outEl.classList.add('flash-ok');
+    }
+
+    inEl.addEventListener('input', process);
+
+    tabsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.cc-tab');
+      if (!btn) return;
+      tabsEl.querySelectorAll('.cc-tab').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      activeTab = btn.dataset.tab;
+      renderTab();
     });
-  });
 
-  clearBtn.addEventListener('click', function () {
-    inEl.value = '';
-    process();
-    inEl.focus();
-  });
+    copyBtn.addEventListener('click', function () {
+      var text = snippets[activeTab];
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
 
-  window.toolGetPreset = function () {
-    return { input: inEl.value };
-  };
-  window.toolSetPreset = function (cfg) {
-    inEl.value = cfg.input ?? '';
-    inEl.dispatchEvent(new Event('input', { bubbles: true }));
-  };
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
 
-  document.addEventListener('keydown', function (e) {
-    var toolEl = document.querySelector('.cc');
-    if (!toolEl || !toolEl.contains(document.activeElement)) return;
-    var pal = document.getElementById('whPalette');
-    if (pal && pal.classList.contains('active')) return;
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && e.shiftKey && e.key.toLowerCase() === 'c') { e.preventDefault(); copyBtn.click(); }
-    if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) { clearBtn.click(); }
-  });
-})();
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inEl.value = cfg.input ?? '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.cc');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+  })();
 </script>
