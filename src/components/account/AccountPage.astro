@@ -77,14 +77,20 @@ const isRu = lang === 'ru';
       </div>
 
       <div class="ac-bottom-row">
-        <a class="ac-action-card" href={isRu ? '/ru/account/keys/' : '/account/keys/'}>
+        <div class="ac-action-card ac-action-card-cs">
           <div class="ac-action-icon"><i class="ti ti-key"></i></div>
-          <div class="ac-action-title">{isRu ? 'API ключи' : 'API keys'}</div>
-          <div class="ac-action-desc" id="descKeys">
-            {isRu ? 'генерировать и управлять ключами' : 'generate & manage keys'}
+          <div class="ac-action-title">
+            {isRu ? 'API ключи' : 'API keys'}
+            <span class="ac-action-cs-badge">{isRu ? 'developer — скоро' : 'developer — soon'}</span
+            >
           </div>
-          <div class="ac-action-arrow">{isRu ? 'управлять →' : 'manage →'}</div>
-        </a>
+          <div class="ac-action-desc">
+            {isRu ? 'доступно в тарифе developer' : 'available on the developer plan'}
+          </div>
+          <div class="ac-action-arrow" style="color:var(--ink-faint)">
+            {isRu ? 'скоро →' : 'coming soon →'}
+          </div>
+        </div>
 
         <div class="ac-action-card" id="presetsCard">
           <div class="ac-action-icon"><i class="ti ti-bookmark"></i></div>

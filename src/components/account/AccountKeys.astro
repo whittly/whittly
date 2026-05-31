@@ -31,66 +31,22 @@ const isRu = lang === 'ru';
             <i class="ti ti-logout"></i>
             {isRu ? 'выйти' : 'sign out'}
           </button>
-          <button class="ac-btn-sm" id="genBtn">
-            <i class="ti ti-plus"></i>
-            {isRu ? 'создать ключ' : 'generate key'}
-          </button>
+          <span class="ac-keys-cs-badge">
+            <i class="ti ti-lock"></i>
+            {isRu ? 'developer — скоро' : 'developer — coming soon'}
+          </span>
         </div>
-      </div>
-
-      <!-- Reveal banner (shown once after generation) -->
-      <div class="ac-reveal" id="revealBanner">
-        <div class="ac-reveal-warn">
-          <i class="ti ti-alert-triangle"></i>
-          {
-            isRu
-              ? 'скопируйте ключ сейчас — он больше не будет показан'
-              : 'copy this key now — it will not be shown again'
-          }
-        </div>
-        <div class="ac-reveal-key" id="revealKey"></div>
-        <button class="ac-btn-sm" id="copyKeyBtn">
-          <i class="ti ti-copy"></i>
-          {isRu ? 'скопировать' : 'copy key'}
-        </button>
       </div>
 
       <!-- Keys list -->
       <div class="ac-keys-list" id="keysList">
         <div class="ac-keys-empty">
-          {isRu ? 'api ключей пока нет — создайте выше' : 'no api keys yet — generate one above'}
+          {
+            isRu
+              ? 'api ключи доступны в тарифе developer — скоро'
+              : 'api keys are available on the developer plan — coming soon'
+          }
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Generate key modal -->
-  <div class="ac-modal-overlay" id="genModal">
-    <div class="ac-modal">
-      <h3>{isRu ? '// новый api ключ' : '// new api key'}</h3>
-      <div class="ac-field">
-        <label for="keyName">
-          {isRu ? 'название' : 'name'}
-          <span style="color:var(--ink-faint);font-size:10px;"
-            >{isRu ? ' (необязательно)' : ' (optional)'}</span
-          >
-        </label>
-        <input
-          class="ac-input"
-          id="keyName"
-          type="text"
-          placeholder={isRu ? 'например: production, ci-cd' : 'e.g. production, ci-cd'}
-          maxlength="64"
-        />
-      </div>
-      <div class="ac-modal-footer">
-        <button class="ac-btn-outline" id="cancelGenBtn" style="width:auto; padding:8px 16px;">
-          {isRu ? 'отмена' : 'cancel'}
-        </button>
-        <button class="ac-btn-sm" id="confirmGenBtn">
-          <i class="ti ti-key"></i>
-          {isRu ? 'создать' : 'generate'}
-        </button>
       </div>
     </div>
   </div>
@@ -101,6 +57,19 @@ const isRu = lang === 'ru';
     to {
       transform: rotate(360deg);
     }
+  }
+
+  .ac-keys-cs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: default;
   }
 </style>
 
@@ -114,14 +83,6 @@ const isRu = lang === 'ru';
     var loadingEl = document.getElementById('acLoading');
     var contentEl = document.getElementById('acContent');
     var keysListEl = document.getElementById('keysList');
-    var revealEl = document.getElementById('revealBanner');
-    var revealKeyEl = document.getElementById('revealKey');
-    var copyKeyBtn = document.getElementById('copyKeyBtn');
-    var genBtn = document.getElementById('genBtn');
-    var genModal = document.getElementById('genModal');
-    var cancelBtn = document.getElementById('cancelGenBtn');
-    var confirmBtn = document.getElementById('confirmGenBtn');
-    var keyNameEl = document.getElementById('keyName');
     var signOutBtn = document.getElementById('signOutBtn');
 
     function logout() {
@@ -170,8 +131,8 @@ const isRu = lang === 'ru';
         var empty = document.createElement('div');
         empty.className = 'ac-keys-empty';
         empty.textContent = isRu
-          ? 'api ключей пока нет — создайте выше'
-          : 'no api keys yet — generate one above';
+          ? 'api ключи доступны в тарифе developer — скоро'
+          : 'api keys are available on the developer plan — coming soon';
         keysListEl.appendChild(empty);
         return;
       }
@@ -243,58 +204,6 @@ const isRu = lang === 'ru';
       var data = await res.json();
       renderKeys(data.keys || []);
     }
-
-    // Modal
-    genBtn.addEventListener('click', function () {
-      keyNameEl.value = '';
-      genModal.classList.add('active');
-      keyNameEl.focus();
-    });
-    cancelBtn.addEventListener('click', function () {
-      genModal.classList.remove('active');
-    });
-    genModal.addEventListener('click', function (e) {
-      if (e.target === genModal) genModal.classList.remove('active');
-    });
-
-    confirmBtn.addEventListener('click', async function () {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = isRu ? 'создаём…' : 'generating…';
-      try {
-        var res = await authFetch('/user/keys', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: keyNameEl.value.trim() || 'default' }),
-        });
-        if (!res) return;
-        var data = await res.json();
-        genModal.classList.remove('active');
-
-        revealKeyEl.textContent = data.key;
-        revealEl.classList.add('visible');
-        revealEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-        await loadKeys();
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = isRu
-          ? '<i class="ti ti-key"></i> создать'
-          : '<i class="ti ti-key"></i> generate';
-      }
-    });
-
-    copyKeyBtn.addEventListener('click', function () {
-      navigator.clipboard.writeText(revealKeyEl.textContent).then(function () {
-        copyKeyBtn.innerHTML = isRu
-          ? '<i class="ti ti-check"></i> скопировано'
-          : '<i class="ti ti-check"></i> copied';
-        setTimeout(function () {
-          copyKeyBtn.innerHTML = isRu
-            ? '<i class="ti ti-copy"></i> скопировать'
-            : '<i class="ti ti-copy"></i> copy key';
-        }, 2000);
-      });
-    });
 
     // Init
     (async function () {
