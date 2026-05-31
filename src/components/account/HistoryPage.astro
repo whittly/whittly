@@ -1,0 +1,493 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+
+interface Props {
+  lang: 'en' | 'ru';
+}
+const { lang } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<Base title={isRu ? 'история — whittly' : 'history — whittly'}>
+  <div class="ac-page">
+    <div class="ac-loading" id="acLoading">
+      <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
+      {isRu ? 'загрузка…' : 'loading…'}
+    </div>
+
+    <div id="acContent" style="display:none">
+      <div class="ac-header">
+        <div>
+          <div class="ac-breadcrumb">
+            <a href={isRu ? '/ru/account/' : '/account/'}>{isRu ? 'аккаунт' : 'account'}</a>
+            <span class="sep">/</span>
+            <span>{isRu ? 'история' : 'history'}</span>
+          </div>
+          <h1 style="font-size:24px; margin:0;">
+            {isRu ? 'История операций' : 'Operation history'}
+          </h1>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="ac-btn-ghost" id="hpImportBtn" title={isRu ? 'импорт' : 'import'}>
+            <i class="ti ti-upload"></i>
+            {isRu ? 'импорт' : 'import'}
+          </button>
+          <input type="file" id="hpImportFile" accept=".json" style="display:none" />
+          <button class="ac-btn-ghost" id="hpExportBtn" title={isRu ? 'экспорт' : 'export'}>
+            <i class="ti ti-download"></i>
+            {isRu ? 'экспорт' : 'export'}
+          </button>
+        </div>
+      </div>
+
+      <div class="hp-toolbar">
+        <span class="hp-count" id="hpCount"></span>
+        <button class="ac-btn-danger" id="hpClearBtn" style="display:none">
+          <i class="ti ti-trash"></i>
+          {isRu ? 'очистить всё' : 'clear all'}
+        </button>
+      </div>
+
+      <div id="hpList"></div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .hp-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    min-height: 32px;
+  }
+
+  .hp-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .hp-empty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    padding: 48px 0;
+    text-align: center;
+  }
+
+  .hp-entry {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    align-items: start;
+    transition: border-color 0.12s;
+  }
+
+  .hp-entry-link {
+    cursor: pointer;
+  }
+  .hp-entry-link:hover {
+    border-color: var(--accent);
+  }
+  .hp-entry-link:hover .hp-entry-restore {
+    opacity: 1;
+  }
+
+  .hp-entry-main {
+    min-width: 0;
+  }
+
+  .hp-entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 3px;
+  }
+
+  .hp-entry-tool {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .hp-entry-summary {
+    font-size: 13px;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hp-entry-ts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .hp-entry-restore {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hp-entry-preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-top: 6px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 48px;
+    overflow: hidden;
+  }
+
+  .hp-entry-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .hp-plan-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    margin-bottom: 16px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    color: var(--ink-faint);
+  }
+  .hp-plan-banner a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .hp-plan-banner a:hover {
+    text-decoration: underline;
+  }
+  .hp-plan-banner-pro {
+    background: color-mix(in srgb, var(--good) 8%, transparent);
+    border-color: color-mix(in srgb, var(--good) 30%, transparent);
+    color: var(--good);
+  }
+  .hp-plan-tag {
+    font-size: 9px;
+    text-transform: uppercase;
+    border: 0.5px solid currentColor;
+    border-radius: 3px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+    opacity: 0.8;
+  }
+</style>
+
+<script is:inline define:vars={{ isRu }}>
+  (function () {
+    if (!localStorage.getItem('wh_access')) {
+      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      return;
+    }
+
+    var HIST_KEY = 'wh_hist';
+    var loadingEl = document.getElementById('acLoading');
+    var contentEl = document.getElementById('acContent');
+    var listEl = document.getElementById('hpList');
+    var countEl = document.getElementById('hpCount');
+    var clearBtn = document.getElementById('hpClearBtn');
+
+    /* ─── IndexedDB ─── */
+    var _idb = null;
+    function openDB(cb) {
+      if (_idb) {
+        cb(_idb);
+        return;
+      }
+      var req = indexedDB.open('whittly', 1);
+      req.onupgradeneeded = function (e) {
+        e.target.result.createObjectStore('hist_inputs', { keyPath: 'ts' });
+      };
+      req.onsuccess = function (e) {
+        _idb = e.target.result;
+        cb(_idb);
+      };
+      req.onerror = function () {
+        cb(null);
+      };
+    }
+    function dbDelete(ts) {
+      openDB(function (db) {
+        if (!db) return;
+        db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').delete(ts);
+      });
+    }
+    function dbClearAll(cb) {
+      openDB(function (db) {
+        if (!db) {
+          cb && cb();
+          return;
+        }
+        var req = db.transaction('hist_inputs', 'readwrite').objectStore('hist_inputs').clear();
+        req.onsuccess = function () {
+          cb && cb();
+        };
+      });
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function timeAgo(ts) {
+      var diff = Date.now() - ts;
+      var m = Math.floor(diff / 60000);
+      if (isRu) {
+        if (m < 1) return 'только что';
+        if (m < 60) return m + 'м назад';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'ч назад';
+        return Math.floor(h / 24) + 'д назад';
+      }
+      if (m < 1) return 'just now';
+      if (m < 60) return m + 'm ago';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    function getEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function render() {
+      var entries = getEntries();
+
+      if (countEl) {
+        countEl.textContent = isRu
+          ? entries.length +
+            ' ' +
+            (entries.length === 1 ? 'операция' : entries.length < 5 ? 'операции' : 'операций')
+          : entries.length + ' ' + (entries.length === 1 ? 'entry' : 'entries');
+      }
+      if (clearBtn) clearBtn.style.display = entries.length ? '' : 'none';
+
+      if (!entries.length) {
+        listEl.innerHTML =
+          '<div class="hp-empty">' + (isRu ? 'история пуста' : 'no history yet') + '</div>';
+        return;
+      }
+
+      listEl.innerHTML = entries
+        .map(function (e) {
+          var hasLink = !!(e.path && e.hasInput);
+          var preview = e.inputPreview || e.input || '';
+          return (
+            '<div class="hp-entry' +
+            (hasLink ? ' hp-entry-link' : '') +
+            '"' +
+            (hasLink ? ' data-path="' + esc(e.path) + '" data-ts="' + esc(e.ts) + '"' : '') +
+            '>' +
+            '<div class="hp-entry-main">' +
+            '<div class="hp-entry-meta">' +
+            '<span class="hp-entry-tool">' +
+            esc(e.tool) +
+            '</span>' +
+            '<span class="hp-entry-summary">' +
+            esc(e.summary || '') +
+            '</span>' +
+            '<span class="hp-entry-ts">' +
+            timeAgo(e.ts) +
+            '</span>' +
+            '</div>' +
+            (hasLink
+              ? '<div class="hp-entry-restore"><i class="ti ti-corner-down-left"></i>' +
+                (isRu ? 'восстановить' : 'restore') +
+                '</div>'
+              : '') +
+            (preview ? '<div class="hp-entry-preview">' + esc(preview) + '</div>' : '') +
+            '</div>' +
+            '<div class="hp-entry-actions">' +
+            '<button class="ac-btn-danger hp-del-btn" data-ts="' +
+            esc(e.ts) +
+            '" type="button">' +
+            (isRu ? 'удалить' : 'delete') +
+            '</button>' +
+            '</div>' +
+            '</div>'
+          );
+        })
+        .join('');
+    }
+
+    /* ─── Navigate + restore ─── */
+    listEl.addEventListener('click', function (ev) {
+      if (ev.target.closest('.hp-del-btn')) return;
+      var entry = ev.target.closest('.hp-entry-link');
+      if (!entry) return;
+      var path = entry.dataset.path;
+      var ts = entry.dataset.ts;
+      if (!path) return;
+      if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+      window.location.href = path;
+    });
+
+    /* ─── Delete single ─── */
+    listEl.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.hp-del-btn');
+      if (!btn) return;
+      ev.stopPropagation();
+      var ts = Number(btn.dataset.ts);
+      var entries = getEntries().filter(function (e) {
+        return e.ts !== ts;
+      });
+      localStorage.setItem(HIST_KEY, JSON.stringify(entries));
+      dbDelete(ts);
+      render();
+    });
+
+    /* ─── Clear all ─── */
+    clearBtn &&
+      clearBtn.addEventListener('click', function () {
+        if (!confirm(isRu ? 'Очистить всю историю?' : 'Clear all history?')) return;
+        localStorage.removeItem(HIST_KEY);
+        dbClearAll();
+        render();
+      });
+
+    /* ─── Export ─── */
+    var exportBtn = document.getElementById('hpExportBtn');
+    exportBtn &&
+      exportBtn.addEventListener('click', function () {
+        var data = JSON.stringify(getEntries(), null, 2);
+        var blob = new Blob([data], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'whittly-history.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+    /* ─── Import ─── */
+    var importBtn = document.getElementById('hpImportBtn');
+    var importFile = document.getElementById('hpImportFile');
+    importBtn &&
+      importBtn.addEventListener('click', function () {
+        importFile.click();
+      });
+    importFile &&
+      importFile.addEventListener('change', function () {
+        var file = importFile.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+          try {
+            var imported = JSON.parse(ev.target.result);
+            if (!Array.isArray(imported)) throw new Error('invalid');
+            var existing = getEntries();
+            var existingTs = new Set(
+              existing.map(function (x) {
+                return x.ts;
+              })
+            );
+            var merged = existing
+              .concat(
+                imported.filter(function (item) {
+                  return item && item.ts && item.tool && !existingTs.has(item.ts);
+                })
+              )
+              .sort(function (a, b) {
+                return b.ts - a.ts;
+              });
+            localStorage.setItem(HIST_KEY, JSON.stringify(merged));
+            render();
+            importBtn.innerHTML =
+              '<i class="ti ti-check"></i> ' + (isRu ? 'импортировано' : 'imported');
+            setTimeout(function () {
+              importBtn.innerHTML = '<i class="ti ti-upload"></i> ' + (isRu ? 'импорт' : 'import');
+            }, 2000);
+          } catch {
+            importBtn.innerHTML =
+              '<i class="ti ti-alert-triangle"></i> ' + (isRu ? 'ошибка' : 'error');
+            setTimeout(function () {
+              importBtn.innerHTML = '<i class="ti ti-upload"></i> ' + (isRu ? 'импорт' : 'import');
+            }, 2000);
+          }
+          importFile.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+    render();
+
+    // Plan banner
+    var plan = window.whApi && window.whApi.getPlan();
+    var isPro = plan === 'pro' || plan === 'api';
+    var bannerEl = document.createElement('div');
+    bannerEl.className = 'hp-plan-banner';
+    if (isPro) {
+      bannerEl.innerHTML =
+        '<i class="ti ti-cloud-check"></i> ' +
+        (isRu ? 'история синхронизируется в облаке' : 'history synced to cloud') +
+        ' <span class="hp-plan-tag">' +
+        (plan === 'api' ? 'Developer' : 'Pro') +
+        '</span>';
+      bannerEl.classList.add('hp-plan-banner-pro');
+    } else {
+      var used = getEntries().length;
+      bannerEl.innerHTML =
+        '<i class="ti ti-info-circle"></i> ' +
+        (isRu
+          ? 'бесплатный план: ' + used + ' / 5 записей — '
+          : 'free plan: ' + used + ' / 5 entries — ') +
+        '<a href="' +
+        (isRu ? '/ru/premium/' : '/premium/') +
+        '">' +
+        (isRu ? 'перейти на pro →' : 'upgrade to pro →') +
+        '</a>';
+    }
+    var toolbar = document.querySelector('.hp-toolbar');
+    if (toolbar) toolbar.after(bannerEl);
+
+    loadingEl.style.display = 'none';
+    contentEl.style.display = '';
+  })();
+</script>

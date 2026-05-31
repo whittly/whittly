@@ -78,6 +78,10 @@ const catalogForPinned = Object.fromEntries(
               <span class="ac-stat-val" id="statPresets">—</span>
             </div>
             <div class="ac-stat-row">
+              <span class="ac-stat-label">{isRu ? 'история' : 'history'}</span>
+              <span class="ac-stat-val" id="statHistory">—</span>
+            </div>
+            <div class="ac-stat-row">
               <span class="ac-stat-label">{isRu ? 'с нами с' : 'member since'}</span>
               <span class="ac-stat-val" id="statSince">—</span>
             </div>
@@ -125,6 +129,9 @@ const catalogForPinned = Object.fromEntries(
         <div class="ac-section">
           <div class="ac-section-head">
             <span class="ac-section-title">{isRu ? '// недавнее' : '// recent'}</span>
+            <a href={isRu ? '/ru/account/history/' : '/account/history/'} class="ac-section-link"
+              >{isRu ? 'вся история →' : 'all history →'}</a
+            >
           </div>
           <div id="acRecentList"></div>
         </div>
@@ -378,8 +385,13 @@ const catalogForPinned = Object.fromEntries(
             }
             acRecentListEl.innerHTML = histEntries
               .map(function (e) {
+                var hasLink = !!(e.path && e.hasInput);
                 return (
-                  '<div class="ac-hist-row">' +
+                  '<div class="ac-hist-row' +
+                  (hasLink ? ' ac-hist-row-link' : '') +
+                  '"' +
+                  (hasLink ? ' data-path="' + esc(e.path) + '" data-ts="' + esc(e.ts) + '"' : '') +
+                  '>' +
                   '<span class="ac-hist-tool">' +
                   esc(e.tool) +
                   '</span>' +
@@ -388,12 +400,46 @@ const catalogForPinned = Object.fromEntries(
                   '</span>' +
                   '<span class="ac-hist-ts">' +
                   timeAgoShort(e.ts) +
+                  (hasLink
+                    ? ' <i class="ti ti-corner-down-left" style="font-size:10px"></i>'
+                    : '') +
                   '</span>' +
                   '</div>'
                 );
               })
               .join('');
+
+            acRecentListEl.addEventListener('click', function (ev) {
+              var row = ev.target.closest('.ac-hist-row-link');
+              if (!row) return;
+              var path = row.dataset.path;
+              var ts = row.dataset.ts;
+              if (!path) return;
+              if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+              window.location.href = path;
+            });
           }
+        }
+
+        // History count stat (localStorage)
+        var statHistEl = document.getElementById('statHistory');
+        if (statHistEl) {
+          var histCount = 0;
+          try {
+            histCount = JSON.parse(localStorage.getItem('wh_hist') || '[]').length;
+          } catch {}
+          var histMax = effectivePlan === 'pro' || effectivePlan === 'api' ? 500 : 5;
+          statHistEl.textContent = histCount + ' / ' + histMax;
+        }
+
+        // Make presetsCard clickable for Pro
+        var presetsCardEl = document.getElementById('presetsCard');
+        if (presetsCardEl && effectivePlan !== 'free') {
+          presetsCardEl.style.cursor = 'pointer';
+          presetsCardEl.addEventListener('click', function (ev) {
+            if (ev.target.closest('a')) return;
+            window.location.href = isRu ? '/ru/account/presets/' : '/account/presets/';
+          });
         }
 
         loadingEl.style.display = 'none';
