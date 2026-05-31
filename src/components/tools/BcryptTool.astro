@@ -512,7 +512,11 @@ const { lang = 'en' } = Astro.props;
       void outputEl.offsetWidth;
       outputEl.classList.add('flash-ok');
       if ((window as any).pushHistory)
-        (window as any).pushHistory('bcrypt', statusEl.textContent, passwordEl.value.trim());
+        (window as any).pushHistory(
+          'bcrypt',
+          statusEl.textContent,
+          JSON.stringify({ m: 'hash', c: cost, t: passwordEl.value.trim() })
+        );
     } catch (err: any) {
       outputEl.textContent = '// ' + (err?.message ?? 'error');
       outputEl.className = 'bc-output err';
@@ -567,7 +571,11 @@ const { lang = 'en' } = Astro.props;
       void resultEl.offsetWidth;
       resultEl.classList.add('flash-ok');
       if ((window as any).pushHistory)
-        (window as any).pushHistory('bcrypt', statusEl.textContent, vPasswordEl.value.trim());
+        (window as any).pushHistory(
+          'bcrypt',
+          statusEl.textContent,
+          JSON.stringify({ m: 'verify', t: vPasswordEl.value.trim(), h: vHashEl.value.trim() })
+        );
     } catch (err: any) {
       resultEl.className = 'bc-result mismatch';
       resultEl.innerHTML = `<i class="ti ti-alert-circle"></i><span>// ${err?.message ?? 'error'}</span>`;
@@ -660,4 +668,52 @@ const { lang = 'en' } = Astro.props;
   (window as any).toolBatchName = function () {
     return mode === 'verify' ? 'bcrypt-verify' : 'bcrypt';
   };
+</script>
+
+<script is:inline>
+  (function () {
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (!_rts) return;
+    var _idbReq = indexedDB.open('whittly', 1);
+    _idbReq.onsuccess = function (ev) {
+      var db = ev.target.result;
+      var r = db
+        .transaction('hist_inputs', 'readonly')
+        .objectStore('hist_inputs')
+        .get(Number(_rts));
+      r.onsuccess = function () {
+        if (!r.result) return;
+        try {
+          var d = JSON.parse(r.result.input);
+          if (!d || d.t === undefined) return;
+          if (d.m === 'verify') {
+            var verifyModeBtn = document.getElementById('bcModeVerify');
+            if (verifyModeBtn) verifyModeBtn.click();
+            var vp = document.getElementById('bcVPassword');
+            var vh = document.getElementById('bcVHash');
+            if (vp) {
+              vp.value = d.t;
+              vp.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (vh && d.h) {
+              vh.value = d.h;
+              vh.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (vp) vp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            var pw = document.getElementById('bcPassword');
+            if (pw) {
+              pw.value = d.t;
+              pw.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (d.c) {
+              var cb = document.querySelector('.bc-cost-btn[data-cost="' + d.c + '"]');
+              if (cb) cb.click();
+            }
+            if (pw) pw.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } catch {}
+      };
+    };
+  })();
 </script>

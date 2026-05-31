@@ -332,7 +332,11 @@ const t = {
             t.encoded + ' · ' + formatSize(inSize) + ' → ' + outSize + ' chars';
           statusEl.className = 'b64-status ok';
           if (window.pushHistory)
-            window.pushHistory('base64', statusEl.textContent, inEl.value.trim());
+            window.pushHistory(
+              'base64',
+              statusEl.textContent,
+              JSON.stringify({ m: mode, us: urlSafe.checked, t: inEl.value.trim() })
+            );
           flashOutput(outEl);
         } else {
           const result = decodeText(raw, safe);
@@ -343,7 +347,11 @@ const t = {
             t.decoded + ' · ' + raw.replace(/\s/g, '').length + ' chars → ' + formatSize(outSize);
           statusEl.className = 'b64-status ok';
           if (window.pushHistory)
-            window.pushHistory('base64', statusEl.textContent, inEl.value.trim());
+            window.pushHistory(
+              'base64',
+              statusEl.textContent,
+              JSON.stringify({ m: mode, us: urlSafe.checked, t: inEl.value.trim() })
+            );
           flashOutput(outEl);
         }
       } catch (e) {
@@ -468,5 +476,31 @@ const t = {
         }
       });
     };
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            var mb = document.querySelector('.b64-mode[data-mode="' + (d.m || 'encode') + '"]');
+            if (mb) mb.click();
+            var us = document.getElementById('b64UrlSafe');
+            if (us) us.checked = !!d.us;
+            inEl.value = d.t;
+            inEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

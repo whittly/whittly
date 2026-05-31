@@ -993,7 +993,7 @@ const t = {
                 pattern.slice(0, 24) +
                 (pattern.length > 24 ? '…' : '') +
                 '/',
-              textEl.value.trim()
+              JSON.stringify({ p: pattern, f: getFlags(), t: textEl.value.trim() })
             );
           outEl.classList.remove('flash-ok');
           void outEl.offsetWidth;
@@ -1290,5 +1290,36 @@ const t = {
         }
       }
     });
+    // Restore regex state from history (runs before HistorySidebar clears wh_restore_ts)
+    var _rxRestoreTs = sessionStorage.getItem('wh_restore_ts');
+    if (_rxRestoreTs) {
+      var _rxDbReq = indexedDB.open('whittly', 1);
+      _rxDbReq.onsuccess = function (e) {
+        var db = e.target.result;
+        var req = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rxRestoreTs));
+        req.onsuccess = function () {
+          if (!req.result) return;
+          try {
+            var d = JSON.parse(req.result.input);
+            if (!d || d.p === undefined) return;
+            if (inputEl) inputEl.value = d.p || '';
+            if (textEl) textEl.value = d.t || '';
+            if (d.f) {
+              Object.keys(activeFlags).forEach(function (flag) {
+                activeFlags[flag] = d.f.includes(flag);
+              });
+              document.querySelectorAll('[data-flag]').forEach(function (btn) {
+                btn.classList.toggle('active', !!activeFlags[btn.dataset.flag]);
+              });
+            }
+            process();
+            if (inputEl) inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

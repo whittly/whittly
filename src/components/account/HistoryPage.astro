@@ -317,6 +317,10 @@ const isRu = lang === 'ru';
         .map(function (e) {
           var hasLink = !!(e.path && e.hasInput);
           var preview = e.inputPreview || e.input || '';
+          try {
+            var _pp = JSON.parse(preview);
+            if (_pp && typeof _pp.t === 'string') preview = _pp.t;
+          } catch {}
           return (
             '<div class="hp-entry' +
             (hasLink ? ' hp-entry-link' : '') +

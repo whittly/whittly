@@ -558,7 +558,18 @@ const t = {
         '+' + added + t.added + t.lines + '  −' + removed + t.removed + t.lines;
       statusEl.className = 'tdiff-status ok';
       if (window.pushHistory)
-        window.pushHistory('text diff', statusEl.textContent, leftEl.value.trim());
+        window.pushHistory(
+          'text diff',
+          statusEl.textContent,
+          JSON.stringify({
+            mode: mode,
+            t: leftEl.value.trim(),
+            r: rightEl.value.trim(),
+            b: baseEl.value.trim(),
+            o: oursEl.value.trim(),
+            th: theirsEl.value.trim(),
+          })
+        );
       outEl.closest('.tdiff-out-wrap').classList.remove('flash-ok');
       void outEl.closest('.tdiff-out-wrap').offsetWidth;
       outEl.closest('.tdiff-out-wrap').classList.add('flash-ok');
@@ -732,5 +743,34 @@ const t = {
         clearBtn.click();
       }
     });
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            if (d.mode === '3way' && mode3Btn) mode3Btn.click();
+            leftEl.value = d.t || '';
+            if (rightEl) rightEl.value = d.r || '';
+            if (baseEl) baseEl.value = d.b || '';
+            if (oursEl) oursEl.value = d.o || '';
+            if (theirsEl) theirsEl.value = d.th || '';
+            leftEl.dispatchEvent(new Event('input', { bubbles: true }));
+            if (d.mode === '3way' && baseEl)
+              baseEl.dispatchEvent(new Event('input', { bubbles: true }));
+            leftEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

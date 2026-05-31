@@ -445,7 +445,16 @@ const t = {
         inputMeta.textContent = result.rows + ' ' + t.rows + ' · ' + result.cols + ' ' + t.cols;
         outputMeta.textContent = result.rows + ' ' + t.rows;
         if (window.pushHistory)
-          window.pushHistory('csv ↔ json', result.rows + ' rows → json', inputTA.value.trim());
+          window.pushHistory(
+            'csv ↔ json',
+            result.rows + ' rows → json',
+            JSON.stringify({
+              d: 'c2j',
+              delim: delimSel.value,
+              h: headersCb.checked,
+              t: inputTA.value.trim(),
+            })
+          );
       } else {
         const result = jsonToCsv(raw);
         if (result.err) {
@@ -460,7 +469,16 @@ const t = {
         inputMeta.textContent = result.rows + ' ' + t.rows;
         outputMeta.textContent = result.rows + ' ' + t.rows + ' · ' + result.cols + ' ' + t.cols;
         if (window.pushHistory)
-          window.pushHistory('csv ↔ json', result.rows + ' rows → csv', inputTA.value.trim());
+          window.pushHistory(
+            'csv ↔ json',
+            result.rows + ' rows → csv',
+            JSON.stringify({
+              d: 'j2c',
+              delim: delimSel.value,
+              h: headersCb.checked,
+              t: inputTA.value.trim(),
+            })
+          );
       }
     }
 
@@ -497,5 +515,32 @@ const t = {
       inputTA.value = cfg.input ?? '';
       inputTA.dispatchEvent(new Event('input', { bubbles: true }));
     };
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            if (d.d === 'j2c' && jsonToCsvBtn) jsonToCsvBtn.click();
+            else if (csvToJsonBtn) csvToJsonBtn.click();
+            if (delimSel) delimSel.value = d.delim || 'auto';
+            if (headersCb) headersCb.checked = d.h !== false;
+            inputTA.value = d.t;
+            var convertBtnEl = document.getElementById('cjConvertBtn');
+            if (convertBtnEl) convertBtnEl.click();
+            inputTA.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

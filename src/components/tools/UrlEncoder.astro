@@ -273,7 +273,11 @@ const t = {
         lastOutput = result;
         outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
         if (window.pushHistory)
-          window.pushHistory('url encoder', statusEl.textContent, inEl.value.trim());
+          window.pushHistory(
+            'url encoder',
+            statusEl.textContent,
+            JSON.stringify({ m: mode, t: inEl.value.trim() })
+          );
         outEl.classList.remove('flash-ok');
         void outEl.offsetWidth;
         outEl.classList.add('flash-ok');
@@ -382,5 +386,29 @@ const t = {
         process();
       }
     } catch (e) {}
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            var mb = document.querySelector('.ue-mode[data-mode="' + (d.m || 'encode') + '"]');
+            if (mb) mb.click();
+            inEl.value = d.t;
+            inEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

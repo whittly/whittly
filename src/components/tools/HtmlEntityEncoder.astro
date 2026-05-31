@@ -314,7 +314,11 @@ const t = {
         outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
         statusEl.className = 'he-status ok';
         if (window.pushHistory)
-          window.pushHistory('html entity encoder', statusEl.textContent, inEl.value.trim());
+          window.pushHistory(
+            'html entity encoder',
+            statusEl.textContent,
+            JSON.stringify({ m: mode, a: allNonAscii.checked, t: inEl.value.trim() })
+          );
         outEl.classList.remove('flash-ok');
         void outEl.offsetWidth;
         outEl.classList.add('flash-ok');
@@ -404,5 +408,30 @@ const t = {
         }
       });
     };
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            var mb = document.querySelector('.he-mode[data-mode="' + (d.m || 'encode') + '"]');
+            if (mb) mb.click();
+            if (allNonAscii) allNonAscii.checked = !!d.a;
+            inEl.value = d.t;
+            inEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

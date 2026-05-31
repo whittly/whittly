@@ -472,6 +472,10 @@ const { isRu, catalog } = Astro.props;
         list.innerHTML = entries
           .map(function (e) {
             var preview = e.inputPreview || e.input || '';
+            try {
+              var _p = JSON.parse(preview);
+              if (_p && typeof _p.t === 'string') preview = _p.t;
+            } catch {}
             var safePreview = esc(preview);
             // derive path from catalog if not stored (e.g. server-synced entries)
             var toolPath = e.path;
@@ -687,9 +691,14 @@ const { isRu, catalog } = Astro.props;
       setTimeout(function () {
         dbGetInput(Number(_restoreTs), function (input) {
           if (!input) return;
+          var textToRestore = input;
+          try {
+            var _p = JSON.parse(input);
+            if (_p && typeof _p.t === 'string') textToRestore = _p.t;
+          } catch {}
           var el = document.querySelector('[data-hist-main-input]');
           if (!el) return;
-          el.value = input;
+          el.value = textToRestore;
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.focus();
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });

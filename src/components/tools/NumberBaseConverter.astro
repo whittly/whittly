@@ -295,7 +295,7 @@ const t = {
         window.pushHistory(
           'number base converter',
           'base ' + fromBase + ' → ' + n.toString(10) + ' (dec)',
-          input.value.trim()
+          JSON.stringify({ b: fromBase, t: input.value.trim() })
         );
     }
 
@@ -339,5 +339,29 @@ const t = {
       input.value = cfg.input ?? '';
       input.dispatchEvent(new Event('input', { bubbles: true }));
     };
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            input.value = d.t;
+            var bb = document.querySelector('.nb-base-btn[data-base="' + d.b + '"]');
+            if (bb) bb.click();
+            else input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>

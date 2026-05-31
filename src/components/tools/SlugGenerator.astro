@@ -385,7 +385,12 @@ const t = {
       var maxNote = maxLen > 0 ? ' · max ' + maxLen : '';
       statusEl.textContent = result.length + t.charCount + maxNote;
       statusEl.className = 'sg-status ok';
-      if (window.pushHistory) window.pushHistory('slug generator', result, inEl.value.trim());
+      if (window.pushHistory)
+        window.pushHistory(
+          'slug generator',
+          result,
+          JSON.stringify({ s: sepEl.value, ml: parseInt(maxEl.value) || 0, t: inEl.value.trim() })
+        );
       outEl.classList.remove('flash-ok');
       void outEl.offsetWidth;
       outEl.classList.add('flash-ok');
@@ -445,5 +450,29 @@ const t = {
         return slugify(line, sep, maxLen) || '// (empty)';
       });
     };
+    // ── History restore ──
+    var _rts = sessionStorage.getItem('wh_restore_ts');
+    if (_rts) {
+      var _idbReq = indexedDB.open('whittly', 1);
+      _idbReq.onsuccess = function (ev) {
+        var db = ev.target.result;
+        var r = db
+          .transaction('hist_inputs', 'readonly')
+          .objectStore('hist_inputs')
+          .get(Number(_rts));
+        r.onsuccess = function () {
+          if (!r.result) return;
+          try {
+            var d = JSON.parse(r.result.input);
+            if (!d || d.t === undefined) return;
+            if (sepEl) sepEl.value = d.s || '-';
+            if (maxEl) maxEl.value = d.ml || 0;
+            inEl.value = d.t;
+            inEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch {}
+        };
+      };
+    }
   })();
 </script>
