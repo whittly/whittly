@@ -206,7 +206,6 @@ import '../styles/premium.css';
     }
     if (!localStorage.getItem('wh_access')) {
       proBtn.textContent = 'sign in to subscribe →';
-      proBtn.classList.replace('filled', 'outline');
       proBtn.onclick = () => {
         location.href = '/account/login/?next=/premium/';
       };

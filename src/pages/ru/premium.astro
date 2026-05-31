@@ -211,7 +211,6 @@ import '../../styles/premium.css';
     }
     if (!localStorage.getItem('wh_access')) {
       proBtn.textContent = 'войти и подключить →';
-      proBtn.classList.replace('filled', 'outline');
       proBtn.onclick = () => {
         location.href = '/ru/account/login/?next=/ru/premium/';
       };
