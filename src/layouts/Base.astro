@@ -165,16 +165,25 @@ const catalog = CATALOG.map((t) => ({
         var API_URL = API;
 
         function getJwtPlan() {
+          var jwtPlan = null;
           try {
             var token = localStorage.getItem('wh_access');
-            if (!token) return null;
-            var payload = JSON.parse(
-              atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
-            );
-            return payload.plan || 'free';
-          } catch (e) {
-            return null;
-          }
+            if (token) {
+              var payload = JSON.parse(
+                atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+              );
+              jwtPlan = payload.plan || 'free';
+            }
+          } catch (e) {}
+          if (jwtPlan && jwtPlan !== 'free') return jwtPlan;
+          try {
+            var u = JSON.parse(localStorage.getItem('wh_user') || 'null');
+            if (u && (u.plan === 'pro' || u.plan === 'api')) {
+              var exp = u.planExpiresAt ? new Date(u.planExpiresAt).getTime() : Infinity;
+              if (exp > Date.now()) return u.plan;
+            }
+          } catch (e2) {}
+          return jwtPlan || 'free';
         }
 
         window.whRefreshAuth = function () {

@@ -288,6 +288,31 @@ const jsonLd = {
     margin-bottom: 16px;
   }
 
+  .tool-pin-btn {
+    margin-left: auto;
+    background: none;
+    border: 0.5px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.12s;
+  }
+  .tool-pin-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .tool-pin-btn.pinned {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
   .tool-cat-badge {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
@@ -575,6 +600,9 @@ const jsonLd = {
       <div class="tool-meta">
         <span class="tool-cat-badge">// {catLabel}</span>
         {tool.new && <span class="tool-new-badge">new</span>}
+        <button class="tool-pin-btn" id="toolPinBtn" type="button">
+          <i class="ti ti-star"></i>
+        </button>
       </div>
       <h1>
         <i
@@ -673,6 +701,8 @@ const jsonLd = {
     define:vars={{
       copyLabel: isRu ? 'копировать' : 'copy',
       copiedLabel: isRu ? 'скопировано' : 'copied',
+      toolSlug: slug,
+      isRu,
     }}
   >
     (function () {
@@ -725,6 +755,38 @@ const jsonLd = {
             }, 1500);
           });
         });
+
+      // Pin button
+      var PINNED_KEY = 'wh_pinned';
+      var pinBtn = document.getElementById('toolPinBtn');
+      if (pinBtn) {
+        function getPinnedSlugs() {
+          try {
+            return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]');
+          } catch {
+            return [];
+          }
+        }
+        function syncPinBtn() {
+          var pinned = getPinnedSlugs().includes(toolSlug);
+          pinBtn.classList.toggle('pinned', pinned);
+          pinBtn.innerHTML =
+            '<i class="ti ti-star' +
+            (pinned ? '-filled' : '') +
+            '"></i><span>' +
+            (pinned ? (isRu ? 'в закреплённых' : 'pinned') : isRu ? 'закрепить' : 'pin') +
+            '</span>';
+        }
+        syncPinBtn();
+        pinBtn.addEventListener('click', function () {
+          var slugs = getPinnedSlugs();
+          var idx = slugs.indexOf(toolSlug);
+          if (idx === -1) slugs.push(toolSlug);
+          else slugs.splice(idx, 1);
+          localStorage.setItem(PINNED_KEY, JSON.stringify(slugs));
+          syncPinBtn();
+        });
+      }
     })();
   </script>
 
