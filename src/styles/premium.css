@@ -185,6 +185,10 @@
   text-decoration: none;
   transition: all 0.15s;
   text-align: center;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .plan-cta.outline {
@@ -230,7 +234,9 @@
   color: var(--bad);
   text-align: center;
   margin-top: 6px;
-  min-height: 16px;
+}
+.plan-cta-hint:empty {
+  display: none;
 }
 
 .plan-cta-cs:hover {
