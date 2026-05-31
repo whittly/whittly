@@ -65,7 +65,7 @@ import '../../styles/premium.css';
         <li>экспорт истории в JSON</li>
         <li>ссылки на конфигурацию инструментов</li>
       </ul>
-      <button class="plan-cta" id="proSubscribeBtn">подключить pro →</button>
+      <button class="plan-cta filled" id="proSubscribeBtn">подключить pro →</button>
       <div class="plan-cta-hint" id="proHint"></div>
     </div>
 
@@ -210,7 +210,8 @@ import '../../styles/premium.css';
       return;
     }
     if (!localStorage.getItem('wh_access')) {
-      proBtn.textContent = 'войти для оплаты →';
+      proBtn.textContent = 'войти и подключить →';
+      proBtn.classList.replace('filled', 'outline');
       proBtn.onclick = () => {
         location.href = '/ru/account/login/?next=/ru/premium/';
       };
