@@ -47,7 +47,7 @@ import '../../styles/premium.css';
 
     <div class="plan-card featured">
       <div>
-        <div class="plan-tier">скоро</div>
+        <div class="plan-tier" id="proTier">подключить</div>
         <div class="plan-name">pro</div>
       </div>
       <div class="plan-price">
@@ -65,7 +65,8 @@ import '../../styles/premium.css';
         <li>экспорт истории в JSON</li>
         <li>ссылки на конфигурацию инструментов</li>
       </ul>
-      <span class="plan-cta ghost plan-cta-cs">скоро</span>
+      <button class="plan-cta" id="proSubscribeBtn">подключить pro →</button>
+      <div class="plan-cta-hint" id="proHint"></div>
     </div>
 
     <div class="plan-card">
@@ -185,6 +186,62 @@ import '../../styles/premium.css';
       el.style.display = isAnnual ? 'inline' : 'none';
     });
   });
+
+  // Pro subscribe button
+  const proBtn = document.getElementById('proSubscribeBtn') as HTMLButtonElement;
+  const proTier = document.getElementById('proTier')!;
+  const proHint = document.getElementById('proHint')!;
+
+  function getCurrentPeriod() {
+    const active = document.querySelector('.bt-opt.active') as HTMLElement;
+    return active?.dataset.period === 'yr' ? 'annual' : 'monthly';
+  }
+
+  function initProButton() {
+    const plan = window.whApi?.getPlan?.();
+    if (plan === 'pro' || plan === 'api') {
+      proBtn.textContent = 'уже активен ✓';
+      proBtn.disabled = true;
+      proBtn.classList.add('plan-cta-active');
+      proTier.textContent = 'активен';
+      return;
+    }
+    if (!localStorage.getItem('wh_access')) {
+      proBtn.textContent = 'войти для оплаты →';
+      proBtn.onclick = () => {
+        location.href = '/ru/account/login/?next=/ru/premium/';
+      };
+      return;
+    }
+  }
+
+  proBtn.addEventListener('click', async () => {
+    const plan = window.whApi?.getPlan?.();
+    if (plan === 'pro' || plan === 'api') return;
+    if (!localStorage.getItem('wh_access')) {
+      location.href = '/ru/account/login/?next=/ru/premium/';
+      return;
+    }
+    proBtn.disabled = true;
+    proBtn.textContent = 'перенаправляю…';
+    proHint.textContent = '';
+    try {
+      const res = await window.whApi.fetch('/billing/robokassa/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'pro', period: getCurrentPeriod() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? 'ошибка');
+      location.href = data.url;
+    } catch (e: unknown) {
+      proBtn.disabled = false;
+      proBtn.textContent = 'подключить pro →';
+      proHint.textContent = 'ошибка — попробуйте ещё раз';
+    }
+  });
+
+  initProButton();
 
   // Share button
   document.getElementById('shareBtn')?.addEventListener('click', async (e) => {

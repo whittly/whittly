@@ -17,6 +17,11 @@ const isRu = lang === 'ru';
     </div>
 
     <div id="acContent" style="display:none">
+      <div class="ac-payment-banner" id="paymentBanner" style="display:none">
+        <i class="ti ti-circle-check"></i>
+        <span id="paymentBannerText"></span>
+      </div>
+
       <div class="ac-verify-banner" id="verifyBanner" style="display:none">
         <div class="ac-verify-banner-left">
           <i class="ti ti-mail"></i>
@@ -47,6 +52,7 @@ const isRu = lang === 'ru';
         <div class="ac-card">
           <div class="ac-card-label">{isRu ? 'тариф' : 'plan'}</div>
           <div class="ac-plan-badge" id="planBadge">—</div>
+          <div class="ac-plan-expires" id="planExpires"></div>
           <div id="upgradeWrap"></div>
         </div>
 
@@ -108,10 +114,30 @@ const isRu = lang === 'ru';
       return;
     }
 
+    // Show payment success banner if redirected from Robokassa
+    var urlParams = new URLSearchParams(location.search);
+    if (urlParams.has('InvId')) {
+      var paymentBanner = document.getElementById('paymentBanner');
+      var paymentBannerText = document.getElementById('paymentBannerText');
+      paymentBannerText.textContent = isRu
+        ? 'оплата принята — ваша подписка активна!'
+        : 'payment confirmed — your subscription is now active!';
+      paymentBanner.style.display = 'flex';
+      // Clean URL without reloading
+      history.replaceState(null, '', location.pathname);
+      setTimeout(function () {
+        paymentBanner.style.opacity = '0';
+        setTimeout(function () {
+          paymentBanner.style.display = 'none';
+        }, 400);
+      }, 6000);
+    }
+
     var loadingEl = document.getElementById('acLoading');
     var contentEl = document.getElementById('acContent');
     var emailEl = document.getElementById('acEmail');
     var planEl = document.getElementById('planBadge');
+    var planExpiresEl = document.getElementById('planExpires');
     var upgradeEl = document.getElementById('upgradeWrap');
     var statKeysEl = document.getElementById('statKeys');
     var statPreEl = document.getElementById('statPresets');
@@ -184,11 +210,35 @@ const isRu = lang === 'ru';
           });
         }
 
-        var planLabel = me.plan === 'api' ? 'Developer' : me.plan.toUpperCase();
-        planEl.textContent = planLabel;
-        planEl.className = 'ac-plan-badge ' + me.plan;
+        var now = Date.now();
+        var isExpired = me.planExpiresAt && new Date(me.planExpiresAt).getTime() < now;
+        var effectivePlan = isExpired ? 'free' : me.plan;
 
-        if (me.plan === 'free') {
+        var planLabel = effectivePlan === 'api' ? 'Developer' : effectivePlan.toUpperCase();
+        planEl.textContent = planLabel;
+        planEl.className = 'ac-plan-badge ' + effectivePlan;
+
+        if (me.plan !== 'free' && me.planExpiresAt) {
+          var expDate = new Date(me.planExpiresAt);
+          var expStr = isRu
+            ? expDate.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' })
+            : expDate.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' });
+          if (isExpired) {
+            planExpiresEl.innerHTML =
+              '<span style="color:var(--bad);font-size:11px;">' +
+              (isRu ? '⚠ истекла ' : '⚠ expired ') +
+              expStr +
+              '</span>';
+          } else {
+            planExpiresEl.innerHTML =
+              '<span style="color:var(--ink-faint);font-size:11px;">' +
+              (isRu ? 'до ' : 'until ') +
+              expStr +
+              '</span>';
+          }
+        }
+
+        if (effectivePlan === 'free') {
           upgradeEl.innerHTML = isRu
             ? '<a class="ac-plan-upgrade" href="/ru/premium/">перейти на pro →</a>'
             : '<a class="ac-plan-upgrade" href="/premium/">upgrade to pro →</a>';

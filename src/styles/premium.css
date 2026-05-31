@@ -216,6 +216,23 @@
   opacity: 0.45;
   cursor: default;
 }
+.plan-cta-active {
+  background: var(--good);
+  color: white;
+  opacity: 0.75;
+  cursor: default;
+  border: none;
+}
+
+.plan-cta-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--bad);
+  text-align: center;
+  margin-top: 6px;
+  min-height: 16px;
+}
+
 .plan-cta-cs:hover {
   opacity: 0.45;
   border-color: var(--line);
