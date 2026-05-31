@@ -343,8 +343,8 @@ const isRu = lang === 'ru';
             return r.json().then(function (e) {
               nameIn.value = '';
               nameIn.placeholder = isRu
-                ? 'лимит 3 пресета (Pro — безлимитно)'
-                : 'limit: 3 presets (Pro — unlimited)';
+                ? 'лимит 3 пресета всего (Pro — безлимитно)'
+                : 'limit: 3 presets total (Pro — unlimited)';
               setTimeout(function () {
                 nameIn.placeholder = isRu ? 'имя пресета…' : 'preset name…';
               }, 3000);

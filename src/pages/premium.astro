@@ -37,6 +37,8 @@ import '../styles/premium.css';
       <ul class="plan-features">
         <li>all tools — runs in your browser</li>
         <li>no signup, no tracking, no ads</li>
+        <li>5 history entries</li>
+        <li>3 saved presets total</li>
         <li>files up to 5 MB</li>
         <li>open source · Apache 2.0</li>
       </ul>
@@ -56,11 +58,12 @@ import '../styles/premium.css';
       <ul class="plan-features">
         <li>everything in free</li>
         <li class="f-sep"></li>
+        <li>history — 500 entries, synced across devices</li>
+        <li>unlimited saved presets</li>
+        <li>saved regex patterns</li>
         <li>batch processing — up to 500 items</li>
         <li>files up to 100 MB</li>
-        <li>history — up to 500 operations</li>
-        <li>unlimited saved presets</li>
-        <li>export history as JSON</li>
+        <li>import &amp; export history as JSON</li>
         <li>shareable tool configurations</li>
       </ul>
       <button class="plan-cta filled" id="proSubscribeBtn">get pro →</button>
@@ -105,7 +108,9 @@ import '../styles/premium.css';
         <li>Cron expression parsing</li>
         <li>Timestamp conversion</li>
         <li>URL encode / decode</li>
-        <li>SHA hash generation</li>
+        <li>SHA / bcrypt hashing</li>
+        <li>Text diff, slug, case, CSV ↔ JSON</li>
+        <li>and 10+ more tools</li>
       </ul>
     </div>
     <div class="runs-col">
@@ -113,10 +118,10 @@ import '../styles/premium.css';
         <i class="ti ti-cloud"></i>on our servers — pro &amp; api
       </div>
       <ul class="runs-list">
-        <li>Batch jobs — hundreds of files at once</li>
+        <li>Cloud history sync across devices</li>
+        <li>Saved presets &amp; regex patterns</li>
+        <li>Batch jobs — up to 500 items at once</li>
         <li>Large file processing (&gt; 5 MB)</li>
-        <li>Persistent history sync across devices</li>
-        <li>Saved presets &amp; custom configurations</li>
         <li>REST API endpoints for all tools</li>
         <li>CLI integration for CI/CD pipelines</li>
       </ul>
@@ -226,7 +231,7 @@ import '../styles/premium.css';
       const res = await whApi.fetch('/billing/robokassa/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: 'pro', period: getCurrentPeriod() }),
+        body: JSON.stringify({ plan: 'pro', period: getCurrentPeriod(), lang: 'en' }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? 'error');

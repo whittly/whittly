@@ -411,6 +411,13 @@ const isRu = lang === 'ru';
         if (!confirm(isRu ? 'Очистить всю историю?' : 'Clear all history?')) return;
         localStorage.removeItem(HIST_KEY);
         dbClearAll();
+        // Pro: also delete from server so cloud sync doesn't restore entries on next load
+        if (window.whApi) {
+          var plan = window.whApi.getPlan();
+          if (plan === 'pro' || plan === 'api') {
+            window.whApi.fetch('/user/history', { method: 'DELETE' }).catch(function () {});
+          }
+        }
         render();
       });
 
