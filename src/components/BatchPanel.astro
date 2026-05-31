@@ -4,7 +4,7 @@ interface Props {
   lang?: 'en' | 'ru';
   placeholder?: string;
 }
-const { lang = 'en', placeholder } = Astro.props;
+const { toolName, lang = 'en', placeholder } = Astro.props;
 const isRu = lang === 'ru';
 const MAX_ITEMS = 500;
 const ph = placeholder ?? (isRu ? 'один элемент на строку…' : 'one item per line…');
@@ -279,7 +279,7 @@ const ph = placeholder ?? (isRu ? 'один элемент на строку…'
   }
 </style>
 
-<script is:inline define:vars={{ isRu, MAX_ITEMS }}>
+<script is:inline define:vars={{ isRu, MAX_ITEMS, toolName }}>
   (function () {
     var toggle = document.getElementById('bpToggle');
     var body = document.getElementById('bpBody');
@@ -354,7 +354,6 @@ const ph = placeholder ?? (isRu ? 'один элемент на строку…'
     }
 
     function run() {
-      if (!window.toolBatchProcess) return;
       var lines = getLines();
       if (!lines.length || lines.length > MAX_ITEMS) return;
       runBtn.disabled = true;
@@ -362,15 +361,31 @@ const ph = placeholder ?? (isRu ? 'один элемент на строку…'
       resultsEl.innerHTML =
         '<span class="bp-results-ph">' + (isRu ? 'обрабатываю…' : 'processing…') + '</span>';
 
-      var result = window.toolBatchProcess(lines);
-      var promise = result && typeof result.then === 'function' ? result : Promise.resolve(result);
-      promise
-        .then(function (results) {
-          renderResults(lines, results);
+      // Collect current tool options (strip input field)
+      var opts = {};
+      if (window.toolGetPreset) {
+        var preset = window.toolGetPreset();
+        Object.keys(preset).forEach(function (k) {
+          if (k !== 'input') opts[k] = preset[k];
+        });
+      }
+
+      var effectiveTool = (window.toolBatchName && window.toolBatchName()) || toolName;
+      window.whApi
+        .fetch('/api/tools/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool: effectiveTool, items: lines, options: opts }),
+        })
+        .then(function (r) {
+          return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.error || 'server error'); });
+        })
+        .then(function (data) {
+          renderResults(lines, data.results);
         })
         .catch(function (e) {
           statusEl.textContent = '// error';
-          resultsEl.textContent = e.message;
+          resultsEl.innerHTML = '<span class="bp-results-ph">' + (e.message || 'error') + '</span>';
         })
         .finally(function () {
           runBtn.disabled = false;
@@ -383,7 +398,7 @@ const ph = placeholder ?? (isRu ? 'один элемент на строку…'
       body.style.display = isOpen ? '' : 'none';
       if (isOpen && !initialized) {
         initialized = true;
-        var plan = window.whApi ? window.whApi.getPlan() : null;
+        var plan = window.whApi.getPlan();
         if (plan === 'pro' || plan === 'api') {
           content.style.display = '';
         } else {

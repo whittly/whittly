@@ -28,6 +28,7 @@ import MimeLookup from './tools/MimeLookup.astro';
 import NumberBaseConverter from './tools/NumberBaseConverter.astro';
 import StringInspector from './tools/StringInspector.astro';
 import CsvJsonConverter from './tools/CsvJsonConverter.astro';
+import JsonToTs from './tools/JsonToTs.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -52,6 +53,7 @@ const TOOL_MAP: Record<string, any> = {
   'number-base-converter': NumberBaseConverter,
   'string-inspector': StringInspector,
   'csv-json': CsvJsonConverter,
+  'json-typescript': JsonToTs,
 };
 
 interface Props {
@@ -465,6 +467,28 @@ const jsonLd = {
     border-color: var(--accent);
   }
 
+  /* ── Share config ── */
+  .tool-share-row {
+    margin-top: 8px;
+  }
+
+  .tool-share-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .tool-share-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .tool-share-btn.done  { color: var(--good); border-color: var(--good); }
+
   /* ── Pro hint strip ── */
   .tool-pro-strip {
     margin-top: 6px;
@@ -565,13 +589,20 @@ const jsonLd = {
       )
     }
 
+    <div class="tool-share-row" id="toolShareRow" style="display:none">
+      <button class="tool-share-btn" id="toolShareBtn" type="button">
+        <i class="ti ti-share-3"></i>
+        {isRu ? 'поделиться конфигурацией' : 'share configuration'}
+      </button>
+    </div>
+
     {
       snip && (
         <div class="tool-api" id="toolApiPanel">
           <button class="tool-api-toggle" id="toolApiToggle" type="button">
             <i class="ti ti-code" />
             {ui.apiToggleLabel}
-            <span class="tool-api-pro">pro</span>
+            <span class="tool-api-pro">developer</span>
             <i class="ti ti-chevron-down tool-api-chevron" />
           </button>
           <div class="tool-api-body">
@@ -597,7 +628,7 @@ const jsonLd = {
             </pre>
             <div class="tool-api-footer">
               <span>
-                {isRu ? 'API доступен на' : 'API access on'} <a href={ui.proUpgradePath}>Pro</a>
+                {isRu ? 'API доступен на тарифе' : 'API access on'} <a href={ui.proUpgradePath}>{isRu ? 'Developer' : 'Developer plan'}</a>
               </span>
               <button class="tool-api-copy" id="toolApiCopy">
                 {isRu ? 'копировать' : 'copy'}
@@ -637,16 +668,11 @@ const jsonLd = {
   >
     (function () {
       // hide Pro upsell strip for Pro users
-      try {
-        var tok = localStorage.getItem('wh_access');
-        if (tok) {
-          var plan = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).plan;
-          if (plan === 'pro' || plan === 'api') {
-            var strip = document.querySelector('.tool-pro-strip');
-            if (strip) strip.style.display = 'none';
-          }
-        }
-      } catch (e) {}
+      var plan = window.whApi && window.whApi.getPlan();
+      if (plan === 'pro' || plan === 'api') {
+        var strip = document.querySelector('.tool-pro-strip');
+        if (strip) strip.style.display = 'none';
+      }
 
       var panel = document.getElementById('toolApiPanel');
       var toggle = document.getElementById('toolApiToggle');
@@ -690,6 +716,48 @@ const jsonLd = {
             }, 1500);
           });
         });
+    })();
+  </script>
+
+  <script is:inline define:vars={{ isRu }}>
+    (function () {
+      var shareRow = document.getElementById('toolShareRow');
+      var shareBtn = document.getElementById('toolShareBtn');
+      if (!shareRow || !shareBtn) return;
+
+      var plan = window.whApi && window.whApi.getPlan();
+      if (plan !== 'pro' && plan !== 'api') return;
+
+      shareRow.style.display = '';
+
+      /* ── restore from URL on load ── */
+      var sp = new URLSearchParams(location.search);
+      var encoded = sp.get('s');
+      if (encoded) {
+        requestAnimationFrame(function () {
+          try {
+            var preset = JSON.parse(atob(decodeURIComponent(encoded)));
+            if (window.toolSetPreset) window.toolSetPreset(preset);
+          } catch (e) {}
+        });
+      }
+
+      /* ── share button ── */
+      shareBtn.addEventListener('click', function () {
+        if (!window.toolGetPreset) return;
+        var preset = window.toolGetPreset();
+        var s = encodeURIComponent(btoa(JSON.stringify(preset)));
+        var url = location.origin + location.pathname + '?s=' + s;
+        navigator.clipboard.writeText(url).then(function () {
+          shareBtn.classList.add('done');
+          shareBtn.innerHTML = '<i class="ti ti-check"></i> ' + (isRu ? 'ссылка скопирована' : 'link copied');
+          setTimeout(function () {
+            shareBtn.classList.remove('done');
+            shareBtn.innerHTML = '<i class="ti ti-share-3"></i> ' + (isRu ? 'поделиться конфигурацией' : 'share configuration');
+          }, 2000);
+          history.replaceState(null, '', url);
+        });
+      });
     })();
   </script>
 

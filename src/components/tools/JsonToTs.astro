@@ -1,0 +1,388 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  rootName: isRu ? 'имя интерфейса' : 'root name',
+  rootPh: isRu ? 'Root' : 'Root',
+  statusEmpty: isRu ? '— вставьте JSON' : '— paste JSON to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  phInput: isRu ? 'вставьте JSON…' : 'paste JSON here…',
+  phOutput: isRu ? '// TypeScript интерфейсы появятся здесь' : '// TypeScript interfaces appear here',
+  validPrefix: isRu ? 'верно' : 'valid',
+  interfaces: isRu ? 'интерф.' : 'interfaces',
+  interface1: isRu ? 'интерф.' : 'interface',
+};
+---
+
+<style is:global>
+  .jts {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jts-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jts-root-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .jts-root-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .jts-root-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 9px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    color: var(--ink);
+    outline: none;
+    width: 120px;
+    transition: border-color 0.15s;
+  }
+  .jts-root-input:focus {
+    border-color: var(--accent);
+  }
+
+  .jts-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jts-status.ok { color: var(--good); }
+  .jts-status.err { color: var(--bad); }
+
+  .jts-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .jts-action:hover { color: var(--ink); border-color: var(--line-strong); }
+  .jts-action.done { color: var(--good); border-color: var(--good); }
+
+  .jts-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 380px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .jts-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .jts-in.err {
+    color: var(--bad);
+  }
+
+  .jts-vsep {
+    background: var(--line);
+  }
+
+  .jts-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .jts-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink-soft);
+  }
+
+  .jts-out .ts-kw { color: var(--accent); }
+  .jts-out .ts-type { color: oklch(55% 0.16 300); }
+  .jts-out .ts-prim { color: var(--good); }
+  .jts-out .ts-ph { color: var(--ink-faint); }
+
+  @media (max-width: 760px) {
+    .jts-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 260px 1px 260px;
+      max-height: none;
+    }
+    .jts-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .jts-out-wrap {
+      overflow: auto;
+      max-height: 260px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="json-typescript" lang={lang} />
+<FileLoader targetId="jtsInput" lang={lang} />
+<div class="jts">
+  <div class="jts-bar">
+    <div class="jts-root-wrap">
+      <span class="jts-root-label">{t.rootName}:</span>
+      <input class="jts-root-input" id="jtsRootName" type="text" value="Root" spellcheck="false" autocomplete="off" />
+    </div>
+    <span class="jts-status" id="jtsStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="jts-action" id="jtsCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
+    <button class="jts-action" id="jtsClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+  </div>
+  <div class="jts-panels">
+    <textarea
+      class="jts-in"
+      id="jtsInput"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.phInput}
+    ></textarea>
+    <div class="jts-vsep"></div>
+    <div class="jts-out-wrap">
+      <pre class="jts-out" id="jtsOut"><span class="ts-ph">{t.phOutput}</span></pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inputEl = document.getElementById('jtsInput');
+    var outEl = document.getElementById('jtsOut');
+    var statusEl = document.getElementById('jtsStatus');
+    var rootNameEl = document.getElementById('jtsRootName');
+    var copyBtn = document.getElementById('jtsCopy');
+    var clearBtn = document.getElementById('jtsClear');
+
+    var lastOutput = '';
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function jsonToTs(json, rootName) {
+      var defs = [];
+      var seen = {};
+
+      function capitalize(s) {
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+      }
+      function toPascal(key) {
+        return key.split(/[\s_\-]+/).map(function(w) {
+          return capitalize(w.replace(/[^a-zA-Z0-9]/g, ''));
+        }).join('').replace(/^[^a-zA-Z]/, '');
+      }
+
+      function tsType(value, key) {
+        if (value === null) return 'null';
+        if (Array.isArray(value)) {
+          if (!value.length) return 'unknown[]';
+          var types = value.map(function(item) { return tsType(item, key); });
+          var unique = types.filter(function(t, i) { return types.indexOf(t) === i; });
+          var inner = unique.length === 1 ? unique[0] : '(' + unique.join(' | ') + ')';
+          return inner + '[]';
+        }
+        if (typeof value === 'object') {
+          var name = toPascal(key) || 'Object';
+          buildInterface(value, name);
+          return name;
+        }
+        return typeof value;
+      }
+
+      function buildInterface(obj, name) {
+        if (seen[name]) return;
+        seen[name] = true;
+        var fields = Object.keys(obj).map(function(k) {
+          var v = obj[k];
+          var optional = v === null ? '?' : '';
+          var type = v === null ? 'string | null' : tsType(v, k);
+          var safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : '"' + k + '"';
+          return '  ' + safeKey + optional + ': ' + type + ';';
+        });
+        defs.push('interface ' + name + ' {\n' + fields.join('\n') + '\n}');
+      }
+
+      if (Array.isArray(json)) {
+        if (json.length && typeof json[0] === 'object' && json[0] !== null && !Array.isArray(json[0])) {
+          buildInterface(json[0], rootName);
+          return 'type ' + rootName + 'List = ' + rootName + '[];\n\n' + defs.slice().reverse().join('\n\n');
+        }
+        return 'type ' + rootName + ' = ' + tsType(json[0] !== undefined ? json[0] : null, 'item') + '[];';
+      }
+      if (json !== null && typeof json === 'object') {
+        buildInterface(json, rootName);
+        return defs.slice().reverse().join('\n\n');
+      }
+      return 'type ' + rootName + ' = ' + typeof json + ';';
+    }
+
+    var PRIMS = ['string', 'number', 'boolean', 'null', 'unknown', 'void', 'any', 'never'];
+
+    function highlightTs(code) {
+      var lines = code.split('\n');
+      return lines.map(function(line) {
+        // Simple token-based highlighting
+        var escaped = esc(line);
+        // keywords: interface, type
+        escaped = escaped.replace(/\b(interface|type)\b/g, '<span class="ts-kw">$1</span>');
+        // primitives in type position (after : or = or |)
+        PRIMS.forEach(function(p) {
+          // Match primitive words that appear as types (after colon, pipe, angle bracket, or space)
+          var re = new RegExp('\\b(' + p + ')\\b(?=\\s*[;,\\|\\[\\])]|$)', 'g');
+          escaped = escaped.replace(re, '<span class="ts-prim">$1</span>');
+        });
+        // type names (PascalCase identifiers after : or = or <)
+        escaped = escaped.replace(/(?<=:\s*)([A-Z][a-zA-Z0-9]*)/g, '<span class="ts-type">$1</span>');
+        return escaped;
+      }).join('\n');
+    }
+
+    function process() {
+      var raw = inputEl.value.trim();
+      var rootName = (rootNameEl.value.trim() || 'Root').replace(/[^a-zA-Z0-9_]/g, '').replace(/^[^a-zA-Z]/, '') || 'Root';
+
+      inputEl.classList.remove('err');
+
+      if (!raw) {
+        outEl.innerHTML = '<span class="ts-ph">' + t.phOutput + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'jts-status';
+        lastOutput = '';
+        return;
+      }
+
+      var parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        inputEl.classList.add('err');
+        statusEl.textContent = '// ' + e.message;
+        statusEl.className = 'jts-status err';
+        outEl.innerHTML = '<span class="ts-ph">' + esc('// ' + e.message) + '</span>';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var result = jsonToTs(parsed, rootName);
+        lastOutput = result;
+
+        // Count interfaces/types
+        var ifaceCount = (result.match(/^interface\s/gm) || []).length + (result.match(/^type\s/gm) || []).length;
+        statusEl.textContent = t.validPrefix + ' · ' + ifaceCount + ' ' + (ifaceCount === 1 ? t.interface1 : t.interfaces);
+        statusEl.className = 'jts-status ok';
+
+        outEl.innerHTML = highlightTs(result);
+
+        if (window.pushHistory) window.pushHistory('json → typescript', statusEl.textContent, raw);
+        outEl.closest('.jts-out-wrap').classList.remove('flash-ok');
+        void outEl.closest('.jts-out-wrap').offsetWidth;
+        outEl.closest('.jts-out-wrap').classList.add('flash-ok');
+      } catch (e) {
+        statusEl.textContent = '// ' + e.message;
+        statusEl.className = 'jts-status err';
+        outEl.innerHTML = '<span class="ts-ph">' + esc('// error: ' + e.message) + '</span>';
+        lastOutput = '';
+      }
+    }
+
+    inputEl.addEventListener('input', process);
+    rootNameEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function() {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function() {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function() {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function() {
+      inputEl.value = '';
+      rootNameEl.value = 'Root';
+      process();
+      inputEl.focus();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      var toolEl = document.querySelector('.jts');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function() {
+      return { input: inputEl.value, rootName: rootNameEl.value };
+    };
+    window.toolSetPreset = function(cfg) {
+      if (cfg.input !== undefined) inputEl.value = cfg.input;
+      if (cfg.rootName !== undefined) rootNameEl.value = cfg.rootName;
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    process();
+  })();
+</script>

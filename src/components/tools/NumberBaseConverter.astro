@@ -333,7 +333,7 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { input: input.value };
+      return { input: input.value, fromBase: fromBase };
     };
     window.toolSetPreset = function (cfg) {
       input.value = cfg.input ?? '';

@@ -184,7 +184,8 @@ const isRu = lang === 'ru';
           });
         }
 
-        planEl.textContent = me.plan.toUpperCase();
+        var planLabel = me.plan === 'api' ? 'Developer' : me.plan.toUpperCase();
+        planEl.textContent = planLabel;
         planEl.className = 'ac-plan-badge ' + me.plan;
 
         if (me.plan === 'free') {

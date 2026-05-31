@@ -41,7 +41,8 @@ const { isRu, catalog } = Astro.props;
     color: var(--ink-soft);
     letter-spacing: 0.06em;
   }
-  .hist-x {
+  .hist-x,
+  .hist-export {
     background: none;
     border: none;
     cursor: pointer;
@@ -55,7 +56,8 @@ const { isRu, catalog } = Astro.props;
       color 0.12s,
       background 0.12s;
   }
-  .hist-x:hover {
+  .hist-x:hover,
+  .hist-export:hover {
     color: var(--ink);
     background: var(--surface-sunken);
   }
@@ -289,6 +291,9 @@ const { isRu, catalog } = Astro.props;
 <div id="whHist" class="hist-sidebar">
   <div class="hist-head">
     <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
+    <button class="hist-export" id="histExport" type="button" title={isRu ? 'экспорт истории' : 'export history'} style="display:none">
+      <i class="ti ti-download"></i>
+    </button>
     <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
   </div>
   <div class="hist-pro" id="histPro">
@@ -368,7 +373,8 @@ const { isRu, catalog } = Astro.props;
 
     /* ─── History ─── */
     var HIST_KEY = 'wh_hist';
-    var HIST_MAX = 15;
+    var _isPro = window.whApi.getPlan() === 'pro' || window.whApi.getPlan() === 'api';
+    var HIST_MAX = _isPro ? 500 : 15;
 
     window.pushHistory = function (tool, summary, input) {
       try {
@@ -540,12 +546,32 @@ const { isRu, catalog } = Astro.props;
         openHist(false);
       });
 
+    /* ─── Export history (Pro) ─── */
+    var histExportBtn = document.getElementById('histExport');
+    if (histExportBtn && _isPro) {
+      histExportBtn.style.display = '';
+      histExportBtn.addEventListener('click', function () {
+        var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+        var json = JSON.stringify(entries, null, 2);
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'whittly-history.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
     /* ─── History cloud sync for Pro users ─── */
     var _plan = window.whApi.getPlan();
     var histProEl = document.getElementById('histPro');
     if (histProEl && (_plan === 'pro' || _plan === 'api')) {
+      var planTag = _plan === 'api' ? 'Developer' : 'Pro';
       histProEl.innerHTML =
-        '<span class="hist-pro-tag">Pro</span><span>' +
+        '<span class="hist-pro-tag">' + planTag + '</span><span>' +
         (isRu ? 'история синхронизируется' : 'history synced') +
         ' <i class="ti ti-cloud-check" style="font-size:12px;vertical-align:middle"></i></span>';
     }

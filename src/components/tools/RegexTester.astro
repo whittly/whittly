@@ -5,6 +5,22 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
+const tLib = {
+  libToggle: isRu ? 'библиотека' : 'library',
+  libHead: isRu ? '// библиотека паттернов' : '// pattern library',
+  libSave: isRu ? 'сохранить текущий' : 'save current',
+  libEmpty: isRu ? 'нет сохранённых паттернов' : 'no saved patterns',
+  libLoad: isRu ? 'загрузить' : 'load',
+  libDelete: isRu ? 'удалить' : 'delete',
+  libNamePh: isRu ? 'имя паттерна…' : 'pattern name…',
+  libDescPh: isRu ? 'описание (опционально)…' : 'description (optional)…',
+  libSaving: isRu ? 'сохраняю…' : 'saving…',
+  libSaved: isRu ? 'сохранено' : 'saved',
+  libProOnly: isRu ? 'библиотека паттернов — только для Pro' : 'pattern library — Pro only',
+  libUpgrade: isRu ? 'улучшить →' : 'upgrade →',
+  libLoading: isRu ? 'загрузка…' : 'loading…',
+  libError: isRu ? 'ошибка загрузки' : 'load error',
+};
 const t = {
   statusEmpty: isRu ? '— введите паттерн' : '— enter a pattern',
   noMatches: isRu ? 'нет совпадений' : 'no matches',
@@ -408,6 +424,170 @@ const t = {
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
+  /* ── Regex Library ── */
+  .rx-lib-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rx-lib-toggle:hover { color: var(--ink); border-color: var(--line-strong); }
+  .rx-lib-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .rx-lib {
+    border-top: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .rx-lib-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+
+  .rx-lib-save-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 12px;
+    flex-wrap: wrap;
+  }
+
+  .rx-lib-name-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    color: var(--ink);
+    outline: none;
+    flex: 1;
+    min-width: 140px;
+    transition: border-color 0.15s;
+  }
+  .rx-lib-name-input:focus { border-color: var(--accent); }
+
+  .rx-lib-save-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 0.5px solid var(--accent);
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .rx-lib-save-btn:hover { background: var(--accent); color: white; }
+  .rx-lib-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .rx-lib-list {
+    padding: 0 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .rx-lib-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    transition: border-color 0.12s;
+  }
+  .rx-lib-item:hover { border-color: var(--line-strong); }
+
+  .rx-lib-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rx-lib-item-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rx-lib-item-pat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rx-lib-item-load {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .rx-lib-item-load:hover { color: var(--accent); border-color: var(--accent); }
+
+  .rx-lib-item-del {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .rx-lib-item-del:hover { color: var(--bad); border-color: var(--bad); }
+
+  .rx-lib-empty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 8px 0;
+  }
+
+  .rx-lib-lock {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .rx-lib-lock a { color: var(--accent); text-decoration: none; }
+  .rx-lib-lock a:hover { text-decoration: underline; }
 </style>
 
 <PresetsBar toolName="regex-tester" lang={lang} />
@@ -433,6 +613,7 @@ const t = {
     </div>
     <span class="rx-status" id="rxStatus">{t.statusEmpty}</span>
     <span class="local-badge">// client-only</span>
+    <button class="rx-lib-toggle" id="rxLibToggleBtn" type="button"><i class="ti ti-books"></i>{tLib.libToggle}</button>
   </div>
 
   <div class="rx-panels">
@@ -622,9 +803,18 @@ const t = {
       </div>
     </div>
   </div>
+
+  <div class="rx-lib" id="rxLib" style="display:none">
+    <div class="rx-lib-head">
+      <span>{tLib.libHead}</span>
+    </div>
+    <div id="rxLibInner">
+      <!-- populated by JS -->
+    </div>
+  </div>
 </div>
 
-<script is:inline define:vars={{ t }}>
+<script is:inline define:vars={{ t, tLib, isRu }}>
   (function () {
     var inputEl = document.getElementById('rxInput');
     var textEl = document.getElementById('rxText');
@@ -864,5 +1054,142 @@ const t = {
     function runMatch() {
       process();
     }
+
+    /* ── Regex Library (Pro) ── */
+    var libToggleBtn = document.getElementById('rxLibToggleBtn');
+    var libEl = document.getElementById('rxLib');
+    var libInner = document.getElementById('rxLibInner');
+    var libOpen = false;
+    var libInitialized = false;
+
+    function esc2(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderLibPatterns(patterns) {
+      if (!patterns.length) {
+        libInner.innerHTML =
+          '<div class="rx-lib-save-row">' + getSaveRowHtml() + '</div>' +
+          '<div class="rx-lib-list"><div class="rx-lib-empty">' + tLib.libEmpty + '</div></div>';
+      } else {
+        var items = patterns.map(function(p) {
+          var flags = p.flags ? '/' + esc2(p.flags) : '';
+          return '<div class="rx-lib-item" data-id="' + esc2(p.id) + '">' +
+            '<div class="rx-lib-item-info">' +
+              '<div class="rx-lib-item-name">' + esc2(p.name) + '</div>' +
+              '<div class="rx-lib-item-pat">/' + esc2(p.pattern) + flags + '</div>' +
+            '</div>' +
+            '<button class="rx-lib-item-load" data-pattern="' + esc2(p.pattern) + '" data-flags="' + esc2(p.flags || '') + '">' + tLib.libLoad + '</button>' +
+            '<button class="rx-lib-item-del" data-id="' + esc2(p.id) + '"><i class="ti ti-trash"></i></button>' +
+          '</div>';
+        }).join('');
+        libInner.innerHTML =
+          '<div class="rx-lib-save-row">' + getSaveRowHtml() + '</div>' +
+          '<div class="rx-lib-list">' + items + '</div>';
+      }
+      bindLibEvents();
+    }
+
+    function getSaveRowHtml() {
+      return '<input class="rx-lib-name-input" id="rxLibName" type="text" placeholder="' + esc2(tLib.libNamePh) + '" spellcheck="false" autocomplete="off" />' +
+        '<button class="rx-lib-save-btn" id="rxLibSaveBtn">' + tLib.libSave + '</button>';
+    }
+
+    function loadLibPatterns() {
+      libInner.innerHTML = '<div class="rx-lib-lock" style="color:var(--ink-faint)">' + tLib.libLoading + '</div>';
+      window.whApi.fetch('/user/regex-patterns')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) renderLibPatterns(data.patterns);
+          else libInner.innerHTML = '<div class="rx-lib-lock" style="color:var(--bad)">' + esc2(data.error || tLib.libError) + '</div>';
+        })
+        .catch(function(e) {
+          libInner.innerHTML = '<div class="rx-lib-lock" style="color:var(--bad)">' + esc2(e.message || tLib.libError) + '</div>';
+        });
+    }
+
+    function bindLibEvents() {
+      var nameInput = document.getElementById('rxLibName');
+      var saveBtn = document.getElementById('rxLibSaveBtn');
+
+      if (saveBtn && nameInput) {
+        saveBtn.addEventListener('click', function() {
+          var name = nameInput.value.trim();
+          if (!name || !inputEl.value.trim()) return;
+          saveBtn.disabled = true;
+          saveBtn.textContent = tLib.libSaving;
+          var flags = getFlags();
+          window.whApi.fetch('/user/regex-patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, pattern: inputEl.value, flags: flags, description: '' }),
+          })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data.ok) { loadLibPatterns(); }
+              else { saveBtn.disabled = false; saveBtn.textContent = tLib.libSave; }
+            })
+            .catch(function() { saveBtn.disabled = false; saveBtn.textContent = tLib.libSave; });
+        });
+      }
+
+      libInner.querySelectorAll('.rx-lib-item-load').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          inputEl.value = btn.dataset.pattern || '';
+          var flags = (btn.dataset.flags || '').split('');
+          Object.keys(activeFlags).forEach(function(f) {
+            activeFlags[f] = flags.indexOf(f) !== -1;
+            var fb = document.querySelector('.rx-flag[data-flag="' + f + '"]');
+            if (fb) fb.classList.toggle('active', activeFlags[f]);
+          });
+          process();
+          inputEl.focus();
+        });
+      });
+
+      libInner.querySelectorAll('.rx-lib-item-del').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = btn.dataset.id;
+          if (!id) return;
+          window.whApi.fetch('/user/regex-patterns/' + id, { method: 'DELETE' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) { if (data.ok) loadLibPatterns(); })
+            .catch(function() {});
+        });
+      });
+    }
+
+    libToggleBtn.addEventListener('click', function() {
+      libOpen = !libOpen;
+      libToggleBtn.classList.toggle('active', libOpen);
+      libEl.style.display = libOpen ? '' : 'none';
+
+      if (libOpen && !libInitialized) {
+        libInitialized = true;
+        var plan = window.whApi && window.whApi.getPlan();
+        if (plan === 'pro' || plan === 'api') {
+          loadLibPatterns();
+        } else {
+          // Check server-side
+          window.whApi.fetch('/user/regex-patterns')
+            .then(function(r) {
+              if (r.ok || r.status === 200) {
+                return r.json().then(function(d) {
+                  if (d.ok) renderLibPatterns(d.patterns);
+                  else throw new Error('not pro');
+                });
+              } else {
+                throw new Error('not pro');
+              }
+            })
+            .catch(function() {
+              libInner.innerHTML =
+                '<div class="rx-lib-lock"><i class="ti ti-lock"></i>' +
+                tLib.libProOnly +
+                ' <a href="' + (isRu ? '/ru/premium/' : '/premium/') + '">' + tLib.libUpgrade + '</a></div>';
+            });
+        }
+      }
+    });
   })();
 </script>

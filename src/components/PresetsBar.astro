@@ -339,6 +339,18 @@ const isRu = lang === 'ru';
           body: JSON.stringify({ tool: toolName, name: name, config: window.toolGetPreset() }),
         })
         .then(function (r) {
+          if (r.status === 403) {
+            return r.json().then(function (e) {
+              nameIn.value = '';
+              nameIn.placeholder = isRu
+                ? 'лимит 3 пресета (Pro — безлимитно)'
+                : 'limit: 3 presets (Pro — unlimited)';
+              setTimeout(function () {
+                nameIn.placeholder = isRu ? 'имя пресета…' : 'preset name…';
+              }, 3000);
+              return null;
+            });
+          }
           return r.ok ? r.json() : null;
         })
         .then(function (data) {

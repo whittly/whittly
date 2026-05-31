@@ -9,16 +9,26 @@ const isRu = lang === 'ru';
 const t = {
   original: isRu ? 'оригинал' : 'original',
   modified: isRu ? 'изменённый' : 'modified',
+  base: isRu ? 'база' : 'base',
+  ours: isRu ? 'наши' : 'ours',
+  theirs: isRu ? 'их' : 'theirs',
+  mode2way: isRu ? '2-way' : '2-way',
+  mode3way: isRu ? '3-way' : '3-way',
   copy: isRu ? 'копировать diff' : 'copy diff',
   copied: isRu ? 'скопировано' : 'copied',
   clear: isRu ? 'очистить' : 'clear',
   paste: isRu ? '— вставьте тексты для сравнения' : '— paste two texts to compare',
+  paste3: isRu ? '— вставьте base, ours, theirs' : '— paste base, ours, and theirs',
   identical: isRu ? 'тексты идентичны' : 'texts are identical',
   added: isRu ? ' добавлено' : ' added',
   removed: isRu ? ' удалено' : ' removed',
+  conflicts: isRu ? ' конфликт(ов)' : ' conflict(s)',
   lines: isRu ? ' стр.' : ' lines',
   phLeft: isRu ? 'оригинальный текст…' : 'original text…',
   phRight: isRu ? 'изменённый текст…' : 'modified text…',
+  phBase: isRu ? 'базовый текст…' : 'base text…',
+  phOurs: isRu ? 'наши изменения…' : 'our changes…',
+  phTheirs: isRu ? 'их изменения…' : 'their changes…',
   noDiff: isRu ? '// тексты идентичны' : '// texts are identical',
   diffPh: isRu ? '// результат diff появится здесь' : '// diff appears here',
   tooLarge: isRu
@@ -162,6 +172,44 @@ const t = {
   .tdiff-out .td-ph {
     color: var(--ink-faint);
   }
+  .tdiff-mode-btns {
+    display: flex;
+    gap: 3px;
+  }
+
+  .tdiff-mode-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 9px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tdiff-mode-btn:hover { color: var(--ink); border-color: var(--line-strong); }
+  .tdiff-mode-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .tdiff-inputs-3 {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    height: 40%;
+    min-height: 160px;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+
+  .tdiff-out .td-conflict {
+    color: oklch(65% 0.18 60);
+    background: color-mix(in srgb, oklch(65% 0.18 60) 10%, transparent);
+    display: block;
+  }
+
   @media (max-width: 760px) {
     .tdiff {
       height: auto;
@@ -172,12 +220,20 @@ const t = {
       grid-template-rows: 160px 1px 160px;
       height: auto;
     }
+    .tdiff-inputs-3 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 130px 1px 130px 1px 130px;
+      height: auto;
+    }
     .tdiff-vsep {
       width: 100%;
       height: 1px;
     }
     .tdiff-label-wrap {
       height: 160px;
+    }
+    .tdiff-label-wrap-3 {
+      height: 130px;
     }
   }
 </style>
@@ -186,6 +242,10 @@ const t = {
 <FileLoader targetId="tdLeft" secondTargetId="tdRight" lang={lang} />
 <div class="tdiff">
   <div class="tdiff-bar">
+    <div class="tdiff-mode-btns">
+      <button class="tdiff-mode-btn active" id="tdMode2" type="button">{t.mode2way}</button>
+      <button class="tdiff-mode-btn" id="tdMode3" type="button">{t.mode3way}</button>
+    </div>
     <span class="tdiff-status" id="tdStatus">{t.paste}</span>
     <span class="local-badge">// client-only</span>
     <button class="tdiff-action" id="tdCopy"
@@ -195,7 +255,9 @@ const t = {
       ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
     >
   </div>
-  <div class="tdiff-inputs">
+
+  <!-- 2-way inputs -->
+  <div class="tdiff-inputs" id="tdInputs2">
     <div class="tdiff-label-wrap">
       <span class="tdiff-label">{t.original}</span>
       <textarea
@@ -211,6 +273,25 @@ const t = {
       <textarea class="tdiff-in" id="tdRight" spellcheck="false" placeholder={t.phRight}></textarea>
     </div>
   </div>
+
+  <!-- 3-way inputs -->
+  <div class="tdiff-inputs-3" id="tdInputs3" style="display:none">
+    <div class="tdiff-label-wrap tdiff-label-wrap-3">
+      <span class="tdiff-label">{t.base}</span>
+      <textarea class="tdiff-in" id="tdBase" spellcheck="false" placeholder={t.phBase}></textarea>
+    </div>
+    <div class="tdiff-vsep"></div>
+    <div class="tdiff-label-wrap tdiff-label-wrap-3">
+      <span class="tdiff-label">{t.ours}</span>
+      <textarea class="tdiff-in" id="tdOurs" spellcheck="false" placeholder={t.phOurs}></textarea>
+    </div>
+    <div class="tdiff-vsep"></div>
+    <div class="tdiff-label-wrap tdiff-label-wrap-3">
+      <span class="tdiff-label">{t.theirs}</span>
+      <textarea class="tdiff-in" id="tdTheirs" spellcheck="false" placeholder={t.phTheirs}></textarea>
+    </div>
+  </div>
+
   <div class="tdiff-out-wrap">
     <pre class="tdiff-out" id="tdOut"><span class="td-ph">{t.diffPh}</span></pre>
   </div>
@@ -220,11 +301,19 @@ const t = {
   (function () {
     var leftEl = document.getElementById('tdLeft');
     var rightEl = document.getElementById('tdRight');
+    var baseEl = document.getElementById('tdBase');
+    var oursEl = document.getElementById('tdOurs');
+    var theirsEl = document.getElementById('tdTheirs');
     var outEl = document.getElementById('tdOut');
     var statusEl = document.getElementById('tdStatus');
     var copyBtn = document.getElementById('tdCopy');
     var clearBtn = document.getElementById('tdClear');
+    var mode2Btn = document.getElementById('tdMode2');
+    var mode3Btn = document.getElementById('tdMode3');
+    var inputs2El = document.getElementById('tdInputs2');
+    var inputs3El = document.getElementById('tdInputs3');
 
+    var mode = '2way';
     var lastDiffText = '';
 
     function esc(s) {
@@ -235,7 +324,6 @@ const t = {
     function computeDiff(a, b) {
       var m = a.length,
         n = b.length;
-      /* Build DP table */
       var dp = new Array(m + 1);
       for (var i = 0; i <= m; i++) dp[i] = new Int32Array(n + 1);
       for (var i = 1; i <= m; i++) {
@@ -244,15 +332,12 @@ const t = {
             a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
         }
       }
-      /* Backtrack */
       var edits = [];
-      var i = m,
-        j = n;
+      var i = m, j = n;
       while (i > 0 || j > 0) {
         if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
           edits.unshift({ type: 'eq', text: a[i - 1] });
-          i--;
-          j--;
+          i--; j--;
         } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
           edits.unshift({ type: 'add', text: b[j - 1] });
           j--;
@@ -264,7 +349,122 @@ const t = {
       return edits;
     }
 
-    function process() {
+    /* 3-way merge: compute hunks from base->ours and base->theirs, detect conflicts */
+    function compute3way(baseLines, oursLines, theirsLines) {
+      var oursEdits = computeDiff(baseLines, oursLines);
+      var theirsEdits = computeDiff(baseLines, theirsLines);
+
+      // Build index: baseLineIdx -> { ours: type, theirs: type }
+      // Simple approach: produce merged output line by line
+      function toMap(edits) {
+        // Produce a sequence of {baseIdx, type, text}
+        var result = [];
+        var bi = 0;
+        edits.forEach(function(e) {
+          if (e.type === 'eq') { result.push({ bi: bi, type: 'eq', text: e.text }); bi++; }
+          else if (e.type === 'del') { result.push({ bi: bi, type: 'del', text: e.text }); bi++; }
+          else { result.push({ bi: -1, type: 'add', text: e.text }); }
+        });
+        return result;
+      }
+
+      var oMap = toMap(oursEdits);
+      var tMap = toMap(theirsEdits);
+
+      // For each base line, track what ours and theirs do
+      var baseCount = baseLines.length;
+      var oursChange = {}; // bi -> 'del' or 'eq'
+      var theirsChange = {}; // bi -> 'del' or 'eq'
+      var oursAdds = {}; // bi -> [lines added after this base line]
+      var theirsAdds = {}; // bi -> [lines added after this base line]
+
+      var prevBi = -1;
+      oMap.forEach(function(e) {
+        if (e.type === 'add') {
+          if (!oursAdds[prevBi]) oursAdds[prevBi] = [];
+          oursAdds[prevBi].push(e.text);
+        } else {
+          oursChange[e.bi] = e.type;
+          prevBi = e.bi;
+        }
+      });
+
+      prevBi = -1;
+      tMap.forEach(function(e) {
+        if (e.type === 'add') {
+          if (!theirsAdds[prevBi]) theirsAdds[prevBi] = [];
+          theirsAdds[prevBi].push(e.text);
+        } else {
+          theirsChange[e.bi] = e.type;
+          prevBi = e.bi;
+        }
+      });
+
+      var output = [];
+      var conflicts = 0;
+
+      // Handle lines added before first base line
+      var oA0 = oursAdds[-1] || [];
+      var tA0 = theirsAdds[-1] || [];
+      if (oA0.length && !tA0.length) {
+        oA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+      } else if (tA0.length && !oA0.length) {
+        tA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+      } else if (oA0.length && tA0.length) {
+        var sameAdds = oA0.join('\n') === tA0.join('\n');
+        if (sameAdds) {
+          oA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+        } else {
+          conflicts++;
+          output.push({ type: 'conflict', text: '<<<<<<< ours' });
+          oA0.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+          output.push({ type: 'conflict', text: '=======' });
+          tA0.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+          output.push({ type: 'conflict', text: '>>>>>>> theirs' });
+        }
+      }
+
+      for (var bi = 0; bi < baseCount; bi++) {
+        var oT = oursChange[bi] || 'eq';
+        var tT = theirsChange[bi] || 'eq';
+        var baseLine = baseLines[bi];
+        var oAdds = oursAdds[bi] || [];
+        var tAdds = theirsAdds[bi] || [];
+
+        if (oT === 'eq' && tT === 'eq') {
+          output.push({ type: 'eq', text: baseLine });
+        } else if (oT === 'del' && tT === 'eq') {
+          output.push({ type: 'del', text: baseLine });
+        } else if (oT === 'eq' && tT === 'del') {
+          output.push({ type: 'del', text: baseLine });
+        } else if (oT === 'del' && tT === 'del') {
+          output.push({ type: 'del', text: baseLine });
+        }
+
+        // Handle adds from ours and theirs after this base line
+        if (oAdds.length && !tAdds.length) {
+          oAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+        } else if (tAdds.length && !oAdds.length) {
+          tAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+        } else if (oAdds.length && tAdds.length) {
+          var sameA = oAdds.join('\n') === tAdds.join('\n');
+          if (sameA) {
+            oAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+          } else {
+            conflicts++;
+            output.push({ type: 'conflict', text: '<<<<<<< ours' });
+            oAdds.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+            output.push({ type: 'conflict', text: '=======' });
+            tAdds.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+            output.push({ type: 'conflict', text: '>>>>>>> theirs' });
+          }
+        }
+      }
+
+      return { output: output, conflicts: conflicts };
+    }
+
+    function process2way() {
       var left = leftEl.value;
       var right = rightEl.value;
 
@@ -289,8 +489,7 @@ const t = {
 
       var edits = computeDiff(aLines, bLines);
 
-      var added = 0,
-        removed = 0;
+      var added = 0, removed = 0;
       edits.forEach(function (e) {
         if (e.type === 'add') added++;
         else if (e.type === 'del') removed++;
@@ -332,8 +531,102 @@ const t = {
       outEl.closest('.tdiff-out-wrap').classList.add('flash-ok');
     }
 
+    function process3way() {
+      var base = baseEl.value;
+      var ours = oursEl.value;
+      var theirs = theirsEl.value;
+
+      if (!base && !ours && !theirs) {
+        outEl.innerHTML = '<span class="td-ph">' + t.diffPh + '</span>';
+        statusEl.textContent = t.paste3;
+        statusEl.className = 'tdiff-status';
+        lastDiffText = '';
+        return;
+      }
+
+      var baseLines = base.split('\n');
+      var oursLines = ours.split('\n');
+      var theirsLines = theirs.split('\n');
+
+      var result = compute3way(baseLines, oursLines, theirsLines);
+
+      var html = '';
+      var plain = '';
+      var added = 0, removed = 0;
+
+      result.output.forEach(function(e) {
+        var line = esc(e.text);
+        if (e.type === 'eq') {
+          html += '<span class="td-eq"> ' + line + '</span>';
+          plain += '  ' + e.text + '\n';
+        } else if (e.type === 'add') {
+          html += '<span class="td-add">+' + line + '</span>';
+          plain += '+ ' + e.text + '\n';
+          added++;
+        } else if (e.type === 'del') {
+          html += '<span class="td-del">-' + line + '</span>';
+          plain += '- ' + e.text + '\n';
+          removed++;
+        } else if (e.type === 'conflict') {
+          html += '<span class="td-conflict">' + line + '</span>';
+          plain += e.text + '\n';
+        }
+      });
+
+      outEl.innerHTML = html || '<span class="td-ph">' + esc(t.noDiff) + '</span>';
+      lastDiffText = plain;
+
+      var parts = [];
+      if (added) parts.push('+' + added + t.added + t.lines);
+      if (removed) parts.push('−' + removed + t.removed + t.lines);
+      if (result.conflicts) parts.push(result.conflicts + t.conflicts);
+      statusEl.textContent = parts.length ? parts.join('  ') : t.identical;
+      statusEl.className = result.conflicts > 0 ? 'tdiff-status err' : (parts.length ? 'tdiff-status ok' : 'tdiff-status eq');
+
+      outEl.closest('.tdiff-out-wrap').classList.remove('flash-ok');
+      void outEl.closest('.tdiff-out-wrap').offsetWidth;
+      outEl.closest('.tdiff-out-wrap').classList.add('flash-ok');
+    }
+
+    function process() {
+      if (mode === '2way') process2way();
+      else process3way();
+    }
+
+    /* Mode toggle */
+    mode2Btn.addEventListener('click', function() {
+      if (mode === '2way') return;
+      mode = '2way';
+      mode2Btn.classList.add('active');
+      mode3Btn.classList.remove('active');
+      inputs2El.style.display = '';
+      inputs3El.style.display = 'none';
+      statusEl.textContent = t.paste;
+      statusEl.className = 'tdiff-status';
+      outEl.innerHTML = '<span class="td-ph">' + t.diffPh + '</span>';
+      lastDiffText = '';
+      process2way();
+    });
+
+    mode3Btn.addEventListener('click', function() {
+      if (mode === '3way') return;
+      mode = '3way';
+      mode3Btn.classList.add('active');
+      mode2Btn.classList.remove('active');
+      inputs2El.style.display = 'none';
+      inputs3El.style.display = '';
+      statusEl.textContent = t.paste3;
+      statusEl.className = 'tdiff-status';
+      outEl.innerHTML = '<span class="td-ph">' + t.diffPh + '</span>';
+      lastDiffText = '';
+      process3way();
+    });
+
     leftEl.addEventListener('input', process);
     rightEl.addEventListener('input', process);
+    baseEl.addEventListener('input', process);
+    oursEl.addEventListener('input', process);
+    theirsEl.addEventListener('input', process);
 
     copyBtn.addEventListener('click', function () {
       if (!lastDiffText) return;
@@ -348,19 +641,35 @@ const t = {
     });
 
     clearBtn.addEventListener('click', function () {
-      leftEl.value = '';
-      rightEl.value = '';
-      process();
-      leftEl.focus();
+      if (mode === '2way') {
+        leftEl.value = '';
+        rightEl.value = '';
+        process2way();
+        leftEl.focus();
+      } else {
+        baseEl.value = '';
+        oursEl.value = '';
+        theirsEl.value = '';
+        process3way();
+        baseEl.focus();
+      }
     });
 
     window.toolGetPreset = function () {
-      return { left: leftEl.value, right: rightEl.value };
+      return { left: leftEl.value, right: rightEl.value, mode: mode, base: baseEl.value, ours: oursEl.value, theirs: theirsEl.value };
     };
     window.toolSetPreset = function (cfg) {
-      leftEl.value = cfg.left ?? '';
-      rightEl.value = cfg.right ?? '';
-      leftEl.dispatchEvent(new Event('input', { bubbles: true }));
+      if (cfg.mode === '3way') {
+        mode3Btn.click();
+        baseEl.value = cfg.base ?? '';
+        oursEl.value = cfg.ours ?? '';
+        theirsEl.value = cfg.theirs ?? '';
+        baseEl.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        leftEl.value = cfg.left ?? '';
+        rightEl.value = cfg.right ?? '';
+        leftEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
     };
 
     document.addEventListener('keydown', function (e) {

@@ -437,7 +437,8 @@ const t = {
       });
     });
 
-    generate();
+    /* auto-generate on load — deferred so window.pushHistory is defined */
+    requestAnimationFrame(generate);
 
     document.addEventListener('keydown', function (e) {
       var toolEl = document.querySelector('.ug');

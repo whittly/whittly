@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props {
   lang?: 'en' | 'ru';
 }
@@ -276,6 +277,7 @@ const { lang = 'en' } = Astro.props;
 </style>
 
 <PresetsBar toolName="bcrypt" lang={lang} />
+<BatchPanel toolName="bcrypt" lang={lang} />
 <div class="bc" data-lang={lang}>
   <div class="bc-bar">
     <div class="bc-modes">
@@ -636,10 +638,26 @@ const { lang = 'en' } = Astro.props;
   });
 
   (window as any).toolGetPreset = function () {
-    return { password: passwordEl.value };
+    if (mode === 'verify') {
+      return { mode: 'verify', hash: vHashEl.value, password: vPasswordEl.value };
+    }
+    return { mode: 'hash', password: passwordEl.value, cost: cost };
   };
   (window as any).toolSetPreset = function (cfg: any) {
-    passwordEl.value = cfg.password ?? '';
-    passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
+    if (cfg.mode === 'verify') {
+      modeVerBtn.click();
+      vPasswordEl.value = cfg.password ?? '';
+      vHashEl.value = cfg.hash ?? '';
+      updateVerifyBtn();
+    } else {
+      modeHashBtn.click();
+      passwordEl.value = cfg.password ?? '';
+      passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  };
+
+  /* Expose tool name for BatchPanel */
+  (window as any).toolBatchName = function () {
+    return mode === 'verify' ? 'bcrypt-verify' : 'bcrypt';
   };
 </script>

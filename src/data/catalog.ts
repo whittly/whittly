@@ -57,6 +57,13 @@ export const CATALOG: Tool[] = [
   },
   {
     cat: 'convert',
+    icon: 'ti-brand-typescript',
+    name: 'json → typescript',
+    desc: 'generate typescript interfaces from json',
+    new: true,
+  },
+  {
+    cat: 'convert',
     icon: 'ti-markdown',
     name: 'markdown → html',
     desc: 'render with github-flavor extensions',
