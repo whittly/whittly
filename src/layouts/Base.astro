@@ -159,6 +159,78 @@ const catalog = CATALOG.map((t) => ({
     </script>
   </head>
   <body>
+    <!-- Globals: must be defined before <slot /> and component scripts -->
+    <script is:inline define:vars={{ API }}>
+      (function () {
+        var API_URL = API;
+
+        function getJwtPlan() {
+          try {
+            var token = localStorage.getItem('wh_access');
+            if (!token) return null;
+            var payload = JSON.parse(
+              atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+            );
+            return payload.plan || 'free';
+          } catch (e) {
+            return null;
+          }
+        }
+
+        window.whRefreshAuth = function () {
+          var rt = localStorage.getItem('wh_refresh');
+          if (!rt) return Promise.resolve(null);
+          return fetch(API_URL + '/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+          })
+            .then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+            .then(function (data) {
+              if (!data) {
+                localStorage.removeItem('wh_access');
+                localStorage.removeItem('wh_refresh');
+                return null;
+              }
+              localStorage.setItem('wh_access', data.accessToken);
+              localStorage.setItem('wh_refresh', data.refreshToken);
+              return data.accessToken;
+            })
+            .catch(function () {
+              return null;
+            });
+        };
+
+        window.whApi = {
+          getToken: function () {
+            return localStorage.getItem('wh_access') || '';
+          },
+          getPlan: getJwtPlan,
+          fetch: function (path, opts) {
+            opts = opts || {};
+            var doFetch = function (tok) {
+              return fetch(
+                API_URL + path,
+                Object.assign({}, opts, {
+                  headers: Object.assign({}, opts.headers || {}, {
+                    Authorization: 'Bearer ' + tok,
+                  }),
+                })
+              );
+            };
+            return doFetch(localStorage.getItem('wh_access') || '').then(function (r) {
+              if (r.status !== 401 || !window.whRefreshAuth) return r;
+              return window.whRefreshAuth().then(function (t) {
+                return t ? doFetch(t) : r;
+              });
+            });
+          },
+        };
+      })();
+    </script>
+
     <div class="container">
       <nav>
         <a class="logo" href={isRu ? '/ru/' : '/'}>
@@ -243,77 +315,8 @@ const catalog = CATALOG.map((t) => ({
     <CommandPalette isRu={isRu} catalog={catalog} />
     <HistorySidebar isRu={isRu} catalog={catalog} />
 
-    <script is:inline define:vars={{ API }}>
+    <script is:inline>
       (function () {
-        var API_URL = API;
-
-        function getJwtPlan() {
-          try {
-            var token = localStorage.getItem('wh_access');
-            if (!token) return null;
-            var payload = JSON.parse(
-              atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
-            );
-            return payload.plan || 'free';
-          } catch (e) {
-            return null;
-          }
-        }
-
-        /* ─── Auth token refresh ─── */
-        window.whRefreshAuth = function () {
-          var rt = localStorage.getItem('wh_refresh');
-          if (!rt) return Promise.resolve(null);
-          return fetch(API_URL + '/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken: rt }),
-          })
-            .then(function (r) {
-              return r.ok ? r.json() : null;
-            })
-            .then(function (data) {
-              if (!data) {
-                localStorage.removeItem('wh_access');
-                localStorage.removeItem('wh_refresh');
-                return null;
-              }
-              localStorage.setItem('wh_access', data.accessToken);
-              localStorage.setItem('wh_refresh', data.refreshToken);
-              return data.accessToken;
-            })
-            .catch(function () {
-              return null;
-            });
-        };
-
-        /* ─── Global API client ─── */
-        window.whApi = {
-          getToken: function () {
-            return localStorage.getItem('wh_access') || '';
-          },
-          getPlan: getJwtPlan,
-          fetch: function (path, opts) {
-            opts = opts || {};
-            var doFetch = function (tok) {
-              return fetch(
-                API_URL + path,
-                Object.assign({}, opts, {
-                  headers: Object.assign({}, opts.headers || {}, {
-                    Authorization: 'Bearer ' + tok,
-                  }),
-                })
-              );
-            };
-            return doFetch(localStorage.getItem('wh_access') || '').then(function (r) {
-              if (r.status !== 401 || !window.whRefreshAuth) return r;
-              return window.whRefreshAuth().then(function (t) {
-                return t ? doFetch(t) : r;
-              });
-            });
-          },
-        };
-
         /* ─── Account nav ─── */
         var isRu = document.documentElement.lang === 'ru';
         var navAccount = document.getElementById('navAccount');
