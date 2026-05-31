@@ -197,8 +197,11 @@ import '../../styles/premium.css';
     return active?.dataset.period === 'yr' ? 'annual' : 'monthly';
   }
 
+  const whApi = (window as unknown as { whApi: { getPlan: () => string; fetch: typeof fetch } })
+    .whApi;
+
   function initProButton() {
-    const plan = window.whApi?.getPlan?.();
+    const plan = whApi?.getPlan?.();
     if (plan === 'pro' || plan === 'api') {
       proBtn.textContent = 'уже активен ✓';
       proBtn.disabled = true;
@@ -216,7 +219,7 @@ import '../../styles/premium.css';
   }
 
   proBtn.addEventListener('click', async () => {
-    const plan = window.whApi?.getPlan?.();
+    const plan = whApi?.getPlan?.();
     if (plan === 'pro' || plan === 'api') return;
     if (!localStorage.getItem('wh_access')) {
       location.href = '/ru/account/login/?next=/ru/premium/';
@@ -226,7 +229,7 @@ import '../../styles/premium.css';
     proBtn.textContent = 'перенаправляю…';
     proHint.textContent = '';
     try {
-      const res = await window.whApi.fetch('/billing/robokassa/init', {
+      const res = await whApi.fetch('/billing/robokassa/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan: 'pro', period: getCurrentPeriod() }),
