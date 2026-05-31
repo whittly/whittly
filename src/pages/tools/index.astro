@@ -75,9 +75,15 @@ const version = pkg.version;
 >
   const PINNED_KEY = 'wh_pinned';
   function getPinned() {
-    try { return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]');
+    } catch {
+      return [];
+    }
   }
-  function setPinned(arr) { localStorage.setItem(PINNED_KEY, JSON.stringify(arr)); }
+  function setPinned(arr) {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(arr));
+  }
 
   function renderPinned() {
     const section = document.getElementById('pinnedSection');
@@ -86,10 +92,15 @@ const version = pkg.version;
     if (!section || !list) return;
     const pinned = getPinned();
     const tools = catalog.filter((t) => pinned.includes(t.slug) && !t.soon);
-    if (!tools.length) { section.style.display = 'none'; return; }
+    if (!tools.length) {
+      section.style.display = 'none';
+      return;
+    }
     section.style.display = '';
     if (countEl) countEl.textContent = tools.length + (tools.length === 1 ? ' tool' : ' tools');
-    list.innerHTML = tools.map((t) => `
+    list.innerHTML = tools
+      .map(
+        (t) => `
       <a class="tool-row" href="/tools/${t.slug}/">
         <i class="ti ${t.icon} icon"></i>
         <div class="body">
@@ -97,7 +108,9 @@ const version = pkg.version;
           <div class="desc">${t.desc}</div>
         </div>
         <button class="tool-pin pinned" data-slug="${t.slug}" type="button" title="Unpin"><i class="ti ti-star-filled"></i></button>
-      </a>`).join('');
+      </a>`
+      )
+      .join('');
   }
 
   document.addEventListener('click', (e) => {
@@ -108,7 +121,8 @@ const version = pkg.version;
     const slug = btn.dataset.slug;
     const pinned = getPinned();
     const idx = pinned.indexOf(slug);
-    if (idx === -1) pinned.push(slug); else pinned.splice(idx, 1);
+    if (idx === -1) pinned.push(slug);
+    else pinned.splice(idx, 1);
     setPinned(pinned);
     renderPinned();
     document.querySelectorAll(`.tool-pin[data-slug="${slug}"]`).forEach((b) => {

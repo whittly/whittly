@@ -579,13 +579,19 @@ const { isRu, catalog } = Astro.props;
             var imported = JSON.parse(e.target.result);
             if (!Array.isArray(imported)) throw new Error('invalid format');
             var existing = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-            var existingTs = new Set(existing.map(function (x) { return x.ts; }));
+            var existingTs = new Set(
+              existing.map(function (x) {
+                return x.ts;
+              })
+            );
             var merged = existing.concat(
               imported.filter(function (item) {
                 return item && item.ts && item.tool && !existingTs.has(item.ts);
               })
             );
-            merged.sort(function (a, b) { return b.ts - a.ts; });
+            merged.sort(function (a, b) {
+              return b.ts - a.ts;
+            });
             merged = merged.slice(0, HIST_MAX);
             localStorage.setItem(HIST_KEY, JSON.stringify(merged));
             renderHistory();

@@ -89,9 +89,15 @@ const version = pkg.version;
 >
   const PINNED_KEY = 'wh_pinned';
   function getPinned() {
-    try { return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]');
+    } catch {
+      return [];
+    }
   }
-  function setPinned(arr) { localStorage.setItem(PINNED_KEY, JSON.stringify(arr)); }
+  function setPinned(arr) {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(arr));
+  }
 
   function renderPinned() {
     const section = document.getElementById('pinnedSection');
@@ -100,10 +106,18 @@ const version = pkg.version;
     if (!section || !list) return;
     const pinned = getPinned();
     const tools = catalog.filter((t) => pinned.includes(t.slug) && !t.soon);
-    if (!tools.length) { section.style.display = 'none'; return; }
+    if (!tools.length) {
+      section.style.display = 'none';
+      return;
+    }
     section.style.display = '';
-    if (countEl) countEl.textContent = tools.length + (tools.length === 1 ? ' инструмент' : tools.length < 5 ? ' инструмента' : ' инструментов');
-    list.innerHTML = tools.map((t) => `
+    if (countEl)
+      countEl.textContent =
+        tools.length +
+        (tools.length === 1 ? ' инструмент' : tools.length < 5 ? ' инструмента' : ' инструментов');
+    list.innerHTML = tools
+      .map(
+        (t) => `
       <a class="tool-row" href="/ru/tools/${t.slug}/">
         <i class="ti ${t.icon} icon"></i>
         <div class="body">
@@ -111,7 +125,9 @@ const version = pkg.version;
           <div class="desc">${descRu[t.name] || t.desc}</div>
         </div>
         <button class="tool-pin pinned" data-slug="${t.slug}" type="button" title="Открепить"><i class="ti ti-star-filled"></i></button>
-      </a>`).join('');
+      </a>`
+      )
+      .join('');
   }
 
   document.addEventListener('click', (e) => {
@@ -122,7 +138,8 @@ const version = pkg.version;
     const slug = btn.dataset.slug;
     const pinned = getPinned();
     const idx = pinned.indexOf(slug);
-    if (idx === -1) pinned.push(slug); else pinned.splice(idx, 1);
+    if (idx === -1) pinned.push(slug);
+    else pinned.splice(idx, 1);
     setPinned(pinned);
     renderPinned();
     document.querySelectorAll(`.tool-pin[data-slug="${slug}"]`).forEach((b) => {
@@ -223,12 +240,17 @@ const version = pkg.version;
           .join('');
 
         const toolCount = tools.length;
-        const mod10 = toolCount % 10, mod100 = toolCount % 100;
-        const countLabel = toolCount + (
-          (mod100 >= 11 && mod100 <= 14) ? ' инструментов' :
-          mod10 === 1 ? ' инструмент' :
-          (mod10 >= 2 && mod10 <= 4) ? ' инструмента' : ' инструментов'
-        );
+        const mod10 = toolCount % 10,
+          mod100 = toolCount % 100;
+        const countLabel =
+          toolCount +
+          (mod100 >= 11 && mod100 <= 14
+            ? ' инструментов'
+            : mod10 === 1
+              ? ' инструмент'
+              : mod10 >= 2 && mod10 <= 4
+                ? ' инструмента'
+                : ' инструментов');
 
         return `
         <section class="cat-section">

@@ -5,7 +5,7 @@ import { CATALOG, toolSlug } from '../../../data/catalog';
 import { toolNameRu } from '../../../data/ru';
 
 const catalogMap = Object.fromEntries(
-  CATALOG.map((t) => [toolSlug(t), { name: toolNameRu[t.name] || t.name, icon: t.icon }]),
+  CATALOG.map((t) => [toolSlug(t), { name: toolNameRu[t.name] || t.name, icon: t.icon }])
 );
 ---
 
@@ -187,11 +187,7 @@ const catalogMap = Object.fromEntries(
         var head = document.createElement('div');
         head.className = 'ac-preset-group-head';
         head.innerHTML =
-          '<i class="ti ' +
-          toolInfo.icon +
-          '"></i><span>' +
-          toolInfo.name +
-          '</span>';
+          '<i class="ti ' + toolInfo.icon + '"></i><span>' + toolInfo.name + '</span>';
         group.appendChild(head);
 
         groups[toolSlug].forEach(function (p) {
