@@ -155,6 +155,7 @@ const version = pkg.version;
   }
 
   function render() {
+    const _pinned = getPinned();
     const filtered = catalog.filter((t) => {
       const matchesCat = activeCat === 'all' || t.cat === activeCat;
       const q = query.toLowerCase().trim();
@@ -202,7 +203,7 @@ const version = pkg.version;
             <div class="name">${t.name}${t.new ? '<span class="new">new</span>' : ''}</div>
             <div class="desc">${t.desc}</div>
           </div>
-          <button class="tool-pin${getPinned().includes(t.slug) ? ' pinned' : ''}" data-slug="${t.slug}" type="button" title="Pin"><i class="ti ti-star${getPinned().includes(t.slug) ? '-filled' : ''}"></i></button>
+          <button class="tool-pin${_pinned.includes(t.slug) ? ' pinned' : ''}" data-slug="${t.slug}" type="button" title="Pin"><i class="ti ti-star${_pinned.includes(t.slug) ? '-filled' : ''}"></i></button>
         </a>
       `
           )

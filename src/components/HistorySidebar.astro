@@ -450,6 +450,8 @@ const { isRu, catalog } = Astro.props;
       return Math.floor(h / 24) + 'd ago';
     }
 
+    var previewCache = {};
+
     function renderHistory() {
       var list = document.getElementById('histList');
       if (!list) return;
@@ -469,6 +471,7 @@ const { isRu, catalog } = Astro.props;
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
         }
+        previewCache = {};
         list.innerHTML = entries
           .map(function (e) {
             var preview = e.inputPreview || e.input || '';
@@ -485,7 +488,15 @@ const { isRu, catalog } = Astro.props;
               });
               if (hit) toolPath = (isRu ? '/ru/tools/' : '/tools/') + hit.slug + '/';
             }
-            var hasLink = !!(toolPath && (e.hasInput || e.input));
+            if (!toolPath && e.tool) {
+              var slug = e.tool
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+            }
+            var hasLink = !!(toolPath && (e.hasInput || e.input || e.inputPreview));
+            if (hasLink && preview) previewCache[e.ts] = preview;
             var inputHtml = safePreview
               ? '<span class="hist-row-input">' + safePreview + '</span>'
               : '';
@@ -557,7 +568,11 @@ const { isRu, catalog } = Astro.props;
         var path = row.dataset.path;
         var ts = row.dataset.ts;
         if (!path) return;
-        if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+        if (ts) {
+          sessionStorage.setItem('wh_restore_ts', ts);
+          var preview = previewCache[ts];
+          if (preview) sessionStorage.setItem('wh_restore_preview', preview);
+        }
         window.location.href = path;
       });
 
@@ -686,14 +701,17 @@ const { isRu, catalog } = Astro.props;
 
     /* ─── Restore input from history (IndexedDB) ─── */
     var _restoreTs = sessionStorage.getItem('wh_restore_ts');
+    var _restorePreview = sessionStorage.getItem('wh_restore_preview');
     if (_restoreTs) {
       sessionStorage.removeItem('wh_restore_ts');
+      sessionStorage.removeItem('wh_restore_preview');
       setTimeout(function () {
         dbGetInput(Number(_restoreTs), function (input) {
-          if (!input) return;
-          var textToRestore = input;
+          var raw = input || _restorePreview || '';
+          if (!raw) return;
+          var textToRestore = raw;
           try {
-            var _p = JSON.parse(input);
+            var _p = JSON.parse(raw);
             if (_p && typeof _p.t === 'string') textToRestore = _p.t;
           } catch {}
           var el = document.querySelector('[data-hist-main-input]');

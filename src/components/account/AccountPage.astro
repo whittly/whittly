@@ -385,12 +385,33 @@ const catalogForPinned = Object.fromEntries(
             }
             acRecentListEl.innerHTML = histEntries
               .map(function (e) {
-                var hasLink = !!(e.path && e.hasInput);
+                var toolPath = e.path;
+                if (!toolPath && e.tool) {
+                  var slug = e.tool
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                  toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+                }
+                var entryPreview = e.inputPreview || e.input || '';
+                try {
+                  var _ep = JSON.parse(entryPreview);
+                  if (_ep && typeof _ep.t === 'string') entryPreview = _ep.t;
+                } catch {}
+                var hasLink = !!(toolPath && (e.hasInput || e.input || e.inputPreview));
                 return (
                   '<div class="ac-hist-row' +
                   (hasLink ? ' ac-hist-row-link' : '') +
                   '"' +
-                  (hasLink ? ' data-path="' + esc(e.path) + '" data-ts="' + esc(e.ts) + '"' : '') +
+                  (hasLink
+                    ? ' data-path="' +
+                      esc(toolPath) +
+                      '" data-ts="' +
+                      esc(e.ts) +
+                      '" data-preview="' +
+                      esc(entryPreview) +
+                      '"'
+                    : '') +
                   '>' +
                   '<span class="ac-hist-tool">' +
                   esc(e.tool) +
@@ -415,7 +436,11 @@ const catalogForPinned = Object.fromEntries(
               var path = row.dataset.path;
               var ts = row.dataset.ts;
               if (!path) return;
-              if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+              if (ts) {
+                sessionStorage.setItem('wh_restore_ts', ts);
+                var preview = row.dataset.preview;
+                if (preview) sessionStorage.setItem('wh_restore_preview', preview);
+              }
               window.location.href = path;
             });
           }

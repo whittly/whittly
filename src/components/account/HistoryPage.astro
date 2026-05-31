@@ -315,17 +315,33 @@ const isRu = lang === 'ru';
 
       listEl.innerHTML = entries
         .map(function (e) {
-          var hasLink = !!(e.path && e.hasInput);
+          var toolPath = e.path;
+          if (!toolPath && e.tool) {
+            var slug = e.tool
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+            toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+          }
           var preview = e.inputPreview || e.input || '';
           try {
             var _pp = JSON.parse(preview);
             if (_pp && typeof _pp.t === 'string') preview = _pp.t;
           } catch {}
+          var hasLink = !!(toolPath && (e.hasInput || e.input || e.inputPreview));
           return (
             '<div class="hp-entry' +
             (hasLink ? ' hp-entry-link' : '') +
             '"' +
-            (hasLink ? ' data-path="' + esc(e.path) + '" data-ts="' + esc(e.ts) + '"' : '') +
+            (hasLink
+              ? ' data-path="' +
+                esc(toolPath) +
+                '" data-ts="' +
+                esc(e.ts) +
+                '" data-preview="' +
+                esc(preview) +
+                '"'
+              : '') +
             '>' +
             '<div class="hp-entry-main">' +
             '<div class="hp-entry-meta">' +
@@ -367,7 +383,11 @@ const isRu = lang === 'ru';
       var path = entry.dataset.path;
       var ts = entry.dataset.ts;
       if (!path) return;
-      if (ts) sessionStorage.setItem('wh_restore_ts', ts);
+      if (ts) {
+        sessionStorage.setItem('wh_restore_ts', ts);
+        var preview = entry.dataset.preview;
+        if (preview) sessionStorage.setItem('wh_restore_preview', preview);
+      }
       window.location.href = path;
     });
 
