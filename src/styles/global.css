@@ -301,10 +301,40 @@ footer {
   margin-top: 64px;
   border-top: 0.5px solid var(--line);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0;
   font-size: 13px;
   color: var(--ink-faint);
+}
+
+.footer-row-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-row-legal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 0.5px dashed var(--line);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+
+.footer-legal-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-legal-name {
+  color: var(--ink-faint);
+  border-right: 0.5px solid var(--line-strong);
+  padding-right: 16px;
 }
 
 footer .meta {
@@ -359,6 +389,21 @@ footer .by:hover {
   footer {
     flex-direction: column;
     gap: 8px;
+  }
+  .footer-row-main {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .footer-row-legal {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .footer-legal-links {
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
   }
 }
 

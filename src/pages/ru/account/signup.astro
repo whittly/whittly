@@ -45,6 +45,14 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
           />
         </div>
 
+        <label class="ac-consent">
+          <input type="checkbox" id="consentBox" />
+          <span>
+            принимаю <a href="/ru/oferta/" target="_blank">публичную оферту</a> и даю согласие на
+            <a href="/ru/privacy/" target="_blank">обработку персональных данных</a>
+          </span>
+        </label>
+
         <button class="ac-btn" id="submitBtn">создать аккаунт</button>
 
         <div class="ac-footer-row">
@@ -64,6 +72,7 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
     var emailEl = document.getElementById('email');
     var passEl = document.getElementById('password');
+    var consentEl = document.getElementById('consentBox');
     var submitEl = document.getElementById('submitBtn');
     var errEl = document.getElementById('errMsg');
 
@@ -82,6 +91,10 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
       }
       if (password.length < 8) {
         showError('пароль должен содержать минимум 8 символов');
+        return;
+      }
+      if (!consentEl.checked) {
+        showError('необходимо принять оферту и согласие на обработку данных');
         return;
       }
 

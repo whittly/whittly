@@ -250,6 +250,38 @@
   font-style: normal;
 }
 
+.ac-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.ac-consent input[type='checkbox'] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ac-consent span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.6;
+}
+
+.ac-consent a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.ac-consent a:hover {
+  text-decoration: underline;
+}
+
 .ac-error-msg {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;

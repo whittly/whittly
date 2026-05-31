@@ -277,38 +277,48 @@ const catalog = CATALOG.map((t) => ({
       <slot />
 
       <footer>
-        <span
-          >{
-            isRu
-              ? 'сделано с заботой о разработчиках · '
-              : 'made with care for fellow developers · '
-          }<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener"
-            >popelyshko.com</a
-          ></span
-        >
-        <nav class="footer-nav">
-          <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link"
-            >{isRu ? 'инструменты' : 'tools'}</a
+        <div class="footer-row-main">
+          <span
+            >{
+              isRu
+                ? 'сделано с заботой о разработчиках · '
+                : 'made with care for fellow developers · '
+            }<a class="by" href="https://popelyshko.com" target="_blank" rel="noopener"
+              >popelyshko.com</a
+            ></span
           >
-          <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link"
-            >{isRu ? 'о проекте' : 'about'}</a
+          <nav class="footer-nav">
+            <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link"
+              >{isRu ? 'инструменты' : 'tools'}</a
+            >
+            <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link"
+              >{isRu ? 'о проекте' : 'about'}</a
+            >
+            <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
+            <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link"
+              >{isRu ? 'конфиденциальность' : 'privacy'}</a
+            >
+            <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link"
+              >{isRu ? 'условия' : 'terms'}</a
+            >
+          </nav>
+          <span class="meta"
+            >v{version}{buildDate ? ` · ${buildDate}` : ''} · <a
+              href="https://github.com/whittly"
+              target="_blank"
+              rel="noopener"
+              class="meta-link">github ↗</a
+            ></span
           >
-          <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
-          <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link"
-            >{isRu ? 'конфиденциальность' : 'privacy'}</a
-          >
-          <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link"
-            >{isRu ? 'условия' : 'terms'}</a
-          >
-        </nav>
-        <span class="meta"
-          >v{version}{buildDate ? ` · ${buildDate}` : ''} · <a
-            href="https://github.com/whittly"
-            target="_blank"
-            rel="noopener"
-            class="meta-link">github ↗</a
-          ></span
-        >
+        </div>
+        <div class="footer-row-legal">
+          <div class="footer-legal-links">
+            <span class="footer-legal-name">Попелышко Дмитрий Иванович · ИНН 402906501480</span>
+            <a href="/ru/oferta/" class="meta-link">публичная оферта</a>
+            <a href="/ru/privacy/" class="meta-link">политика конфиденциальности</a>
+          </div>
+          <a href="mailto:support@whittly.dev" class="meta-link">support</a>
+        </div>
       </footer>
     </div>
 

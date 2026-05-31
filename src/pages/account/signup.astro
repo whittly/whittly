@@ -45,6 +45,14 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
           />
         </div>
 
+        <label class="ac-consent">
+          <input type="checkbox" id="consentBox" />
+          <span>
+            I agree to the <a href="/terms/" target="_blank">terms of service</a> and
+            <a href="/privacy/" target="_blank">privacy policy</a>
+          </span>
+        </label>
+
         <button class="ac-btn" id="submitBtn">create account</button>
 
         <div class="ac-footer-row">
@@ -64,6 +72,7 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
     var emailEl = document.getElementById('email');
     var passEl = document.getElementById('password');
+    var consentEl = document.getElementById('consentBox');
     var submitEl = document.getElementById('submitBtn');
     var errEl = document.getElementById('errMsg');
 
@@ -82,6 +91,10 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
       }
       if (password.length < 8) {
         showError('password must be at least 8 characters');
+        return;
+      }
+      if (!consentEl.checked) {
+        showError('please accept the terms and privacy policy');
         return;
       }
 
