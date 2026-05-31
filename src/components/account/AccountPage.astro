@@ -276,13 +276,13 @@ const isRu = lang === 'ru';
               (pCount === 1 ? '' : pCount < 5 ? 'а' : 'ов') +
               ' в разных инструментах';
             presetsArrowEl.innerHTML =
-              '<a href="/ru/tools/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">смотреть →</a>';
+              '<a href="/ru/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">смотреть →</a>';
           } else {
             statPreEl.textContent = pCount + ' saved';
             descPreEl.textContent =
               pCount + ' preset' + (pCount === 1 ? '' : 's') + ' across all tools';
             presetsArrowEl.innerHTML =
-              '<a href="/tools/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">manage in tools →</a>';
+              '<a href="/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">manage →</a>';
           }
         }
 

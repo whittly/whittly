@@ -51,6 +51,16 @@ const version = pkg.version;
     </div>
   </div>
 
+  <div id="pinnedSection" style="display:none">
+    <section class="cat-section" id="pinnedCat">
+      <div class="cat-head">
+        <span class="cat-name">pinned</span>
+        <span class="cat-count" id="pinnedCount"></span>
+      </div>
+      <div class="tool-list" id="pinnedList"></div>
+    </section>
+  </div>
+
   <div id="catalog"></div>
 
   <div class="empty" id="empty" style="display:none;">
@@ -63,6 +73,51 @@ const version = pkg.version;
   is:inline
   define:vars={{ catalog: catalogWithSlugs, catMeta: CAT_META, catOrder: CAT_ORDER }}
 >
+  const PINNED_KEY = 'wh_pinned';
+  function getPinned() {
+    try { return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]'); } catch { return []; }
+  }
+  function setPinned(arr) { localStorage.setItem(PINNED_KEY, JSON.stringify(arr)); }
+
+  function renderPinned() {
+    const section = document.getElementById('pinnedSection');
+    const list = document.getElementById('pinnedList');
+    const countEl = document.getElementById('pinnedCount');
+    if (!section || !list) return;
+    const pinned = getPinned();
+    const tools = catalog.filter((t) => pinned.includes(t.slug) && !t.soon);
+    if (!tools.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    if (countEl) countEl.textContent = tools.length + (tools.length === 1 ? ' tool' : ' tools');
+    list.innerHTML = tools.map((t) => `
+      <a class="tool-row" href="/tools/${t.slug}/">
+        <i class="ti ${t.icon} icon"></i>
+        <div class="body">
+          <div class="name">${t.name}${t.new ? '<span class="new">new</span>' : ''}</div>
+          <div class="desc">${t.desc}</div>
+        </div>
+        <button class="tool-pin pinned" data-slug="${t.slug}" type="button" title="Unpin"><i class="ti ti-star-filled"></i></button>
+      </a>`).join('');
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tool-pin');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = btn.dataset.slug;
+    const pinned = getPinned();
+    const idx = pinned.indexOf(slug);
+    if (idx === -1) pinned.push(slug); else pinned.splice(idx, 1);
+    setPinned(pinned);
+    renderPinned();
+    document.querySelectorAll(`.tool-pin[data-slug="${slug}"]`).forEach((b) => {
+      const p = pinned.includes(slug);
+      b.classList.toggle('pinned', p);
+      b.innerHTML = `<i class="ti ti-star${p ? '-filled' : ''}"></i>`;
+    });
+  });
+
   const catalogEl = document.getElementById('catalog');
   const emptyEl = document.getElementById('empty');
   const searchInput = document.getElementById('toolSearch');
@@ -133,6 +188,7 @@ const version = pkg.version;
             <div class="name">${t.name}${t.new ? '<span class="new">new</span>' : ''}</div>
             <div class="desc">${t.desc}</div>
           </div>
+          <button class="tool-pin${getPinned().includes(t.slug) ? ' pinned' : ''}" data-slug="${t.slug}" type="button" title="Pin"><i class="ti ti-star${getPinned().includes(t.slug) ? '-filled' : ''}"></i></button>
         </a>
       `
           )
@@ -184,4 +240,5 @@ const version = pkg.version;
   });
 
   render();
+  renderPinned();
 </script>

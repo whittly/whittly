@@ -293,6 +293,15 @@ const { isRu, catalog } = Astro.props;
     <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
     <button
       class="hist-export"
+      id="histImport"
+      type="button"
+      title={isRu ? 'импорт истории' : 'import history'}
+      style="display:none"
+    >
+      <i class="ti ti-upload"></i>
+    </button>
+    <button
+      class="hist-export"
       id="histExport"
       type="button"
       title={isRu ? 'экспорт истории' : 'export history'}
@@ -300,6 +309,7 @@ const { isRu, catalog } = Astro.props;
     >
       <i class="ti ti-download"></i>
     </button>
+    <input type="file" id="histImportFile" accept=".json" style="display:none" />
     <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
   </div>
   <div class="hist-pro" id="histPro">
@@ -380,7 +390,7 @@ const { isRu, catalog } = Astro.props;
     /* ─── History ─── */
     var HIST_KEY = 'wh_hist';
     var _isPro = window.whApi.getPlan() === 'pro' || window.whApi.getPlan() === 'api';
-    var HIST_MAX = _isPro ? 500 : 15;
+    var HIST_MAX = _isPro ? 500 : 5;
 
     window.pushHistory = function (tool, summary, input) {
       try {
@@ -552,9 +562,52 @@ const { isRu, catalog } = Astro.props;
         openHist(false);
       });
 
-    /* ─── Export history (Pro) ─── */
+    /* ─── Import history ─── */
+    var histImportBtn = document.getElementById('histImport');
+    var histImportFile = document.getElementById('histImportFile');
+    if (histImportBtn) {
+      histImportBtn.style.display = '';
+      histImportBtn.addEventListener('click', function () {
+        histImportFile.click();
+      });
+      histImportFile.addEventListener('change', function () {
+        var file = histImportFile.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            var imported = JSON.parse(e.target.result);
+            if (!Array.isArray(imported)) throw new Error('invalid format');
+            var existing = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+            var existingTs = new Set(existing.map(function (x) { return x.ts; }));
+            var merged = existing.concat(
+              imported.filter(function (item) {
+                return item && item.ts && item.tool && !existingTs.has(item.ts);
+              })
+            );
+            merged.sort(function (a, b) { return b.ts - a.ts; });
+            merged = merged.slice(0, HIST_MAX);
+            localStorage.setItem(HIST_KEY, JSON.stringify(merged));
+            renderHistory();
+            histImportBtn.innerHTML = '<i class="ti ti-check"></i>';
+            setTimeout(function () {
+              histImportBtn.innerHTML = '<i class="ti ti-upload"></i>';
+            }, 2000);
+          } catch {
+            histImportBtn.innerHTML = '<i class="ti ti-alert-triangle"></i>';
+            setTimeout(function () {
+              histImportBtn.innerHTML = '<i class="ti ti-upload"></i>';
+            }, 2000);
+          }
+          histImportFile.value = '';
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    /* ─── Export history ─── */
     var histExportBtn = document.getElementById('histExport');
-    if (histExportBtn && _isPro) {
+    if (histExportBtn) {
       histExportBtn.style.display = '';
       histExportBtn.addEventListener('click', function () {
         var entries = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');

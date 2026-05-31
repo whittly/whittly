@@ -1,0 +1,238 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/account.css';
+import { CATALOG, toolSlug } from '../../data/catalog';
+
+const catalogMap = Object.fromEntries(
+  CATALOG.map((t) => [toolSlug(t), { name: t.name, icon: t.icon }]),
+);
+---
+
+<Base title="presets — whittly">
+  <div class="ac-page">
+    <div class="ac-loading" id="acLoading">
+      <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
+      loading…
+    </div>
+
+    <div id="acContent" style="display:none">
+      <div class="ac-header">
+        <div>
+          <div class="ac-breadcrumb">
+            <a href="/account/">account</a>
+            <span class="sep">/</span>
+            <span>presets</span>
+          </div>
+          <h1 style="font-size:24px; margin:0;">Saved presets</h1>
+        </div>
+        <button class="ac-btn-ghost" id="signOutBtn">
+          <i class="ti ti-logout"></i>
+          sign out
+        </button>
+      </div>
+
+      <div class="ac-presets-list" id="presetsList"></div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ac-presets-empty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    padding: 32px 0;
+    text-align: center;
+  }
+
+  .ac-preset-group {
+    margin-bottom: 28px;
+  }
+
+  .ac-preset-group-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 10px;
+    border-bottom: 0.5px solid var(--line);
+    margin-bottom: 2px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .ac-preset-group-head i {
+    color: var(--accent);
+    font-size: 16px;
+  }
+
+  .ac-preset-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+
+  .ac-preset-row:last-child {
+    border-bottom: none;
+  }
+
+  .ac-preset-name {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .ac-preset-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .ac-preset-open {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.12s;
+  }
+
+  .ac-preset-open:hover {
+    opacity: 0.7;
+  }
+</style>
+
+<script is:inline define:vars={{ catalogMap }}>
+  (function () {
+    if (!localStorage.getItem('wh_access')) {
+      location.replace('/account/login/');
+      return;
+    }
+
+    var loadingEl = document.getElementById('acLoading');
+    var contentEl = document.getElementById('acContent');
+    var listEl = document.getElementById('presetsList');
+    var signOutBtn = document.getElementById('signOutBtn');
+
+    function logout() {
+      var rt = localStorage.getItem('wh_refresh');
+      if (rt)
+        window.whApi
+          .fetch('/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+          })
+          .catch(function () {});
+      localStorage.removeItem('wh_access');
+      localStorage.removeItem('wh_refresh');
+      localStorage.removeItem('wh_user');
+      location.replace('/account/login/');
+    }
+
+    signOutBtn.addEventListener('click', logout);
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+
+    async function loadPresets() {
+      var res = await window.whApi.fetch('/user/presets');
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      var data = await res.json();
+      var presets = data.presets || [];
+
+      listEl.innerHTML = '';
+
+      if (!presets.length) {
+        var empty = document.createElement('div');
+        empty.className = 'ac-presets-empty';
+        empty.textContent = 'no presets yet — save a configuration in any tool';
+        listEl.appendChild(empty);
+        loadingEl.style.display = 'none';
+        contentEl.style.display = '';
+        return;
+      }
+
+      var groups = {};
+      presets.forEach(function (p) {
+        if (!groups[p.tool]) groups[p.tool] = [];
+        groups[p.tool].push(p);
+      });
+
+      Object.keys(groups).forEach(function (slug) {
+        var toolInfo = catalogMap[slug] || { name: slug, icon: 'ti-tool' };
+        var group = document.createElement('div');
+        group.className = 'ac-preset-group';
+
+        var head = document.createElement('div');
+        head.className = 'ac-preset-group-head';
+        head.innerHTML =
+          '<i class="ti ' + toolInfo.icon + '"></i><span>' + toolInfo.name + '</span>';
+        group.appendChild(head);
+
+        groups[slug].forEach(function (p) {
+          var row = document.createElement('div');
+          row.className = 'ac-preset-row';
+
+          var name = document.createElement('span');
+          name.className = 'ac-preset-name';
+          name.textContent = p.name;
+
+          var date = document.createElement('span');
+          date.className = 'ac-preset-date';
+          date.textContent = formatDate(p.updatedAt || p.createdAt);
+
+          var open = document.createElement('a');
+          open.className = 'ac-preset-open';
+          open.href = '/tools/' + slug + '/';
+          open.textContent = 'open →';
+
+          var del = document.createElement('button');
+          del.className = 'ac-btn-danger';
+          del.textContent = 'delete';
+          del.addEventListener('click', async function () {
+            if (!confirm('Delete preset "' + p.name + '"?')) return;
+            var r = await window.whApi.fetch('/user/presets/' + p.id, { method: 'DELETE' });
+            if (r && r.ok) {
+              row.remove();
+              if (!group.querySelector('.ac-preset-row')) group.remove();
+            }
+          });
+
+          row.appendChild(name);
+          row.appendChild(date);
+          row.appendChild(open);
+          row.appendChild(del);
+          group.appendChild(row);
+        });
+
+        listEl.appendChild(group);
+      });
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = '';
+    }
+
+    loadPresets().catch(function () {
+      loadingEl.innerHTML = '<span style="color:var(--bad)">// failed to load</span>';
+    });
+  })();
+</script>
