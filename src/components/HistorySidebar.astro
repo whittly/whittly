@@ -676,6 +676,7 @@ const { isRu, catalog } = Astro.props;
             });
             var localEntries = data.entries.map(function (e) {
               return {
+                id: e.id,
                 tool: e.tool,
                 summary: e.summary,
                 inputPreview: (e.input || '').slice(0, 300),

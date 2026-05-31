@@ -397,11 +397,28 @@ const isRu = lang === 'ru';
       if (!btn) return;
       ev.stopPropagation();
       var ts = Number(btn.dataset.ts);
-      var entries = getEntries().filter(function (e) {
-        return e.ts !== ts;
+      var all = getEntries();
+      var entry = all.find(function (e) {
+        return e.ts === ts;
       });
-      localStorage.setItem(HIST_KEY, JSON.stringify(entries));
+      localStorage.setItem(
+        HIST_KEY,
+        JSON.stringify(
+          all.filter(function (e) {
+            return e.ts !== ts;
+          })
+        )
+      );
       dbDelete(ts);
+      // Pro: delete from server to prevent cloud sync restoring the entry
+      if (entry && entry.id && window.whApi) {
+        var plan = window.whApi.getPlan();
+        if (plan === 'pro' || plan === 'api') {
+          window.whApi
+            .fetch('/user/history/' + entry.id, { method: 'DELETE' })
+            .catch(function () {});
+        }
+      }
       render();
     });
 
