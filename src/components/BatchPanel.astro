@@ -378,7 +378,11 @@ const ph = placeholder ?? (isRu ? 'один элемент на строку…'
           body: JSON.stringify({ tool: effectiveTool, items: lines, options: opts }),
         })
         .then(function (r) {
-          return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.error || 'server error'); });
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
         })
         .then(function (data) {
           renderResults(lines, data.results);

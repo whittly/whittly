@@ -14,7 +14,9 @@ const t = {
   copied: isRu ? 'скопировано' : 'copied',
   clear: isRu ? 'очистить' : 'clear',
   phInput: isRu ? 'вставьте JSON…' : 'paste JSON here…',
-  phOutput: isRu ? '// TypeScript интерфейсы появятся здесь' : '// TypeScript interfaces appear here',
+  phOutput: isRu
+    ? '// TypeScript интерфейсы появятся здесь'
+    : '// TypeScript interfaces appear here',
   validPrefix: isRu ? 'верно' : 'valid',
   interfaces: isRu ? 'интерф.' : 'interfaces',
   interface1: isRu ? 'интерф.' : 'interface',
@@ -78,8 +80,12 @@ const t = {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .jts-status.ok { color: var(--good); }
-  .jts-status.err { color: var(--bad); }
+  .jts-status.ok {
+    color: var(--good);
+  }
+  .jts-status.err {
+    color: var(--bad);
+  }
 
   .jts-action {
     font-family: 'JetBrains Mono', monospace;
@@ -95,8 +101,14 @@ const t = {
     align-items: center;
     gap: 5px;
   }
-  .jts-action:hover { color: var(--ink); border-color: var(--line-strong); }
-  .jts-action.done { color: var(--good); border-color: var(--good); }
+  .jts-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jts-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   .jts-panels {
     display: grid;
@@ -145,10 +157,18 @@ const t = {
     color: var(--ink-soft);
   }
 
-  .jts-out .ts-kw { color: var(--accent); }
-  .jts-out .ts-type { color: oklch(55% 0.16 300); }
-  .jts-out .ts-prim { color: var(--good); }
-  .jts-out .ts-ph { color: var(--ink-faint); }
+  .jts-out .ts-kw {
+    color: var(--accent);
+  }
+  .jts-out .ts-type {
+    color: oklch(55% 0.16 300);
+  }
+  .jts-out .ts-prim {
+    color: var(--good);
+  }
+  .jts-out .ts-ph {
+    color: var(--ink-faint);
+  }
 
   @media (max-width: 760px) {
     .jts-panels {
@@ -173,12 +193,23 @@ const t = {
   <div class="jts-bar">
     <div class="jts-root-wrap">
       <span class="jts-root-label">{t.rootName}:</span>
-      <input class="jts-root-input" id="jtsRootName" type="text" value="Root" spellcheck="false" autocomplete="off" />
+      <input
+        class="jts-root-input"
+        id="jtsRootName"
+        type="text"
+        value="Root"
+        spellcheck="false"
+        autocomplete="off"
+      />
     </div>
     <span class="jts-status" id="jtsStatus">{t.statusEmpty}</span>
     <span class="local-badge">// client-only</span>
-    <button class="jts-action" id="jtsCopy"><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button>
-    <button class="jts-action" id="jtsClear"><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button>
+    <button class="jts-action" id="jtsCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="jts-action" id="jtsClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
   </div>
   <div class="jts-panels">
     <textarea
@@ -186,8 +217,7 @@ const t = {
       id="jtsInput"
       data-hist-main-input
       spellcheck="false"
-      placeholder={t.phInput}
-    ></textarea>
+      placeholder={t.phInput}></textarea>
     <div class="jts-vsep"></div>
     <div class="jts-out-wrap">
       <pre class="jts-out" id="jtsOut"><span class="ts-ph">{t.phOutput}</span></pre>
@@ -218,17 +248,25 @@ const t = {
         return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
       }
       function toPascal(key) {
-        return key.split(/[\s_\-]+/).map(function(w) {
-          return capitalize(w.replace(/[^a-zA-Z0-9]/g, ''));
-        }).join('').replace(/^[^a-zA-Z]/, '');
+        return key
+          .split(/[\s_\-]+/)
+          .map(function (w) {
+            return capitalize(w.replace(/[^a-zA-Z0-9]/g, ''));
+          })
+          .join('')
+          .replace(/^[^a-zA-Z]/, '');
       }
 
       function tsType(value, key) {
         if (value === null) return 'null';
         if (Array.isArray(value)) {
           if (!value.length) return 'unknown[]';
-          var types = value.map(function(item) { return tsType(item, key); });
-          var unique = types.filter(function(t, i) { return types.indexOf(t) === i; });
+          var types = value.map(function (item) {
+            return tsType(item, key);
+          });
+          var unique = types.filter(function (t, i) {
+            return types.indexOf(t) === i;
+          });
           var inner = unique.length === 1 ? unique[0] : '(' + unique.join(' | ') + ')';
           return inner + '[]';
         }
@@ -243,7 +281,7 @@ const t = {
       function buildInterface(obj, name) {
         if (seen[name]) return;
         seen[name] = true;
-        var fields = Object.keys(obj).map(function(k) {
+        var fields = Object.keys(obj).map(function (k) {
           var v = obj[k];
           var optional = v === null ? '?' : '';
           var type = v === null ? 'string | null' : tsType(v, k);
@@ -254,11 +292,29 @@ const t = {
       }
 
       if (Array.isArray(json)) {
-        if (json.length && typeof json[0] === 'object' && json[0] !== null && !Array.isArray(json[0])) {
+        if (
+          json.length &&
+          typeof json[0] === 'object' &&
+          json[0] !== null &&
+          !Array.isArray(json[0])
+        ) {
           buildInterface(json[0], rootName);
-          return 'type ' + rootName + 'List = ' + rootName + '[];\n\n' + defs.slice().reverse().join('\n\n');
+          return (
+            'type ' +
+            rootName +
+            'List = ' +
+            rootName +
+            '[];\n\n' +
+            defs.slice().reverse().join('\n\n')
+          );
         }
-        return 'type ' + rootName + ' = ' + tsType(json[0] !== undefined ? json[0] : null, 'item') + '[];';
+        return (
+          'type ' +
+          rootName +
+          ' = ' +
+          tsType(json[0] !== undefined ? json[0] : null, 'item') +
+          '[];'
+        );
       }
       if (json !== null && typeof json === 'object') {
         buildInterface(json, rootName);
@@ -271,26 +327,34 @@ const t = {
 
     function highlightTs(code) {
       var lines = code.split('\n');
-      return lines.map(function(line) {
-        // Simple token-based highlighting
-        var escaped = esc(line);
-        // keywords: interface, type
-        escaped = escaped.replace(/\b(interface|type)\b/g, '<span class="ts-kw">$1</span>');
-        // primitives in type position (after : or = or |)
-        PRIMS.forEach(function(p) {
-          // Match primitive words that appear as types (after colon, pipe, angle bracket, or space)
-          var re = new RegExp('\\b(' + p + ')\\b(?=\\s*[;,\\|\\[\\])]|$)', 'g');
-          escaped = escaped.replace(re, '<span class="ts-prim">$1</span>');
-        });
-        // type names (PascalCase identifiers after : or = or <)
-        escaped = escaped.replace(/(?<=:\s*)([A-Z][a-zA-Z0-9]*)/g, '<span class="ts-type">$1</span>');
-        return escaped;
-      }).join('\n');
+      return lines
+        .map(function (line) {
+          // Simple token-based highlighting
+          var escaped = esc(line);
+          // keywords: interface, type
+          escaped = escaped.replace(/\b(interface|type)\b/g, '<span class="ts-kw">$1</span>');
+          // primitives in type position (after : or = or |)
+          PRIMS.forEach(function (p) {
+            // Match primitive words that appear as types (after colon, pipe, angle bracket, or space)
+            var re = new RegExp('\\b(' + p + ')\\b(?=\\s*[;,\\|\\[\\])]|$)', 'g');
+            escaped = escaped.replace(re, '<span class="ts-prim">$1</span>');
+          });
+          // type names (PascalCase identifiers after : or = or <)
+          escaped = escaped.replace(
+            /(?<=:\s*)([A-Z][a-zA-Z0-9]*)/g,
+            '<span class="ts-type">$1</span>'
+          );
+          return escaped;
+        })
+        .join('\n');
     }
 
     function process() {
       var raw = inputEl.value.trim();
-      var rootName = (rootNameEl.value.trim() || 'Root').replace(/[^a-zA-Z0-9_]/g, '').replace(/^[^a-zA-Z]/, '') || 'Root';
+      var rootName =
+        (rootNameEl.value.trim() || 'Root')
+          .replace(/[^a-zA-Z0-9_]/g, '')
+          .replace(/^[^a-zA-Z]/, '') || 'Root';
 
       inputEl.classList.remove('err');
 
@@ -319,8 +383,14 @@ const t = {
         lastOutput = result;
 
         // Count interfaces/types
-        var ifaceCount = (result.match(/^interface\s/gm) || []).length + (result.match(/^type\s/gm) || []).length;
-        statusEl.textContent = t.validPrefix + ' · ' + ifaceCount + ' ' + (ifaceCount === 1 ? t.interface1 : t.interfaces);
+        var ifaceCount =
+          (result.match(/^interface\s/gm) || []).length + (result.match(/^type\s/gm) || []).length;
+        statusEl.textContent =
+          t.validPrefix +
+          ' · ' +
+          ifaceCount +
+          ' ' +
+          (ifaceCount === 1 ? t.interface1 : t.interfaces);
         statusEl.className = 'jts-status ok';
 
         outEl.innerHTML = highlightTs(result);
@@ -340,26 +410,27 @@ const t = {
     inputEl.addEventListener('input', process);
     rootNameEl.addEventListener('input', process);
 
-    copyBtn.addEventListener('click', function() {
+    copyBtn.addEventListener('click', function () {
       if (!lastOutput) return;
-      navigator.clipboard.writeText(lastOutput).then(function() {
+      navigator.clipboard.writeText(lastOutput).then(function () {
         copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
         copyBtn.classList.add('done');
-        setTimeout(function() {
-          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
           copyBtn.classList.remove('done');
         }, 1600);
       });
     });
 
-    clearBtn.addEventListener('click', function() {
+    clearBtn.addEventListener('click', function () {
       inputEl.value = '';
       rootNameEl.value = 'Root';
       process();
       inputEl.focus();
     });
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
       var toolEl = document.querySelector('.jts');
       if (!toolEl || !toolEl.contains(document.activeElement)) return;
       var pal = document.getElementById('whPalette');
@@ -374,10 +445,10 @@ const t = {
       }
     });
 
-    window.toolGetPreset = function() {
+    window.toolGetPreset = function () {
       return { input: inputEl.value, rootName: rootNameEl.value };
     };
-    window.toolSetPreset = function(cfg) {
+    window.toolSetPreset = function (cfg) {
       if (cfg.input !== undefined) inputEl.value = cfg.input;
       if (cfg.rootName !== undefined) rootNameEl.value = cfg.rootName;
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));

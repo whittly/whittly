@@ -291,7 +291,13 @@ const { isRu, catalog } = Astro.props;
 <div id="whHist" class="hist-sidebar">
   <div class="hist-head">
     <span class="hist-head-title">{isRu ? '// история' : '// history'}</span>
-    <button class="hist-export" id="histExport" type="button" title={isRu ? 'экспорт истории' : 'export history'} style="display:none">
+    <button
+      class="hist-export"
+      id="histExport"
+      type="button"
+      title={isRu ? 'экспорт истории' : 'export history'}
+      style="display:none"
+    >
       <i class="ti ti-download"></i>
     </button>
     <button class="hist-x" id="histClose" type="button"><i class="ti ti-x"></i></button>
@@ -571,7 +577,9 @@ const { isRu, catalog } = Astro.props;
     if (histProEl && (_plan === 'pro' || _plan === 'api')) {
       var planTag = _plan === 'api' ? 'Developer' : 'Pro';
       histProEl.innerHTML =
-        '<span class="hist-pro-tag">' + planTag + '</span><span>' +
+        '<span class="hist-pro-tag">' +
+        planTag +
+        '</span><span>' +
         (isRu ? 'история синхронизируется' : 'history synced') +
         ' <i class="ti ti-cloud-check" style="font-size:12px;vertical-align:middle"></i></span>';
     }

@@ -484,10 +484,18 @@ const jsonLd = {
     background: none;
     color: var(--ink-faint);
     cursor: pointer;
-    transition: color 0.12s, border-color 0.12s;
+    transition:
+      color 0.12s,
+      border-color 0.12s;
   }
-  .tool-share-btn:hover { color: var(--accent); border-color: var(--accent); }
-  .tool-share-btn.done  { color: var(--good); border-color: var(--good); }
+  .tool-share-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .tool-share-btn.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
 
   /* ── Pro hint strip ── */
   .tool-pro-strip {
@@ -628,7 +636,8 @@ const jsonLd = {
             </pre>
             <div class="tool-api-footer">
               <span>
-                {isRu ? 'API доступен на тарифе' : 'API access on'} <a href={ui.proUpgradePath}>{isRu ? 'Developer' : 'Developer plan'}</a>
+                {isRu ? 'API доступен на тарифе' : 'API access on'}{' '}
+                <a href={ui.proUpgradePath}>{isRu ? 'Developer' : 'Developer plan'}</a>
               </span>
               <button class="tool-api-copy" id="toolApiCopy">
                 {isRu ? 'копировать' : 'copy'}
@@ -750,10 +759,13 @@ const jsonLd = {
         var url = location.origin + location.pathname + '?s=' + s;
         navigator.clipboard.writeText(url).then(function () {
           shareBtn.classList.add('done');
-          shareBtn.innerHTML = '<i class="ti ti-check"></i> ' + (isRu ? 'ссылка скопирована' : 'link copied');
+          shareBtn.innerHTML =
+            '<i class="ti ti-check"></i> ' + (isRu ? 'ссылка скопирована' : 'link copied');
           setTimeout(function () {
             shareBtn.classList.remove('done');
-            shareBtn.innerHTML = '<i class="ti ti-share-3"></i> ' + (isRu ? 'поделиться конфигурацией' : 'share configuration');
+            shareBtn.innerHTML =
+              '<i class="ti ti-share-3"></i> ' +
+              (isRu ? 'поделиться конфигурацией' : 'share configuration');
           }, 2000);
           history.replaceState(null, '', url);
         });

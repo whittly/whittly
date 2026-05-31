@@ -188,7 +188,10 @@ const t = {
     cursor: pointer;
     transition: all 0.12s;
   }
-  .tdiff-mode-btn:hover { color: var(--ink); border-color: var(--line-strong); }
+  .tdiff-mode-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
   .tdiff-mode-btn.active {
     background: var(--ink);
     color: var(--bg);
@@ -288,7 +291,8 @@ const t = {
     <div class="tdiff-vsep"></div>
     <div class="tdiff-label-wrap tdiff-label-wrap-3">
       <span class="tdiff-label">{t.theirs}</span>
-      <textarea class="tdiff-in" id="tdTheirs" spellcheck="false" placeholder={t.phTheirs}></textarea>
+      <textarea class="tdiff-in" id="tdTheirs" spellcheck="false" placeholder={t.phTheirs}
+      ></textarea>
     </div>
   </div>
 
@@ -333,11 +337,13 @@ const t = {
         }
       }
       var edits = [];
-      var i = m, j = n;
+      var i = m,
+        j = n;
       while (i > 0 || j > 0) {
         if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
           edits.unshift({ type: 'eq', text: a[i - 1] });
-          i--; j--;
+          i--;
+          j--;
         } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
           edits.unshift({ type: 'add', text: b[j - 1] });
           j--;
@@ -360,10 +366,16 @@ const t = {
         // Produce a sequence of {baseIdx, type, text}
         var result = [];
         var bi = 0;
-        edits.forEach(function(e) {
-          if (e.type === 'eq') { result.push({ bi: bi, type: 'eq', text: e.text }); bi++; }
-          else if (e.type === 'del') { result.push({ bi: bi, type: 'del', text: e.text }); bi++; }
-          else { result.push({ bi: -1, type: 'add', text: e.text }); }
+        edits.forEach(function (e) {
+          if (e.type === 'eq') {
+            result.push({ bi: bi, type: 'eq', text: e.text });
+            bi++;
+          } else if (e.type === 'del') {
+            result.push({ bi: bi, type: 'del', text: e.text });
+            bi++;
+          } else {
+            result.push({ bi: -1, type: 'add', text: e.text });
+          }
         });
         return result;
       }
@@ -379,7 +391,7 @@ const t = {
       var theirsAdds = {}; // bi -> [lines added after this base line]
 
       var prevBi = -1;
-      oMap.forEach(function(e) {
+      oMap.forEach(function (e) {
         if (e.type === 'add') {
           if (!oursAdds[prevBi]) oursAdds[prevBi] = [];
           oursAdds[prevBi].push(e.text);
@@ -390,7 +402,7 @@ const t = {
       });
 
       prevBi = -1;
-      tMap.forEach(function(e) {
+      tMap.forEach(function (e) {
         if (e.type === 'add') {
           if (!theirsAdds[prevBi]) theirsAdds[prevBi] = [];
           theirsAdds[prevBi].push(e.text);
@@ -407,19 +419,29 @@ const t = {
       var oA0 = oursAdds[-1] || [];
       var tA0 = theirsAdds[-1] || [];
       if (oA0.length && !tA0.length) {
-        oA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+        oA0.forEach(function (l) {
+          output.push({ type: 'add', text: l });
+        });
       } else if (tA0.length && !oA0.length) {
-        tA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+        tA0.forEach(function (l) {
+          output.push({ type: 'add', text: l });
+        });
       } else if (oA0.length && tA0.length) {
         var sameAdds = oA0.join('\n') === tA0.join('\n');
         if (sameAdds) {
-          oA0.forEach(function(l) { output.push({ type: 'add', text: l }); });
+          oA0.forEach(function (l) {
+            output.push({ type: 'add', text: l });
+          });
         } else {
           conflicts++;
           output.push({ type: 'conflict', text: '<<<<<<< ours' });
-          oA0.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+          oA0.forEach(function (l) {
+            output.push({ type: 'conflict', text: l });
+          });
           output.push({ type: 'conflict', text: '=======' });
-          tA0.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+          tA0.forEach(function (l) {
+            output.push({ type: 'conflict', text: l });
+          });
           output.push({ type: 'conflict', text: '>>>>>>> theirs' });
         }
       }
@@ -443,19 +465,29 @@ const t = {
 
         // Handle adds from ours and theirs after this base line
         if (oAdds.length && !tAdds.length) {
-          oAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+          oAdds.forEach(function (l) {
+            output.push({ type: 'add', text: l });
+          });
         } else if (tAdds.length && !oAdds.length) {
-          tAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+          tAdds.forEach(function (l) {
+            output.push({ type: 'add', text: l });
+          });
         } else if (oAdds.length && tAdds.length) {
           var sameA = oAdds.join('\n') === tAdds.join('\n');
           if (sameA) {
-            oAdds.forEach(function(l) { output.push({ type: 'add', text: l }); });
+            oAdds.forEach(function (l) {
+              output.push({ type: 'add', text: l });
+            });
           } else {
             conflicts++;
             output.push({ type: 'conflict', text: '<<<<<<< ours' });
-            oAdds.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+            oAdds.forEach(function (l) {
+              output.push({ type: 'conflict', text: l });
+            });
             output.push({ type: 'conflict', text: '=======' });
-            tAdds.forEach(function(l) { output.push({ type: 'conflict', text: l }); });
+            tAdds.forEach(function (l) {
+              output.push({ type: 'conflict', text: l });
+            });
             output.push({ type: 'conflict', text: '>>>>>>> theirs' });
           }
         }
@@ -489,7 +521,8 @@ const t = {
 
       var edits = computeDiff(aLines, bLines);
 
-      var added = 0, removed = 0;
+      var added = 0,
+        removed = 0;
       edits.forEach(function (e) {
         if (e.type === 'add') added++;
         else if (e.type === 'del') removed++;
@@ -552,9 +585,10 @@ const t = {
 
       var html = '';
       var plain = '';
-      var added = 0, removed = 0;
+      var added = 0,
+        removed = 0;
 
-      result.output.forEach(function(e) {
+      result.output.forEach(function (e) {
         var line = esc(e.text);
         if (e.type === 'eq') {
           html += '<span class="td-eq"> ' + line + '</span>';
@@ -581,7 +615,12 @@ const t = {
       if (removed) parts.push('−' + removed + t.removed + t.lines);
       if (result.conflicts) parts.push(result.conflicts + t.conflicts);
       statusEl.textContent = parts.length ? parts.join('  ') : t.identical;
-      statusEl.className = result.conflicts > 0 ? 'tdiff-status err' : (parts.length ? 'tdiff-status ok' : 'tdiff-status eq');
+      statusEl.className =
+        result.conflicts > 0
+          ? 'tdiff-status err'
+          : parts.length
+            ? 'tdiff-status ok'
+            : 'tdiff-status eq';
 
       outEl.closest('.tdiff-out-wrap').classList.remove('flash-ok');
       void outEl.closest('.tdiff-out-wrap').offsetWidth;
@@ -594,7 +633,7 @@ const t = {
     }
 
     /* Mode toggle */
-    mode2Btn.addEventListener('click', function() {
+    mode2Btn.addEventListener('click', function () {
       if (mode === '2way') return;
       mode = '2way';
       mode2Btn.classList.add('active');
@@ -608,7 +647,7 @@ const t = {
       process2way();
     });
 
-    mode3Btn.addEventListener('click', function() {
+    mode3Btn.addEventListener('click', function () {
       if (mode === '3way') return;
       mode = '3way';
       mode3Btn.classList.add('active');
@@ -656,7 +695,14 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { left: leftEl.value, right: rightEl.value, mode: mode, base: baseEl.value, ours: oursEl.value, theirs: theirsEl.value };
+      return {
+        left: leftEl.value,
+        right: rightEl.value,
+        mode: mode,
+        base: baseEl.value,
+        ours: oursEl.value,
+        theirs: theirsEl.value,
+      };
     };
     window.toolSetPreset = function (cfg) {
       if (cfg.mode === '3way') {
