@@ -21,6 +21,9 @@ export const toolNameRu: Record<string, string> = {
   'number base converter': 'конвертер систем счисления',
   'string inspector': 'инспектор строки',
   'csv ↔ json': 'csv ↔ json',
+  'json → java': 'json → java',
+  'maven ↔ gradle': 'maven ↔ gradle',
+  'quartz cron': 'quartz cron',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -47,6 +50,9 @@ export const toolDescRu: Record<string, string> = {
     'десятичная, двоичная, восьмеричная, шестнадцатеричная и любое своё основание',
   'string inspector': 'длина, байты, unicode, энтропия, частота символов',
   'csv ↔ json': 'конвертация csv в json и обратно, автоопределение разделителя',
+  'json → java': 'генерация java pojo и records из json, lombok, jackson',
+  'maven ↔ gradle': 'конвертация зависимостей между maven xml и gradle dsl',
+  'quartz cron': 'расшифровка quartz cron-выражений с секундами и L/W/# синтаксисом',
 };
 
 export const catLabelRu: Record<string, string> = {

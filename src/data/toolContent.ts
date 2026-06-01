@@ -466,6 +466,69 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
       },
     ],
   },
+
+  'json-java': {
+    about:
+      'Java POJOs (Plain Old Java Objects) are simple classes used to represent data. This tool generates Java class or record definitions from a JSON sample, inferring field types and names automatically. It supports Lombok @Data to eliminate boilerplate getters and setters, and Jackson annotations for JSON property mapping.',
+    useCases: [
+      'Quickly scaffold a data model from an API response',
+      'Generate Java records (Java 16+) for immutable data transfer objects',
+      'Add Jackson @JsonProperty annotations for snake_case JSON keys',
+      'Add Lombok @Data to eliminate getter/setter boilerplate',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between class and record?',
+        a: 'Java records (introduced in Java 16) are immutable data carriers with auto-generated constructor, getters, equals, hashCode, and toString. Classes give you full control including mutable fields. Use records for DTOs and value objects; use classes when you need inheritance or mutable state.',
+      },
+      {
+        q: 'Why does the generated code use List instead of arrays?',
+        a: 'List<T> is preferred over arrays in modern Java because it is more flexible (resizable), integrates with the Collections API, and works better with Jackson deserialization.',
+      },
+    ],
+  },
+
+  'maven-gradle': {
+    about:
+      'Maven and Gradle are the two dominant build tools in the Java ecosystem. Maven uses XML pom.xml files; Gradle uses a Kotlin or Groovy DSL. This tool converts dependency declarations between the two formats, mapping Maven scopes (compile, test, provided, runtime) to their Gradle counterparts (implementation, testImplementation, compileOnly, runtimeOnly).',
+    useCases: [
+      'Migrate a Maven project to Gradle without manually rewriting dependencies',
+      'Copy a dependency from Maven Central docs and convert it for Gradle',
+      'Understand which Gradle configuration matches a Maven scope',
+      'Convert a Gradle build back to Maven for a legacy project',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between implementation and api in Gradle?',
+        a: 'implementation hides the dependency from consumers of your library (compile classpath only). api exposes it (like Maven compile scope). Use implementation by default — it produces faster builds with better dependency isolation.',
+      },
+      {
+        q: 'What happens to Maven <exclusions>?',
+        a: 'Exclusions are not converted — they require manual handling. In Gradle, use exclude within the dependency block: implementation("group:artifact") { exclude group: "unwanted", module: "dep" }.',
+      },
+    ],
+  },
+
+  'quartz-cron': {
+    about:
+      'Quartz is a popular Java job scheduling library. Its cron format extends the standard Unix cron with a mandatory seconds field and special characters: L (last), W (nearest weekday), and # (nth occurrence). A Quartz expression has 6 required fields — seconds, minutes, hours, day-of-month, month, day-of-week — and an optional year field.',
+    useCases: [
+      'Decode a Quartz @Scheduled expression in a Spring Boot application',
+      'Understand what 0 0 0 L * ? means (midnight on the last day of every month)',
+      'Figure out the next run times for a Quartz job',
+      'Use the L/W/# specials to schedule the last Friday or first Monday of the month',
+    ],
+    faq: [
+      {
+        q: 'How is Quartz cron different from standard Unix cron?',
+        a: 'Quartz adds a mandatory seconds field at the beginning (Unix cron starts at minutes). Day-of-week numbering differs: Quartz uses 1=Sunday through 7=Saturday. Quartz also adds L (last), W (nearest weekday), and # (nth weekday) special characters. Finally, either day-of-month or day-of-week must be ? when the other is specified.',
+      },
+      {
+        q: 'What does ? mean in Quartz cron?',
+        a: '? means "no specific value" and is used to avoid conflicts between day-of-month and day-of-week. For example, 0 0 0 15 * ? fires on the 15th regardless of weekday. You cannot specify both a day-of-month and a day-of-week — use ? for the one you do not care about.',
+      },
+    ],
+  },
 };
 
 export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
@@ -927,6 +990,69 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'Что с полями в кавычках содержащими запятые?',
         a: 'Парсер обрабатывает правила RFC 4180: поля в двойных кавычках могут содержать запятые, переносы строк и экранированные кавычки ("").',
+      },
+    ],
+  },
+
+  'json-java': {
+    about:
+      'Java POJO (Plain Old Java Object) — простой класс для представления данных. Инструмент генерирует Java-классы или records из JSON, автоматически выводя типы и имена полей. Поддерживаются Lombok @Data для устранения шаблонного кода и Jackson-аннотации для маппинга JSON-ключей.',
+    useCases: [
+      'Быстро создать модель данных из ответа API',
+      'Сгенерировать Java records (Java 16+) для неизменяемых DTO',
+      'Добавить @JsonProperty аннотации для snake_case JSON ключей',
+      'Использовать Lombok @Data чтобы убрать геттеры и сеттеры',
+    ],
+    faq: [
+      {
+        q: 'В чём разница между class и record?',
+        a: 'Java records (с Java 16) — неизменяемые носители данных с автогенерируемыми конструктором, геттерами, equals, hashCode и toString. Классы дают полный контроль включая изменяемые поля. Используйте records для DTO и value-объектов; классы — когда нужно наследование или изменяемое состояние.',
+      },
+      {
+        q: 'Почему в сгенерированном коде используется List, а не массивы?',
+        a: 'List<T> предпочтительнее массивов в современном Java: он гибче (изменяемый размер), интегрируется с Collections API и лучше работает при десериализации через Jackson.',
+      },
+    ],
+  },
+
+  'maven-gradle': {
+    about:
+      'Maven и Gradle — два доминирующих инструмента сборки в Java-экосистеме. Maven использует XML-файлы pom.xml; Gradle — Kotlin или Groovy DSL. Инструмент конвертирует зависимости между форматами, маппируя Maven-скоупы (compile, test, provided, runtime) в конфигурации Gradle (implementation, testImplementation, compileOnly, runtimeOnly).',
+    useCases: [
+      'Перенести Maven-проект на Gradle без ручной переписки зависимостей',
+      'Скопировать зависимость из документации Maven Central и конвертировать для Gradle',
+      'Понять какая конфигурация Gradle соответствует Maven-скоупу',
+      'Конвертировать Gradle-сборку обратно в Maven для legacy-проекта',
+    ],
+    faq: [
+      {
+        q: 'В чём разница между implementation и api в Gradle?',
+        a: 'implementation скрывает зависимость от потребителей библиотеки (только compile classpath). api её открывает (как Maven compile). По умолчанию используйте implementation — это даёт быстрые сборки с лучшей изоляцией зависимостей.',
+      },
+      {
+        q: 'Что происходит с Maven <exclusions>?',
+        a: 'Исключения не конвертируются — их нужно добавить вручную. В Gradle используйте exclude внутри блока зависимости: implementation("group:artifact") { exclude group: "unwanted", module: "dep" }.',
+      },
+    ],
+  },
+
+  'quartz-cron': {
+    about:
+      'Quartz — популярная библиотека планирования задач для Java. Её cron-формат расширяет стандартный Unix cron обязательным полем секунд и специальными символами: L (последний), W (ближайший будний день), # (n-е вхождение). Выражение Quartz имеет 6 обязательных полей — секунды, минуты, часы, день месяца, месяц, день недели — и необязательный год.',
+    useCases: [
+      'Расшифровать выражение @Scheduled в Spring Boot приложении',
+      'Понять что означает 0 0 0 L * ? (полночь в последний день месяца)',
+      'Вычислить следующие времена запуска Quartz-задачи',
+      'Использовать L/W/# для планирования последней пятницы или первого понедельника месяца',
+    ],
+    faq: [
+      {
+        q: 'Чем Quartz cron отличается от стандартного Unix cron?',
+        a: 'Quartz добавляет обязательное поле секунд в начале (Unix cron начинается с минут). Нумерация дней недели отличается: в Quartz 1=воскресенье, 7=суббота. Quartz также добавляет спецсимволы L (последний), W (ближайший будний) и # (n-й день недели). Одно из полей — день месяца или день недели — должно быть ? если указано другое.',
+      },
+      {
+        q: 'Что означает ? в Quartz cron?',
+        a: '? означает "без конкретного значения" и используется чтобы избежать конфликта между днём месяца и днём недели. Например, 0 0 0 15 * ? срабатывает 15-го числа независимо от дня недели. Нельзя указать и день месяца, и день недели одновременно — используйте ? для того поля, которое не важно.',
       },
     ],
   },

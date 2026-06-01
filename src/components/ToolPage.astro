@@ -29,6 +29,9 @@ import NumberBaseConverter from './tools/NumberBaseConverter.astro';
 import StringInspector from './tools/StringInspector.astro';
 import CsvJsonConverter from './tools/CsvJsonConverter.astro';
 import JsonToTs from './tools/JsonToTs.astro';
+import JsonToJava from './tools/JsonToJava.astro';
+import MavenGradle from './tools/MavenGradle.astro';
+import QuartzCron from './tools/QuartzCron.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -54,6 +57,9 @@ const TOOL_MAP: Record<string, any> = {
   'string-inspector': StringInspector,
   'csv-json': CsvJsonConverter,
   'json-typescript': JsonToTs,
+  'json-java': JsonToJava,
+  'maven-gradle': MavenGradle,
+  'quartz-cron': QuartzCron,
 };
 
 interface Props {

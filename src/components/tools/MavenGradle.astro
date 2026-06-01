@@ -1,0 +1,538 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  dirMG: isRu ? 'maven → gradle' : 'maven → gradle',
+  dirGM: isRu ? 'gradle → maven' : 'gradle → maven',
+  fmtKotlin: 'kotlin dsl',
+  fmtGroovy: 'groovy dsl',
+  statusEmpty: isRu ? '— вставьте зависимости' : '— paste dependencies to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  phMaven: isRu
+    ? '<dependency>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-web</artifactId>\n    <version>3.3.0</version>\n</dependency>'
+    : '<dependency>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-web</artifactId>\n    <version>3.3.0</version>\n</dependency>',
+  phGradle:
+    'implementation("org.springframework.boot:spring-boot-starter-web:3.3.0")\ntestImplementation("org.junit.jupiter:junit-jupiter:5.10.0")',
+  phOutput: isRu ? '// результат появится здесь' : '// result appears here',
+  deps: isRu ? 'зав.' : 'deps',
+  dep1: isRu ? 'зав.' : 'dep',
+};
+---
+
+<style is:global>
+  .mg {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .mg-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .mg-seg {
+    display: flex;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .mg-seg-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: none;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    border-right: 0.5px solid var(--line);
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .mg-seg-btn:last-child {
+    border-right: none;
+  }
+  .mg-seg-btn:hover {
+    color: var(--ink);
+  }
+  .mg-seg-btn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .mg-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mg-status.ok {
+    color: var(--good);
+  }
+  .mg-status.err {
+    color: var(--bad);
+  }
+
+  .mg-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .mg-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .mg-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .mg-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 340px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .mg-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .mg-vsep {
+    background: var(--line);
+  }
+
+  .mg-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .mg-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink-soft);
+  }
+
+  .mg-out .mg-conf {
+    color: var(--accent);
+  }
+  .mg-out .mg-tag {
+    color: oklch(55% 0.16 300);
+  }
+  .mg-out .mg-val {
+    color: var(--good);
+  }
+  .mg-out .mg-ph {
+    color: var(--ink-faint);
+  }
+  .mg-out .mg-comm {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  @media (max-width: 760px) {
+    .mg-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 240px 1px 240px;
+      max-height: none;
+    }
+    .mg-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .mg-out-wrap {
+      max-height: 240px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="maven-gradle" lang={lang} />
+<div class="mg">
+  <div class="mg-bar">
+    <div class="mg-seg" id="mgDirSeg">
+      <button class="mg-seg-btn active" data-val="mg">{t.dirMG}</button>
+      <button class="mg-seg-btn" data-val="gm">{t.dirGM}</button>
+    </div>
+    <div class="mg-seg" id="mgFmtSeg">
+      <button class="mg-seg-btn active" data-val="kotlin">{t.fmtKotlin}</button>
+      <button class="mg-seg-btn" data-val="groovy">{t.fmtGroovy}</button>
+    </div>
+    <span class="mg-status" id="mgStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="mg-action" id="mgCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="mg-action" id="mgClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="mg-panels">
+    <textarea class="mg-in" id="mgInput" data-hist-main-input spellcheck="false"></textarea>
+    <div class="mg-vsep"></div>
+    <div class="mg-out-wrap">
+      <pre class="mg-out" id="mgOut"><span class="mg-ph">{t.phOutput}</span></pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inputEl = document.getElementById('mgInput');
+    var outEl = document.getElementById('mgOut');
+    var statusEl = document.getElementById('mgStatus');
+    var copyBtn = document.getElementById('mgCopy');
+    var clearBtn = document.getElementById('mgClear');
+    var dirSeg = document.getElementById('mgDirSeg');
+    var fmtSeg = document.getElementById('mgFmtSeg');
+
+    var direction = 'mg'; // maven→gradle | gradle→maven
+    var format = 'kotlin';
+    var lastOutput = '';
+
+    /* ── Scope maps ─────────────────────────────────── */
+
+    var MAVEN_TO_GRADLE = {
+      compile: 'implementation',
+      test: 'testImplementation',
+      provided: 'compileOnly',
+      runtime: 'runtimeOnly',
+      system: 'compileOnly',
+      import: 'implementation',
+    };
+
+    var GRADLE_TO_MAVEN = {
+      implementation: 'compile',
+      api: 'compile',
+      testImplementation: 'test',
+      compileOnly: 'provided',
+      runtimeOnly: 'runtime',
+      testRuntimeOnly: 'test',
+      annotationProcessor: 'provided',
+      testCompileOnly: 'test',
+      kapt: 'provided',
+      ksp: 'provided',
+      developmentOnly: 'runtime',
+    };
+
+    /* ── Maven parser ───────────────────────────────── */
+
+    function parseMaven(xml) {
+      var deps = [];
+      var re = /<dependency>([\s\S]*?)<\/dependency>/g;
+      var m;
+      while ((m = re.exec(xml)) !== null) {
+        var block = m[1];
+        function tag(name) {
+          var r = new RegExp('<' + name + '>\\s*([^<]+?)\\s*<\\/' + name + '>');
+          var mm = r.exec(block);
+          return mm ? mm[1].trim() : '';
+        }
+        var g = tag('groupId');
+        var a = tag('artifactId');
+        if (!g || !a) continue;
+        deps.push({
+          groupId: g,
+          artifactId: a,
+          version: tag('version'),
+          scope: tag('scope') || 'compile',
+          optional: tag('optional') === 'true',
+          classifier: tag('classifier'),
+        });
+      }
+      return deps;
+    }
+
+    /* ── Gradle parser ──────────────────────────────── */
+
+    var GRADLE_CONFS = [
+      'implementation',
+      'api',
+      'testImplementation',
+      'compileOnly',
+      'runtimeOnly',
+      'testRuntimeOnly',
+      'annotationProcessor',
+      'testCompileOnly',
+      'kapt',
+      'ksp',
+      'developmentOnly',
+      'testAnnotationProcessor',
+    ];
+
+    function parseGradle(text) {
+      var deps = [];
+      var confPat = new RegExp(
+        '(' + GRADLE_CONFS.join('|') + ')\\s*[\\(\\s]["\']([^"\'\\n]+)["\']\\)?',
+        'g'
+      );
+      var m;
+      while ((m = confPat.exec(text)) !== null) {
+        var coords = m[2].split(':');
+        if (coords.length < 2) continue;
+        deps.push({
+          configuration: m[1],
+          groupId: coords[0].trim(),
+          artifactId: coords[1].trim(),
+          version: coords[2] ? coords[2].trim() : '',
+        });
+      }
+      return deps;
+    }
+
+    /* ── Converters ─────────────────────────────────── */
+
+    function mavenToGradle(deps) {
+      if (!deps.length) return null;
+      return deps
+        .map(function (dep) {
+          var conf = MAVEN_TO_GRADLE[dep.scope] || 'implementation';
+          if (dep.optional && conf === 'implementation') conf = 'compileOnly';
+          var coords = dep.groupId + ':' + dep.artifactId;
+          if (dep.version) coords += ':' + dep.version;
+          if (dep.classifier) coords += ':' + dep.classifier;
+          if (format === 'kotlin') {
+            return conf + '("' + coords + '")';
+          } else {
+            return conf + " '" + coords + "'";
+          }
+        })
+        .join('\n');
+    }
+
+    function gradleToMaven(deps) {
+      if (!deps.length) return null;
+      return deps
+        .map(function (dep) {
+          var scope = GRADLE_TO_MAVEN[dep.configuration] || 'compile';
+          var lines = [
+            '<dependency>',
+            '    <groupId>' + dep.groupId + '</groupId>',
+            '    <artifactId>' + dep.artifactId + '</artifactId>',
+          ];
+          if (dep.version) lines.push('    <version>' + dep.version + '</version>');
+          if (scope !== 'compile') lines.push('    <scope>' + scope + '</scope>');
+          lines.push('</dependency>');
+          return lines.join('\n');
+        })
+        .join('\n');
+    }
+
+    /* ── Highlight ──────────────────────────────────── */
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlightGradle(code) {
+      return code
+        .split('\n')
+        .map(function (line) {
+          var e = esc(line);
+          // configuration keyword at start of line
+          e = e.replace(
+            new RegExp('^(' + GRADLE_CONFS.join('|') + ')(?=[\\s(])'),
+            '<span class="mg-conf">$1</span>'
+          );
+          // quoted coordinates
+          e = e.replace(/([&quot;"'])(.*?)\1/g, function (m, q, v) {
+            return q + '<span class="mg-val">' + v + '</span>' + q;
+          });
+          return e;
+        })
+        .join('\n');
+    }
+
+    function highlightMaven(code) {
+      return code
+        .split('\n')
+        .map(function (line) {
+          var e = esc(line);
+          // XML tags
+          e = e.replace(/(&lt;\/?)([\w]+)(&gt;)/g, '$1<span class="mg-tag">$2</span>$3');
+          // tag content (values between tags)
+          e = e.replace(/(&gt;)([^&<]+)(&lt;)/g, '$1<span class="mg-val">$2</span>$3');
+          return e;
+        })
+        .join('\n');
+    }
+
+    /* ── Process ──────────────────────────────────────── */
+
+    function process() {
+      var raw = inputEl.value.trim();
+
+      if (!raw) {
+        outEl.innerHTML = '<span class="mg-ph">' + esc(t.phOutput) + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'mg-status';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var result, deps, count;
+
+        if (direction === 'mg') {
+          deps = parseMaven(raw);
+          if (!deps.length) throw new Error('no <dependency> blocks found');
+          result = mavenToGradle(deps);
+          count = deps.length;
+          outEl.innerHTML = highlightGradle(result);
+        } else {
+          deps = parseGradle(raw);
+          if (!deps.length) throw new Error('no dependency declarations found');
+          result = gradleToMaven(deps);
+          count = deps.length;
+          outEl.innerHTML = highlightMaven(result);
+        }
+
+        lastOutput = result;
+        statusEl.textContent = count + ' ' + (count === 1 ? t.dep1 : t.deps);
+        statusEl.className = 'mg-status ok';
+
+        if (window.pushHistory) window.pushHistory('maven ↔ gradle', statusEl.textContent, raw);
+        outEl.closest('.mg-out-wrap').classList.remove('flash-ok');
+        void outEl.closest('.mg-out-wrap').offsetWidth;
+        outEl.closest('.mg-out-wrap').classList.add('flash-ok');
+      } catch (e) {
+        statusEl.textContent = '// ' + e.message;
+        statusEl.className = 'mg-status err';
+        outEl.innerHTML = '<span class="mg-ph">' + esc('// ' + e.message) + '</span>';
+        lastOutput = '';
+      }
+    }
+
+    /* ── Segment controls ──────────────────────────── */
+
+    function setupSeg(seg, onChange) {
+      seg.querySelectorAll('.mg-seg-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          seg.querySelectorAll('.mg-seg-btn').forEach(function (b) {
+            b.classList.remove('active');
+          });
+          btn.classList.add('active');
+          onChange(btn.dataset.val);
+          process();
+        });
+      });
+    }
+
+    setupSeg(dirSeg, function (v) {
+      direction = v;
+      updatePlaceholder();
+    });
+    setupSeg(fmtSeg, function (v) {
+      format = v;
+    });
+
+    function updatePlaceholder() {
+      inputEl.placeholder = direction === 'mg' ? t.phMaven : t.phGradle;
+    }
+    updatePlaceholder();
+
+    /* ── Events ─────────────────────────────────────── */
+
+    inputEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      process();
+      inputEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.mg');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inputEl.value, direction: direction, format: format };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inputEl.value = cfg.input;
+      if (cfg.direction !== undefined) {
+        direction = cfg.direction;
+        dirSeg.querySelectorAll('.mg-seg-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.val === direction);
+        });
+        updatePlaceholder();
+      }
+      if (cfg.format !== undefined) {
+        format = cfg.format;
+        fmtSeg.querySelectorAll('.mg-seg-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.val === format);
+        });
+      }
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    process();
+  })();
+</script>

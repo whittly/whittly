@@ -23,6 +23,9 @@ export const SEO_TITLE: Record<string, string> = {
   'number-base-converter': 'Number Base Converter — Binary, Hex, Octal',
   'string-inspector': 'String Inspector — Length, Bytes, Entropy',
   'csv-json': 'CSV ↔ JSON Converter',
+  'json-java': 'JSON to Java POJO / Record Generator',
+  'maven-gradle': 'Maven ↔ Gradle Dependency Converter',
+  'quartz-cron': 'Quartz Cron Expression Parser & Explainer',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -70,6 +73,12 @@ export const SEO_DESC: Record<string, string> = {
     'Free online string inspector. Analyze text length, byte size, word count, Unicode code points, Shannon entropy, and character frequency distribution.',
   'csv-json':
     'Free online CSV to JSON converter. Convert CSV to JSON arrays and JSON back to CSV. Auto-detects comma, semicolon, tab, and pipe delimiters.',
+  'json-java':
+    'Free online JSON to Java POJO generator. Generate Java classes or records from JSON with optional Lombok @Data and Jackson annotations. Runs in your browser.',
+  'maven-gradle':
+    'Free online Maven to Gradle dependency converter. Convert Maven XML <dependency> blocks to Gradle Kotlin or Groovy DSL and back. Handles all common scopes.',
+  'quartz-cron':
+    'Free online Quartz cron expression parser. Decode 6-field Quartz schedules with seconds, explain L/W/# syntax, and preview the next 8 run times.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -117,4 +126,10 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный инспектор строк онлайн. Анализ длины, байтов, слов, Unicode, энтропии Шеннона и частоты символов.',
   'csv-json':
     'Бесплатный конвертер CSV ↔ JSON онлайн. Конвертация CSV в JSON-массивы и обратно. Автоопределение разделителя: запятая, точка с запятой, таб.',
+  'json-java':
+    'Бесплатный генератор Java POJO из JSON онлайн. Создавай Java-классы и records из JSON с поддержкой Lombok @Data и Jackson аннотаций.',
+  'maven-gradle':
+    'Бесплатный конвертер зависимостей Maven ↔ Gradle онлайн. Конвертация Maven XML <dependency> в Gradle Kotlin/Groovy DSL и обратно.',
+  'quartz-cron':
+    'Бесплатный парсер Quartz cron-выражений онлайн. Расшифровка 6-польного формата с секундами, объяснение синтаксиса L/W/#, следующие 8 запусков.',
 };

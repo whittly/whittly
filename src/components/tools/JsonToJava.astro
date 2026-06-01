@@ -1,0 +1,579 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  rootName: isRu ? 'имя класса' : 'root class',
+  style: isRu ? 'стиль' : 'style',
+  styleClass: 'class',
+  styleRecord: 'record',
+  annotations: isRu ? 'аннотации' : 'annotations',
+  annNone: isRu ? 'нет' : 'none',
+  annLombok: 'lombok',
+  annJackson: 'jackson',
+  annBoth: isRu ? 'оба' : 'both',
+  statusEmpty: isRu ? '— вставьте JSON' : '— paste JSON to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  phInput: isRu ? 'вставьте JSON…' : 'paste JSON here…',
+  phOutput: isRu ? '// Java-классы появятся здесь' : '// Java classes appear here',
+  validPrefix: isRu ? 'верно' : 'valid',
+  classes: isRu ? 'кл.' : 'classes',
+  class1: isRu ? 'кл.' : 'class',
+};
+---
+
+<style is:global>
+  .jj {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jj-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jj-root-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .jj-root-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .jj-root-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 9px;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    color: var(--ink);
+    outline: none;
+    width: 110px;
+    transition: border-color 0.15s;
+  }
+  .jj-root-input:focus {
+    border-color: var(--accent);
+  }
+
+  .jj-seg {
+    display: flex;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .jj-seg-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 9px;
+    border: none;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    border-right: 0.5px solid var(--line);
+    transition: all 0.12s;
+  }
+  .jj-seg-btn:last-child {
+    border-right: none;
+  }
+  .jj-seg-btn:hover {
+    color: var(--ink);
+  }
+  .jj-seg-btn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .jj-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jj-status.ok {
+    color: var(--good);
+  }
+  .jj-status.err {
+    color: var(--bad);
+  }
+
+  .jj-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jj-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jj-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jj-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 380px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .jj-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+  .jj-in.err {
+    color: var(--bad);
+  }
+
+  .jj-vsep {
+    background: var(--line);
+  }
+
+  .jj-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .jj-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink-soft);
+  }
+
+  .jj-out .jj-kw {
+    color: var(--accent);
+  }
+  .jj-out .jj-ann {
+    color: oklch(65% 0.17 50);
+  }
+  .jj-out .jj-type {
+    color: oklch(55% 0.16 300);
+  }
+  .jj-out .jj-prim {
+    color: var(--good);
+  }
+  .jj-out .jj-imp {
+    color: var(--ink-faint);
+  }
+  .jj-out .jj-ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .jj-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 260px 1px 260px;
+      max-height: none;
+    }
+    .jj-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .jj-out-wrap {
+      max-height: 260px;
+    }
+    .jj-bar {
+      gap: 6px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="json-java" lang={lang} />
+<FileLoader targetId="jjInput" lang={lang} />
+<div class="jj">
+  <div class="jj-bar">
+    <div class="jj-root-wrap">
+      <span class="jj-root-label">{t.rootName}:</span>
+      <input
+        class="jj-root-input"
+        id="jjRootName"
+        type="text"
+        value="Root"
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </div>
+    <div class="jj-seg" id="jjStyleSeg">
+      <button class="jj-seg-btn active" data-val="class">{t.styleClass}</button>
+      <button class="jj-seg-btn" data-val="record">{t.styleRecord}</button>
+    </div>
+    <div class="jj-seg" id="jjAnnSeg">
+      <button class="jj-seg-btn active" data-val="none">{t.annNone}</button>
+      <button class="jj-seg-btn" data-val="lombok">{t.annLombok}</button>
+      <button class="jj-seg-btn" data-val="jackson">{t.annJackson}</button>
+      <button class="jj-seg-btn" data-val="both">{t.annBoth}</button>
+    </div>
+    <span class="jj-status" id="jjStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="jj-action" id="jjCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="jj-action" id="jjClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="jj-panels">
+    <textarea
+      class="jj-in"
+      id="jjInput"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.phInput}></textarea>
+    <div class="jj-vsep"></div>
+    <div class="jj-out-wrap">
+      <pre class="jj-out" id="jjOut"><span class="jj-ph">{t.phOutput}</span></pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inputEl = document.getElementById('jjInput');
+    var outEl = document.getElementById('jjOut');
+    var statusEl = document.getElementById('jjStatus');
+    var rootNameEl = document.getElementById('jjRootName');
+    var copyBtn = document.getElementById('jjCopy');
+    var clearBtn = document.getElementById('jjClear');
+    var styleSeg = document.getElementById('jjStyleSeg');
+    var annSeg = document.getElementById('jjAnnSeg');
+
+    var style = 'class';
+    var annotation = 'none';
+    var lastOutput = '';
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function setupSeg(seg, onChange) {
+      seg.querySelectorAll('.jj-seg-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          seg.querySelectorAll('.jj-seg-btn').forEach(function (b) {
+            b.classList.remove('active');
+          });
+          btn.classList.add('active');
+          onChange(btn.dataset.val);
+          process();
+        });
+      });
+    }
+
+    setupSeg(styleSeg, function (v) {
+      style = v;
+    });
+    setupSeg(annSeg, function (v) {
+      annotation = v;
+    });
+
+    /* ── Java type generation ─────────────────────────── */
+
+    function toCamel(key) {
+      return key.replace(/[_-]([a-zA-Z0-9])/g, function (_, c) {
+        return c.toUpperCase();
+      });
+    }
+    function toPascal(key) {
+      var c = toCamel(key);
+      return c.charAt(0).toUpperCase() + c.slice(1);
+    }
+
+    function jsonToJava(json, rootName) {
+      var usedImports = {};
+      var defs = [];
+      var seen = {};
+
+      function javaType(value, key) {
+        if (value === null) return 'Object';
+        if (Array.isArray(value)) {
+          usedImports['java.util.List'] = true;
+          if (!value.length) return 'List<Object>';
+          var inner = javaType(value[0], key);
+          if (inner === 'int') inner = 'Integer';
+          if (inner === 'double') inner = 'Double';
+          if (inner === 'boolean') inner = 'Boolean';
+          return 'List<' + inner + '>';
+        }
+        if (typeof value === 'object') {
+          var name = toPascal(key) || 'Inner';
+          buildDef(value, name);
+          return name;
+        }
+        if (typeof value === 'string') return 'String';
+        if (typeof value === 'boolean') return 'boolean';
+        if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'double';
+        return 'Object';
+      }
+
+      function buildDef(obj, name) {
+        if (seen[name]) return;
+        seen[name] = true;
+
+        var keys = Object.keys(obj);
+        var types = {};
+        var camels = {};
+        keys.forEach(function (k) {
+          types[k] = javaType(obj[k], k);
+          camels[k] = toCamel(k);
+        });
+
+        var lines = [];
+
+        if (annotation === 'jackson' || annotation === 'both') {
+          usedImports['com.fasterxml.jackson.annotation.JsonIgnoreProperties'] = true;
+          lines.push('@JsonIgnoreProperties(ignoreUnknown = true)');
+        }
+        if (annotation === 'lombok' || annotation === 'both') {
+          usedImports['lombok.Data'] = true;
+          lines.push('@Data');
+        }
+
+        if (style === 'record') {
+          var params = keys
+            .map(function (k) {
+              var camel = camels[k];
+              if ((annotation === 'jackson' || annotation === 'both') && camel !== k) {
+                usedImports['com.fasterxml.jackson.annotation.JsonProperty'] = true;
+                return '@JsonProperty("' + k + '") ' + types[k] + ' ' + camel;
+              }
+              return types[k] + ' ' + camel;
+            })
+            .join(',\n    ');
+          lines.push('public record ' + name + '(\n    ' + params + '\n) {}');
+        } else {
+          lines.push('public class ' + name + ' {');
+          keys.forEach(function (k) {
+            var camel = camels[k];
+            if ((annotation === 'jackson' || annotation === 'both') && camel !== k) {
+              usedImports['com.fasterxml.jackson.annotation.JsonProperty'] = true;
+              lines.push('    @JsonProperty("' + k + '")');
+            }
+            lines.push('    private ' + types[k] + ' ' + camel + ';');
+          });
+          lines.push('}');
+        }
+
+        defs.push(lines.join('\n'));
+      }
+
+      if (Array.isArray(json)) {
+        if (
+          json.length &&
+          typeof json[0] === 'object' &&
+          json[0] !== null &&
+          !Array.isArray(json[0])
+        ) {
+          buildDef(json[0], rootName);
+        }
+      } else if (json !== null && typeof json === 'object') {
+        buildDef(json, rootName);
+      }
+
+      var importLines = Object.keys(usedImports)
+        .sort()
+        .map(function (i) {
+          return 'import ' + i + ';';
+        });
+      var header = importLines.length ? importLines.join('\n') + '\n\n' : '';
+      return header + defs.slice().reverse().join('\n\n');
+    }
+
+    /* ── Syntax highlighting ──────────────────────────── */
+
+    var JAVA_KW =
+      /\b(public|private|class|record|import|void|new|return|static|final|extends|implements)\b/g;
+    var JAVA_ANN = /(@\w+(?:\([^)]*\))?)/g;
+    var JAVA_PRIM = /\b(int|double|boolean|String|Object|Integer|Double|Boolean|List|void)\b/g;
+
+    function highlightJava(code) {
+      return code
+        .split('\n')
+        .map(function (line) {
+          var e = esc(line);
+          if (e.startsWith('import ') || e.startsWith('//')) {
+            return '<span class="jj-imp">' + e + '</span>';
+          }
+          e = e.replace(JAVA_ANN, '<span class="jj-ann">$1</span>');
+          e = e.replace(JAVA_KW, '<span class="jj-kw">$1</span>');
+          e = e.replace(JAVA_PRIM, '<span class="jj-prim">$1</span>');
+          e = e.replace(
+            /(?<=:\s*|&lt;\s*|\(\s*)([A-Z][a-zA-Z0-9]*)/g,
+            '<span class="jj-type">$1</span>'
+          );
+          return e;
+        })
+        .join('\n');
+    }
+
+    /* ── Process ──────────────────────────────────────── */
+
+    function process() {
+      var raw = inputEl.value.trim();
+      var rootName =
+        (rootNameEl.value.trim() || 'Root')
+          .replace(/[^a-zA-Z0-9_]/g, '')
+          .replace(/^[^a-zA-Z]/, '') || 'Root';
+
+      inputEl.classList.remove('err');
+
+      if (!raw) {
+        outEl.innerHTML = '<span class="jj-ph">' + esc(t.phOutput) + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'jj-status';
+        lastOutput = '';
+        return;
+      }
+
+      var parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        inputEl.classList.add('err');
+        statusEl.textContent = '// ' + e.message;
+        statusEl.className = 'jj-status err';
+        outEl.innerHTML = '<span class="jj-ph">' + esc('// ' + e.message) + '</span>';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var result = jsonToJava(parsed, rootName);
+        lastOutput = result;
+
+        var classCount = (result.match(/^public\s+(?:class|record)\s/gm) || []).length;
+        statusEl.textContent =
+          t.validPrefix + ' · ' + classCount + ' ' + (classCount === 1 ? t.class1 : t.classes);
+        statusEl.className = 'jj-status ok';
+
+        outEl.innerHTML = highlightJava(result);
+        if (window.pushHistory) window.pushHistory('json → java', statusEl.textContent, raw);
+        outEl.closest('.jj-out-wrap').classList.remove('flash-ok');
+        void outEl.closest('.jj-out-wrap').offsetWidth;
+        outEl.closest('.jj-out-wrap').classList.add('flash-ok');
+      } catch (e) {
+        statusEl.textContent = '// ' + e.message;
+        statusEl.className = 'jj-status err';
+        outEl.innerHTML = '<span class="jj-ph">' + esc('// error: ' + e.message) + '</span>';
+        lastOutput = '';
+      }
+    }
+
+    /* ── Events ───────────────────────────────────────── */
+
+    inputEl.addEventListener('input', process);
+    rootNameEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      rootNameEl.value = 'Root';
+      process();
+      inputEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.jj');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return {
+        input: inputEl.value,
+        rootName: rootNameEl.value,
+        style: style,
+        annotation: annotation,
+      };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inputEl.value = cfg.input;
+      if (cfg.rootName !== undefined) rootNameEl.value = cfg.rootName;
+      if (cfg.style !== undefined) {
+        style = cfg.style;
+        styleSeg.querySelectorAll('.jj-seg-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.val === style);
+        });
+      }
+      if (cfg.annotation !== undefined) {
+        annotation = cfg.annotation;
+        annSeg.querySelectorAll('.jj-seg-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.val === annotation);
+        });
+      }
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    process();
+  })();
+</script>

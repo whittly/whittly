@@ -64,6 +64,20 @@ export const CATALOG: Tool[] = [
   },
   {
     cat: 'convert',
+    icon: 'ti-coffee',
+    name: 'json → java',
+    desc: 'generate java pojos or records from json',
+    new: true,
+  },
+  {
+    cat: 'convert',
+    icon: 'ti-arrows-shuffle',
+    name: 'maven ↔ gradle',
+    desc: 'convert dependencies between maven and gradle dsl',
+    new: true,
+  },
+  {
+    cat: 'convert',
     icon: 'ti-markdown',
     name: 'markdown → html',
     desc: 'render with github-flavor extensions',
@@ -308,6 +322,13 @@ export const CATALOG: Tool[] = [
     name: 'cron parser',
     desc: 'translate schedules to english',
     shortcut: 'C',
+  },
+  {
+    cat: 'data',
+    icon: 'ti-clock-code',
+    name: 'quartz cron',
+    desc: 'parse quartz cron expressions with seconds and L/W/# syntax',
+    new: true,
   },
   {
     cat: 'data',
