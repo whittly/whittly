@@ -297,6 +297,7 @@ const catalog = CATALOG.map((t) => {
             <a href="/tools/" class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
             <a href="/about/" class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
             <a href="/premium/" class="meta-link">pro</a>
+            <a href="/privacy/" class="meta-link">{isRu ? 'конфиденциальность' : 'privacy'}</a>
             <a href="/terms/" class="meta-link">{isRu ? 'условия' : 'terms'}</a>
           </nav>
           <span class="meta"
@@ -312,7 +313,7 @@ const catalog = CATALOG.map((t) => {
           <div class="footer-legal-links">
             <span class="footer-legal-name">Попелышко Дмитрий Иванович · ИНН 402906501480</span>
             <a href="/oferta/" class="meta-link">публичная оферта</a>
-            <a href="/privacy/" class="meta-link">политика конфиденциальности</a>
+            <a href={isRu ? '/privacy/' : '/privacy-ru/'} class="meta-link">политика конфиденциальности</a>
           </div>
           <a href={`mailto:support@${isRu ? 'whittly.ru' : 'whittly.dev'}`} class="meta-link"
             >support</a
