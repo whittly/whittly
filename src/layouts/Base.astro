@@ -19,6 +19,10 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const isRu = import.meta.env.PUBLIC_SITE_DOMAIN === 'whittly.ru';
 const SITE = isRu ? 'https://whittly.ru' : 'https://whittly.dev';
+const ANALYTICS_SITE = isRu ? 'https://analytics.whittly.ru' : 'https://analytics.whittly.dev';
+const UMAMI_WEBSITE_ID = isRu
+  ? (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID_RU ?? import.meta.env.PUBLIC_UMAMI_WEBSITE_ID)
+  : (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID_DEV ?? import.meta.env.PUBLIC_UMAMI_WEBSITE_ID);
 const pathname = Astro.url.pathname;
 const canonical = SITE + pathname;
 
@@ -145,12 +149,12 @@ const catalog = CATALOG.map((t) => {
       href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
     />
     {
-      import.meta.env.PROD && import.meta.env.PUBLIC_UMAMI_WEBSITE_ID && (
+      import.meta.env.PROD && UMAMI_WEBSITE_ID && (
         <script
           is:inline
           defer
-          src="https://analytics.whittly.dev/script.js"
-          data-website-id={import.meta.env.PUBLIC_UMAMI_WEBSITE_ID}
+          src={`${ANALYTICS_SITE}/script.js`}
+          data-website-id={UMAMI_WEBSITE_ID}
         />
       )
     }
@@ -293,7 +297,6 @@ const catalog = CATALOG.map((t) => {
             <a href="/tools/" class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
             <a href="/about/" class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
             <a href="/premium/" class="meta-link">pro</a>
-            <a href="/privacy/" class="meta-link">{isRu ? 'конфиденциальность' : 'privacy'}</a>
             <a href="/terms/" class="meta-link">{isRu ? 'условия' : 'terms'}</a>
           </nav>
           <span class="meta"

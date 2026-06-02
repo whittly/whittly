@@ -21,11 +21,13 @@ jobs:
         run: npm run build
         env:
           PUBLIC_API_URL: https://api.whittly.dev
+          PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_DEV }}
       - name: Build whittly.ru
         run: npm run build:ru
         env:
           PUBLIC_API_URL: https://api.whittly.ru
           PUBLIC_SITE_DOMAIN: whittly.ru
+          PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_RU }}
 
   e2e:
     name: E2E Smoke Tests
@@ -63,11 +65,15 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          UMAMI_ID_DEV: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_DEV }}
+          UMAMI_ID_RU: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_RU }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          envs: UMAMI_ID_DEV,UMAMI_ID_RU
           script: |
             set -e
             export PATH=$PATH:/usr/bin:/usr/local/bin
@@ -75,6 +81,6 @@ jobs:
             git pull origin ${{ github.ref_name }}
             npm ci
             BUILD_DATE=$(date +%Y.%m.%d)
-            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev npm run build
-            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.ru PUBLIC_SITE_DOMAIN=whittly.ru npm run build:ru
+            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev PUBLIC_UMAMI_WEBSITE_ID=$UMAMI_ID_DEV npm run build
+            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.ru PUBLIC_SITE_DOMAIN=whittly.ru PUBLIC_UMAMI_WEBSITE_ID=$UMAMI_ID_RU npm run build:ru
             echo "✓ frontend (${{ github.ref_name }}) deployed at $(date)"
