@@ -62,7 +62,7 @@ import '../styles/about.css';
 <span class="k">email</span>          <span class="p">·</span> only when you create an account
 <span class="k">password</span>       <span class="p">·</span> bcrypt hash only — plaintext is never stored
 <span class="k">api keys</span>       <span class="p">·</span> sha-256 hash only — raw key shown once, never stored
-<span class="k">analytics</span>      <span class="p">·</span> cloudflare web analytics — cookieless, aggregate only
+<span class="k">analytics</span>      <span class="p">·</span> umami analytics — cookieless, self-hosted, no third parties
 
 <span class="c"># what we never collect</span>
 <span class="p">×</span> anything you paste or type into the tools
@@ -133,24 +133,17 @@ import '../styles/about.css';
       and immediately erased. There is no backup retention period.
     </p>
     <p class="lo-p">
-      <strong>5.2.</strong> Cloudflare Web Analytics aggregate data contains no personal data and is not
-      subject to a retention limit.
+      <strong>5.2.</strong> Umami Analytics aggregate data contains no personal data and is not subject
+      to a retention limit.
     </p>
 
     <!-- 6 -->
     <h2 class="lo-head">6. Third-party processors</h2>
     <p class="lo-p">
-      <strong>6.1.</strong> We use <strong>Cloudflare Web Analytics</strong> (Cloudflare, Inc., 101 Townsend
-      St, San Francisco, CA&nbsp;94107, USA) for cookieless traffic analytics. Cloudflare collects only
-      aggregate data — page view counts and approximate visitor country. It receives no email addresses,
-      no account data, and no request content.
-    </p>
-    <p class="lo-p">
-      <strong>6.2.</strong> Cloudflare processes data under a Data Processing Addendum (DPA) incorporating
-      EU Standard Contractual Clauses (SCCs). See:
-      <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener"
-        >cloudflare.com/privacypolicy</a
-      >.
+      <strong>6.1.</strong> We use <strong>Umami Analytics</strong> — an open-source, self-hosted analytics
+      platform running on our own server (<code>analytics.whittly.dev</code>). Umami collects only
+      aggregate data — page view counts and approximate visitor country. It receives no email
+      addresses, no account data, and no request content. No data is transferred to any third party.
     </p>
     <p class="lo-p">
       <strong>6.3.</strong> We do not use Google Analytics, Facebook Pixel, Hotjar, Mixpanel, or any other
@@ -172,8 +165,8 @@ import '../styles/about.css';
       acknowledge this transfer.
     </p>
     <p class="lo-p">
-      <strong>7.3. Cloudflare — United States.</strong> Anonymised aggregate analytics data is processed
-      by Cloudflare in the US under Standard Contractual Clauses as described in §&nbsp;6.
+      <strong>7.3. Analytics — our own server (EU).</strong> Umami Analytics is self-hosted on our own
+      server in the EU. No analytics data is transferred outside the EEA.
     </p>
 
     <!-- 8 -->
@@ -283,8 +276,8 @@ import '../styles/about.css';
       localStorage on your own device.
     </p>
     <p class="lo-p">
-      <strong>9.2.</strong> Cloudflare Web Analytics operates without cookies or fingerprinting. No cookie
-      consent banner is displayed because there is nothing to consent to.
+      <strong>9.2.</strong> Umami Analytics operates without cookies or fingerprinting. No cookie consent
+      banner is displayed because there is nothing to consent to.
     </p>
 
     <!-- 10 -->

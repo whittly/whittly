@@ -141,6 +141,16 @@ const catalog = CATALOG.map((t) => ({
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
     />
+    {
+      import.meta.env.PROD && import.meta.env.PUBLIC_UMAMI_WEBSITE_ID && (
+        <script
+          is:inline
+          defer
+          src="https://analytics.whittly.dev/script.js"
+          data-website-id={import.meta.env.PUBLIC_UMAMI_WEBSITE_ID}
+        />
+      )
+    }
     <slot name="head" />
     <script is:inline>
       /* Auto-redirect CIS browser languages to /ru/ — skips if user explicitly chose EN */
