@@ -77,7 +77,7 @@ const ToolComponent = TOOL_MAP[slug];
 const name = isRu ? toolNameRu[tool.name] || tool.name : tool.name;
 const desc = isRu ? toolDescRu[tool.name] || tool.desc : tool.desc;
 const catLabel = isRu ? catLabelRu[tool.cat] || catMeta.label : catMeta.label;
-const toolsPath = isRu ? '/ru/tools/' : '/tools/';
+const toolsPath = '/tools/';
 
 const hints = PRO_HINTS[lang][slug] ?? [];
 const snip = API_SNIPPETS[slug] ?? null;

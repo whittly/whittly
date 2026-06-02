@@ -1,5 +1,7 @@
 # build output
 dist/
+dist-global/
+dist-ru/
 # generated types
 .astro/
 
@@ -34,3 +36,6 @@ playwright-report/
 
 # local scripts
 scripts/
+
+# server config (keep out of public repo)
+nginx/

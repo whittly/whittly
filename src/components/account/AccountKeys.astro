@@ -20,7 +20,7 @@ const isRu = lang === 'ru';
       <div class="ac-header">
         <div>
           <div class="ac-breadcrumb">
-            <a href={isRu ? '/ru/account/' : '/account/'}>{isRu ? 'аккаунт' : 'account'}</a>
+            <a href="/account/">{isRu ? 'аккаунт' : 'account'}</a>
             <span class="sep">/</span>
             <span>{isRu ? 'api ключи' : 'api keys'}</span>
           </div>
@@ -76,7 +76,7 @@ const isRu = lang === 'ru';
 <script is:inline define:vars={{ isRu }}>
   (function () {
     if (!localStorage.getItem('wh_access')) {
-      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      location.replace('/account/login/');
       return;
     }
 
@@ -98,7 +98,7 @@ const isRu = lang === 'ru';
       localStorage.removeItem('wh_access');
       localStorage.removeItem('wh_refresh');
       localStorage.removeItem('wh_user');
-      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      location.replace('/account/login/');
     }
     signOutBtn.addEventListener('click', logout);
 

@@ -17,8 +17,12 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run check
-      - name: Build
+      - name: Build whittly.dev
         run: npm run build
+        env:
+          PUBLIC_API_URL: https://api.whittly.dev
+      - name: Build whittly.ru
+        run: npm run build:ru
         env:
           PUBLIC_API_URL: https://api.whittly.dev
 
@@ -69,5 +73,6 @@ jobs:
             cd /var/www/whittly/whittly
             git pull origin ${{ github.ref_name }}
             npm ci
-            VITE_BUILD_DATE=$(date +%Y.%m.%d) npm run build
+            BUILD_DATE=$(date +%Y.%m.%d)
+            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev npm run build
             echo "✓ frontend (${{ github.ref_name }}) deployed at $(date)"

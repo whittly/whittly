@@ -1,0 +1,996 @@
+﻿---
+import Base from '@/layouts/Base.astro';
+import { CATALOG, CAT_ORDER, CAT_META } from '@/data/catalog';
+import { toolNameRu } from '@/data/ru';
+import pkg from '../../package.json';
+
+const totalTools = CATALOG.filter((t) => !t.soon).length;
+const version = pkg.version;
+
+function pluralRu(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10,
+    mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
+}
+const toolsLabel = pluralRu(totalTools, 'инструмент', 'инструмента', 'инструментов');
+
+const catGroups = CAT_ORDER.map((cat) => ({
+  cat,
+  label: CAT_META[cat].label,
+  tools: CATALOG.filter((t) => t.cat === cat),
+})).filter((g) => g.tools.length > 0);
+---
+
+<style is:global>
+  .hero {
+    padding: 72px 0 56px;
+    max-width: 780px;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  .hero-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 10px;
+    text-decoration: none;
+    transition:
+      color 0.12s,
+      border-color 0.12s,
+      background 0.12s;
+  }
+
+  .hero-tag:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .demo {
+    background: var(--surface);
+    border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow:
+      0 1px 0 rgba(26, 26, 24, 0.02),
+      0 18px 40px -22px rgba(26, 26, 24, 0.12);
+  }
+
+  .demo-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .demo-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .demo-status .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+  .demo-status.err {
+    color: var(--bad);
+  }
+  .demo-status.err .dot {
+    background: var(--bad);
+  }
+
+  .demo-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 260px;
+  }
+
+  .demo-pane {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    background: none;
+    resize: none;
+    width: 100%;
+    overflow: auto;
+    max-height: 320px;
+  }
+
+  .demo-pane.in {
+    border-right: 0.5px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .demo-pane.out {
+    background: var(--surface-sunken);
+    white-space: pre;
+    margin: 0;
+  }
+  .demo-pane.out .k {
+    color: var(--accent);
+  }
+  .demo-pane.out .s {
+    color: var(--good);
+  }
+  .demo-pane.out .n {
+    color: var(--ink);
+  }
+  .demo-pane.out .b {
+    color: var(--ink-soft);
+  }
+  .demo-pane.out .p {
+    color: var(--ink-faint);
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 16px 18px 14px;
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 132px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .tool-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+  }
+
+  .tool-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tool-icon {
+    font-size: 17px;
+    color: var(--ink-soft);
+  }
+  .tool-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .tool-preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-sm);
+    padding: 9px 11px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .tool-preview .row {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .tool-preview .arrow {
+    color: var(--accent);
+    margin: 0 6px;
+  }
+  .tool-preview .hl {
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0 1px;
+    border-radius: 2px;
+  }
+  .tool-preview .g {
+    color: var(--good);
+  }
+  .tool-preview .s {
+    color: var(--ink-soft);
+  }
+  .tool-preview .k {
+    color: var(--accent);
+  }
+
+  .ls {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ls-head {
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ls-head .prompt {
+    color: var(--accent);
+  }
+  .ls-head .flag {
+    color: var(--ink-faint);
+  }
+  .ls-head .caret {
+    width: 6px;
+    height: 12px;
+    background: var(--ink-soft);
+    margin-left: 2px;
+    animation: blink 1.1s steps(2) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .ls-body {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ls-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 56px;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.12s;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .ls-row:hover {
+    background: var(--accent-soft);
+  }
+  .ls-row .name {
+    color: var(--ink);
+    display: inline-flex;
+    align-items: baseline;
+  }
+  .ls-row .name::after {
+    content: '/';
+    color: var(--ink-faint);
+  }
+  .ls-row .tools {
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .ls-row .tools .sep {
+    color: var(--ink-faint);
+    margin: 0 6px;
+  }
+  .ls-row .tools .more {
+    color: var(--ink-faint);
+  }
+  .ls-row .count {
+    color: var(--ink-faint);
+    font-size: 11px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 960px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 36px;
+      padding-top: 48px;
+    }
+    .tools-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
+    }
+    .demo-body {
+      grid-template-columns: 1fr;
+    }
+    .demo-pane.in {
+      border-right: none;
+      border-bottom: 0.5px solid var(--line);
+    }
+  }
+
+  .premium {
+    margin: 64px 0 72px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+  }
+
+  .premium-copy {
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    justify-content: center;
+    border-right: 0.5px solid var(--line);
+  }
+
+  .premium-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .premium-title {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+
+  .premium-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .premium-body {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .btn-premium {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    align-self: flex-start;
+    margin-top: 6px;
+  }
+
+  .btn-premium:hover {
+    opacity: 0.85;
+  }
+
+  .premium-feat {
+    background: var(--surface-sunken);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .premium-feat-head {
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .premium-feat-head .prompt {
+    color: var(--accent);
+  }
+  .premium-feat-head .file {
+    color: var(--ink);
+  }
+
+  .premium-feat-body {
+    display: block;
+    padding: 18px 22px;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--ink);
+    overflow-x: auto;
+  }
+
+  .premium-feat-body .k {
+    color: var(--accent);
+  }
+  .premium-feat-body .p {
+    color: var(--ink-soft);
+  }
+  .premium-feat-body .c {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 768px) {
+    .premium {
+      grid-template-columns: 1fr;
+    }
+    .premium-copy {
+      border-right: none;
+      border-bottom: 0.5px solid var(--line);
+      padding: 24px 22px;
+    }
+    .premium-feat-body {
+      white-space: pre-wrap;
+      font-size: 12px;
+      padding: 14px 16px;
+    }
+  }
+
+  .magic-detect {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: var(--accent-soft);
+    border: 0.5px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    animation: magicIn 0.15s ease;
+  }
+  @keyframes magicIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .magic-type {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .magic-sep {
+    color: var(--ink-faint);
+  }
+  .magic-go {
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .magic-go:hover {
+    color: var(--accent);
+  }
+
+  .demo-format-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .demo-format-status.detected {
+    color: var(--accent);
+  }
+
+  .demo-foot {
+    padding: 8px 14px;
+    border-top: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .demo-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    text-decoration: none;
+    border: 0.5px solid var(--accent);
+    border-radius: 4px;
+    padding: 3px 9px;
+    transition:
+      background 0.12s,
+      color 0.12s;
+  }
+  .demo-link:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .demo-link-pro {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .demo-link-pro:hover {
+    color: var(--accent);
+  }
+</style>
+
+<Base
+  title="whittly — инструменты разработчика в браузере"
+  description="Инструменты разработчика прямо в браузере: JSON-форматтер, JWT-декодер, Base64, UUID, регулярные выражения, cron и другие. Без установки и регистрации."
+>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>{`${totalTools} ${toolsLabel} · v${version}`}</span>
+      </div>
+      <h1>убери лишнее — оставь <em>главное</em>.</h1>
+      <p class="subhead">
+        утилиты для повседневной работы: конвертеры, форматтеры, валидаторы, генераторы. работают
+        прямо в браузере — без установки, регистрации и рекламы.
+      </p>
+
+      <div id="magicDetect" class="magic-detect">
+        <span id="magicType" class="magic-type"></span>
+        <span class="magic-sep">·</span>
+        <a id="magicGo" class="magic-go">открыть в инструменте →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="tools-section">
+    <div class="section-head">
+      <h2 class="section-title">// популярные инструменты</h2>
+      <a href="/tools/" class="see-all">{`все ${totalTools} ${toolsLabel} →`}</a>
+    </div>
+    <div class="tools-grid">
+      <a class="tool-card" href="/tools/json-formatter/">
+        <div class="tool-head">
+          <i class="ti ti-braces tool-icon"></i>
+          <span class="tool-name">json-форматтер</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row">{'{"a":1,"b":[2,3]}'}</span>
+          <span class="row"
+            ><span class="k">"a"</span>: <span class="g">1</span>, <span class="k">"b"</span>: [<span
+              class="g">2</span
+            >, <span class="g">3</span>]</span
+          >
+        </div>
+      </a>
+
+      <a class="tool-card" href="/tools/regex-tester/">
+        <div class="tool-head">
+          <i class="ti ti-regex tool-icon"></i>
+          <span class="tool-name">regex-тестер</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row"><span class="k">/\d+/g</span></span>
+          <span class="row"
+            >заказ <span class="hl">42</span> через <span class="hl">2</span> дня</span
+          >
+        </div>
+      </a>
+
+      <a class="tool-card" href="/tools/jwt-decoder/">
+        <div class="tool-head">
+          <i class="ti ti-key tool-icon"></i>
+          <span class="tool-name">jwt-декодер</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row"
+            ><span class="k">eyJhbGc</span>.<span class="g">eyJzdWI</span>.<span class="s"
+              >XdaY8</span
+            ></span
+          >
+          <span class="row">sub: alice · exp: 1h</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="/tools/base64/">
+        <div class="tool-head">
+          <i class="ti ti-binary tool-icon"></i>
+          <span class="tool-name">base64</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row">hello, world</span>
+          <span class="row">aGVsbG8sIHdvcmxk</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="/tools/cron-parser/">
+        <div class="tool-head">
+          <i class="ti ti-clock-bolt tool-icon"></i>
+          <span class="tool-name">cron-парсер</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row"><span class="k">*/5 9-17 * * 1-5</span></span>
+          <span class="row"><span class="s">каждые 5 мин, будни</span></span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="/tools/uuid-generator/">
+        <div class="tool-head">
+          <i class="ti ti-fingerprint tool-icon"></i>
+          <span class="tool-name">uuid-генератор</span>
+        </div>
+        <div class="tool-preview">
+          <span class="row"><span class="k">v4</span> · <span class="k">v7</span> · nanoid</span>
+          <span class="row"><span class="s">пакетный · свой формат</span></span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="tools-section">
+    <div class="section-head">
+      <h2 class="section-title">// по категориям</h2>
+    </div>
+    <div class="ls">
+      <div class="ls-head">
+        <span class="prompt">$</span>
+        <span>whittly ls</span>
+        <span class="flag">--by-category --sort=count</span>
+        <span class="caret"></span>
+      </div>
+      <div class="ls-body">
+        {
+          catGroups.map((g) => {
+            const visible = g.tools.slice(0, 3);
+            const rest = g.tools.length - visible.length;
+            return (
+              <a class="ls-row" href={`/tools/?cat=${g.cat}`}>
+                <span class="name">{g.label}</span>
+                <span class="tools">
+                  {visible.map((t, i) => (
+                    <>
+                      {i > 0 && <span class="sep">·</span>}
+                      {toolNameRu[t.name] ?? t.name}
+                    </>
+                  ))}
+                  {rest > 0 && (
+                    <>
+                      <span class="sep">·</span>
+                      <span class="more">+{rest}</span>
+                    </>
+                  )}
+                </span>
+                <span class="count">{g.tools.length}</span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="premium">
+    <div class="premium-copy">
+      <div class="premium-label">// pro · от 390 ₽/мес</div>
+      <div class="premium-title">когда одного<br />файла <em>мало</em>.</div>
+      <p class="premium-body">
+        пакетная обработка, api, пресеты — для задач, где один файл за раз уже не спасает.
+      </p>
+      <a href="/premium/" class="btn-premium">смотреть планы →</a>
+    </div>
+    <div class="premium-feat">
+      <div class="premium-feat-head">
+        <span class="prompt">$</span>
+        <span>cat</span>
+        <span class="file">pro.txt</span>
+      </div>
+      <pre
+        class="premium-feat-body"><span class="c"># pro  ·  390 ₽/мес  ·  2 900 ₽/год</span>
+<span class="k">batch</span>        <span class="p">·</span> до 500 файлов за один запрос
+<span class="k">large_files</span>  <span class="p">·</span> до 100 МБ на файл
+<span class="k">history</span>      <span class="p">·</span> синхронизация между устройствами
+<span class="k">presets</span>      <span class="p">·</span> сохранение и переиспользование
+
+<span class="c"># api  ·  1 990 ₽/мес  ·  14 900 ₽/год</span>
+<span class="k">api_keys</span>     <span class="p">·</span> вызов любого инструмента через api
+<span class="k">requests</span>     <span class="p">·</span> 50 000 запросов в месяц
+<span class="k">cli</span>          <span class="p">·</span> интеграция в ci/cd пайплайны</pre>
+    </div>
+  </div>
+</Base>
+
+<script is:inline>
+  (function () {
+    /* ── Smart Demo Box ─────────────────────────────────── */
+    const demoInEl = document.getElementById('demoIn');
+    const demoOutEl = document.getElementById('demoOut');
+    const demoFmtEl = document.getElementById('demoFormatStatus');
+    const demoFootEl = document.getElementById('demoFoot');
+    const demoGoBtnEl = document.getElementById('demoGoBtn');
+    if (!demoInEl) return;
+    let demoPloadKey = null;
+
+    const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+    function esc(s) {
+      return s.replace(/[&<>]/g, (c) => ESC[c]);
+    }
+
+    function colorizeJson(obj, d = 0) {
+      const pad = '  '.repeat(d);
+      const pad1 = '  '.repeat(d + 1);
+      if (obj === null) return '<span class="b">null</span>';
+      if (typeof obj === 'boolean') return '<span class="b">' + obj + '</span>';
+      if (typeof obj === 'number') return '<span class="n">' + obj + '</span>';
+      if (typeof obj === 'string') return '<span class="s">"' + esc(obj) + '"</span>';
+      if (Array.isArray(obj)) {
+        if (!obj.length) return '[]';
+        return (
+          '[\n' +
+          obj.map((v) => pad1 + colorizeJson(v, d + 1)).join('<span class="p">,</span>\n') +
+          '\n' +
+          pad +
+          ']'
+        );
+      }
+      const keys = Object.keys(obj);
+      if (!keys.length) return '{}';
+      return (
+        '{\n' +
+        keys
+          .map(
+            (k) =>
+              pad1 +
+              '<span class="k">"' +
+              esc(k) +
+              '"</span><span class="p">:</span> ' +
+              colorizeJson(obj[k], d + 1)
+          )
+          .join('<span class="p">,</span>\n') +
+        '\n' +
+        pad +
+        '}'
+      );
+    }
+
+    function decodeB64Url(s) {
+      const b = s.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b + '==='.slice((b.length + 3) % 4)));
+    }
+
+    function tryDecodeJwt(token) {
+      const parts = token.split('.');
+      if (parts.length < 2) throw new Error('bad jwt');
+      return { header: decodeB64Url(parts[0]), payload: decodeB64Url(parts[1]) };
+    }
+
+    const DOW_NAMES = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    function describeCron(expr) {
+      const [min, hr, dom, mon, dow] = expr.trim().split(/\s+/);
+      const out = [];
+      if (min === '*') out.push('каждую минуту');
+      else if (/^\*\/\d+$/.test(min)) out.push('каждые ' + min.slice(2) + ' мин');
+      else out.push('в :' + min.padStart(2, '0'));
+      if (hr !== '*') {
+        if (/^\*\/\d+$/.test(hr)) out.push('каждые ' + hr.slice(2) + 'ч');
+        else if (hr.includes('-')) out.push('часы ' + hr);
+        else out.push(hr.padStart(2, '0') + ':xx');
+      }
+      if (dow !== '*') {
+        if (dow === '1-5') out.push('будни');
+        else if (dow === '0,6' || dow === '6,0') out.push('выходные');
+        else
+          out.push(
+            dow
+              .split(',')
+              .map((d) => DOW_NAMES[+d] ?? d)
+              .join(',')
+          );
+      }
+      if (dom !== '*') out.push('день ' + dom);
+      if (mon !== '*') out.push('месяц ' + mon);
+      return out.join(' · ');
+    }
+
+    const RE_JWT = /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/;
+    const RE_JSON = /^\s*[\{\[][\s\S]{2,}[\}\]]\s*$/;
+    const RE_CRON =
+      /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/;
+
+    function resetDemo() {
+      demoFmtEl.textContent = '// определяю формат…';
+      demoFmtEl.className = 'demo-format-status';
+      demoOutEl.innerHTML = '<span class="p">// результат будет здесь</span>';
+      demoFootEl.style.display = 'none';
+      demoPloadKey = null;
+    }
+
+    function detectAndRender() {
+      const val = demoInEl.value;
+      if (!val.trim()) {
+        resetDemo();
+        return;
+      }
+
+      if (val.length > 32768) {
+        demoFmtEl.textContent = '[данные слишком большие для превью]';
+        demoFmtEl.className = 'demo-format-status detected';
+        demoOutEl.innerHTML =
+          '<span class="p">// данные &gt;32 КБ — слишком большие для быстрого превью.</span>\n' +
+          '<span class="p">// откройте полный инструмент для обработки.</span>';
+        demoFootEl.style.display = 'flex';
+        demoGoBtnEl.textContent = '[ открыть полный инструмент (бесплатно) ]';
+        demoGoBtnEl.href = '/tools/json-formatter/';
+        demoPloadKey = 'magic_box_payload';
+        return;
+      }
+
+      if (RE_JWT.test(val.trim())) {
+        try {
+          const jwt = tryDecodeJwt(val.trim());
+          demoFmtEl.textContent = '[формат: jwt]';
+          demoFmtEl.className = 'demo-format-status detected';
+          demoOutEl.innerHTML =
+            '<span class="p">// header</span>\n' +
+            colorizeJson(jwt.header) +
+            '\n\n<span class="p">// payload</span>\n' +
+            colorizeJson(jwt.payload);
+          demoFootEl.style.display = 'flex';
+          demoGoBtnEl.textContent = '[ открыть в jwt decoder ]';
+          demoGoBtnEl.href = '/tools/jwt-decoder/';
+          demoPloadKey = 'magic_box_payload';
+          return;
+        } catch (e) {
+          /* fall through */
+        }
+      }
+
+      if (RE_JSON.test(val)) {
+        try {
+          const parsed = JSON.parse(val);
+          demoFmtEl.textContent = '[формат: json]';
+          demoFmtEl.className = 'demo-format-status detected';
+          demoOutEl.innerHTML = colorizeJson(parsed);
+          demoFootEl.style.display = 'flex';
+          demoGoBtnEl.textContent = '[ открыть в json formatter ]';
+          demoGoBtnEl.href = '/tools/json-formatter/';
+          demoPloadKey = 'magic_box_payload';
+          return;
+        } catch (e) {
+          /* fall through */
+        }
+      }
+
+      if (RE_CRON.test(val.trim())) {
+        const desc = describeCron(val.trim());
+        demoFmtEl.textContent = '[формат: cron]';
+        demoFmtEl.className = 'demo-format-status detected';
+        demoOutEl.innerHTML =
+          '<span class="p">// выражение</span>\n' +
+          '<span class="k">' +
+          esc(val.trim()) +
+          '</span>\n\n' +
+          '<span class="p">// расписание</span>\n' +
+          esc(desc);
+        demoFootEl.style.display = 'flex';
+        demoGoBtnEl.textContent = '[ открыть в cron parser ]';
+        demoGoBtnEl.href = '/tools/cron-parser/';
+        demoPloadKey = 'magic_box_payload';
+        return;
+      }
+
+      demoFmtEl.textContent = '// определение…';
+      demoFmtEl.className = 'demo-format-status';
+      demoOutEl.innerHTML = '<span class="p">// вставьте JSON, JWT или cron-выражение</span>';
+      demoFootEl.style.display = 'none';
+      demoPloadKey = null;
+    }
+
+    demoInEl?.addEventListener('input', detectAndRender);
+
+    demoGoBtnEl?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (demoPloadKey && demoInEl.value.trim()) {
+        sessionStorage.setItem(demoPloadKey, demoInEl.value.trim());
+        window.location.href = demoGoBtnEl.href;
+      }
+    });
+
+    resetDemo();
+
+    /* ── Search bar / shortcut ──────────────────────────── */
+    const searchInput = document.querySelector('.search input');
+
+    /* ── Smart Magic Box (search input detection) ───────── */
+    const MAGIC = [
+      {
+        re: /^eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+\/=]*$/,
+        label: '[обнаружен: jwt token]',
+        slug: 'jwt-decoder',
+        key: 'jwt_payload',
+      },
+      {
+        re: /^\s*[{\[][\s\S]{2,}[}\]]\s*$/,
+        label: '[обнаружен: json]',
+        slug: 'json-formatter',
+        key: 'json_payload',
+      },
+      {
+        re: /^(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)\s+(\*|[0-9*\/,\-]+)$/,
+        label: '[обнаружен: cron expression]',
+        slug: 'cron-parser',
+        key: 'cron_payload',
+      },
+    ];
+
+    const magicDetect = document.getElementById('magicDetect');
+    const magicType = document.getElementById('magicType');
+    const magicGo = document.getElementById('magicGo');
+    let magicSlug = null,
+      magicKey = null;
+
+    if (searchInput && magicDetect) {
+      searchInput.addEventListener('input', () => {
+        const val = searchInput.value.trim();
+        const hit = val.length > 8 ? MAGIC.find((p) => p.re.test(val)) : null;
+        if (hit) {
+          magicType.textContent = hit.label;
+          magicSlug = hit.slug;
+          magicKey = hit.key;
+          magicDetect.style.display = 'flex';
+        } else {
+          magicDetect.style.display = 'none';
+          magicSlug = null;
+        }
+      });
+    }
+
+    magicGo?.addEventListener('click', () => {
+      if (magicSlug && magicKey && searchInput) {
+        sessionStorage.setItem(magicKey, searchInput.value.trim());
+        window.location.href = `/tools/${magicSlug}/`;
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,274 @@
+﻿---
+import Base from '@/layouts/Base.astro';
+import '@/styles/premium.css';
+---
+
+<Base
+  title="поддержка и pro — whittly"
+  description="Простые и честные цены. Базовые инструменты бесплатны навсегда. Pro — пакетная обработка, облачный API, большие файлы — скоро."
+>
+  <header class="premium-hero">
+    <div class="badge"><span class="badge-dot"></span><span>pro-планы и цены</span></div>
+    <h1>просто и <em>честно</em>.</h1>
+    <p class="lede">
+      базовые инструменты бесплатны и без рекламы — навсегда. pro-функции появятся с честными
+      ценами: платишь только за серверные расходы, без накруток.
+    </p>
+  </header>
+
+  <h2 class="h-section">// планы</h2>
+
+  <div class="billing-row">
+    <div class="bt-wrap" id="billingToggle">
+      <button class="bt-opt active" data-period="mo">ежемесячно</button>
+      <button class="bt-opt" data-period="yr"
+        >ежегодно <span class="bt-save">2 мес. бесплатно</span></button
+      >
+    </div>
+  </div>
+
+  <div class="plans-grid">
+    <div class="plan-card">
+      <div>
+        <div class="plan-tier">бесплатно · навсегда</div>
+        <div class="plan-name">базовые инструменты</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount">0 ₽</span>
+      </div>
+      <ul class="plan-features">
+        <li>все инструменты — работают в браузере</li>
+        <li>без регистрации, трекеров и рекламы</li>
+        <li>файлы до 5 МБ</li>
+        <li>открытый код · Apache 2.0</li>
+      </ul>
+      <a href="/tools/" class="plan-cta outline">начать →</a>
+    </div>
+
+    <div class="plan-card featured">
+      <div>
+        <div class="plan-tier" id="proTier">подключить</div>
+        <div class="plan-name">pro</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount" data-mo="390 ₽" data-yr="2 900 ₽">390 ₽</span>
+        <span class="period" data-mo="/ мес" data-yr="/ год">/ мес</span>
+        <span class="annual-note" id="proAnnualNote">при оплате за год</span>
+      </div>
+      <ul class="plan-features">
+        <li>всё из бесплатного</li>
+        <li class="f-sep"></li>
+        <li>пакетная обработка — до 500 элементов</li>
+        <li>файлы до 100 МБ</li>
+        <li>история — до 500 операций</li>
+        <li>неограниченные пресеты</li>
+        <li>экспорт истории в JSON</li>
+        <li>ссылки на конфигурацию инструментов</li>
+      </ul>
+      <button class="plan-cta filled" id="proSubscribeBtn">подключить pro →</button>
+      <div class="plan-cta-hint" id="proHint"></div>
+    </div>
+
+    <div class="plan-card">
+      <div>
+        <div class="plan-tier">скоро</div>
+        <div class="plan-name">developer</div>
+      </div>
+      <div class="plan-price">
+        <span class="amount" data-mo="1 990 ₽" data-yr="14 900 ₽">1 990 ₽</span>
+        <span class="period" data-mo="/ мес" data-yr="/ год">/ мес</span>
+        <span class="annual-note" id="apiAnnualNote">при оплате за год</span>
+      </div>
+      <ul class="plan-features">
+        <li>всё из pro</li>
+        <li class="f-sep"></li>
+        <li>личные API-ключи</li>
+        <li>50 000 запросов в месяц</li>
+        <li>интеграция с CLI</li>
+        <li>программный доступ ко всем инструментам</li>
+        <li>дашборд использования</li>
+      </ul>
+      <span class="plan-cta ghost plan-cta-cs">скоро</span>
+    </div>
+  </div>
+
+  <h2 class="h-section">// что работает где</h2>
+  <div class="runs-grid">
+    <div class="runs-col">
+      <div class="runs-col-head local">
+        <i class="ti ti-device-laptop"></i>в вашем браузере — всегда бесплатно
+      </div>
+      <ul class="runs-list">
+        <li>форматирование и валидация JSON</li>
+        <li>Base64 кодирование / декодирование</li>
+        <li>JWT декодирование и инспекция</li>
+        <li>тестирование регулярных выражений</li>
+        <li>генерация UUID / NanoID</li>
+        <li>парсинг cron-выражений</li>
+        <li>конвертация timestamp</li>
+        <li>URL кодирование / декодирование</li>
+        <li>генерация SHA-хешей</li>
+      </ul>
+    </div>
+    <div class="runs-col">
+      <div class="runs-col-head cloud">
+        <i class="ti ti-cloud"></i>на наших серверах — pro и api
+      </div>
+      <ul class="runs-list">
+        <li>пакетная обработка — сотни файлов сразу</li>
+        <li>большие файлы (больше 5 МБ)</li>
+        <li>синхронизация истории между устройствами</li>
+        <li>сохранённые пресеты и конфигурации</li>
+        <li>REST API для всех инструментов</li>
+        <li>CLI для CI/CD-пайплайнов</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="h-section">// пока можно</h2>
+  <div class="free-grid">
+    <a
+      class="free-card"
+      href="https://github.com/whittly/whittly/issues"
+      target="_blank"
+      rel="noopener"
+    >
+      <i class="ti ti-bug"></i>
+      <div>
+        <div class="title">сообщить об ошибке</div>
+        <div class="desc">
+          нашёл что-то сломанное или непонятное? открой issue — это реально помогает.
+        </div>
+      </div>
+    </a>
+
+    <a class="free-card" href="#" id="shareBtn">
+      <i class="ti ti-share-2"></i>
+      <div>
+        <div class="title">поделиться с коллегой</div>
+        <div class="desc">
+          тот самый, который всё ещё пользуется сомнительными json-сайтами. ты знаешь, о ком речь.
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="thanks">
+    <span class="thanks-icon"><i class="ti ti-heart"></i></span>
+    <div class="thanks-body">
+      если нашли баг, есть идея для фичи, или просто пользуетесь инструментами каждый день и
+      делитесь с командой — <strong>спасибо</strong>. это значит больше, чем кажется.
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Billing toggle
+  const toggle = document.getElementById('billingToggle')!;
+  toggle.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.bt-opt') as HTMLElement | null;
+    if (!btn) return;
+    const period = btn.dataset.period!;
+    toggle.querySelectorAll('.bt-opt').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isAnnual = period === 'yr';
+
+    document.querySelectorAll('.plan-price .amount[data-mo]').forEach((el) => {
+      const e = el as HTMLElement;
+      e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
+    });
+    document.querySelectorAll('.plan-price .period[data-mo]').forEach((el) => {
+      const e = el as HTMLElement;
+      e.textContent = isAnnual ? e.dataset.yr! : e.dataset.mo!;
+    });
+    ['proAnnualNote', 'apiAnnualNote'].forEach((id) => {
+      const el = document.getElementById(id)!;
+      el.style.display = isAnnual ? 'inline' : 'none';
+    });
+  });
+
+  // Pro subscribe button
+  const proBtn = document.getElementById('proSubscribeBtn') as HTMLButtonElement;
+  const proTier = document.getElementById('proTier')!;
+  const proHint = document.getElementById('proHint')!;
+
+  function getCurrentPeriod() {
+    const active = document.querySelector('.bt-opt.active') as HTMLElement;
+    return active?.dataset.period === 'yr' ? 'annual' : 'monthly';
+  }
+
+  const whApi = (window as unknown as { whApi: { getPlan: () => string; fetch: typeof fetch } })
+    .whApi;
+
+  function initProButton() {
+    const plan = whApi?.getPlan?.();
+    if (plan === 'pro' || plan === 'api') {
+      proBtn.textContent = 'уже активен ✓';
+      proBtn.disabled = true;
+      proBtn.classList.add('plan-cta-active');
+      proTier.textContent = 'активен';
+      return;
+    }
+    if (!localStorage.getItem('wh_access')) {
+      proBtn.textContent = 'войти и подключить →';
+      proBtn.onclick = () => {
+        location.href = '/account/login/?next=/premium/';
+      };
+      return;
+    }
+  }
+
+  proBtn.addEventListener('click', async () => {
+    const plan = whApi?.getPlan?.();
+    if (plan === 'pro' || plan === 'api') return;
+    if (!localStorage.getItem('wh_access')) {
+      location.href = '/account/login/?next=/premium/';
+      return;
+    }
+    proBtn.disabled = true;
+    proBtn.textContent = 'перенаправляю…';
+    proHint.textContent = '';
+    try {
+      const res = await whApi.fetch('/billing/robokassa/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'pro', period: getCurrentPeriod() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? 'ошибка');
+      location.href = data.url;
+    } catch (e: unknown) {
+      proBtn.disabled = false;
+      proBtn.textContent = 'подключить pro →';
+      proHint.textContent = 'ошибка — попробуйте ещё раз';
+    }
+  });
+
+  initProButton();
+
+  // Share button
+  document.getElementById('shareBtn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const card = e.currentTarget as HTMLElement;
+    const titleEl = card.querySelector('.title') as HTMLElement;
+    const data = {
+      title: 'whittly',
+      text: 'инструменты разработчика прямо в браузере',
+      url: 'https://whittly.ru/',
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(data.url);
+        const original = titleEl.textContent!;
+        titleEl.textContent = 'ссылка скопирована!';
+        setTimeout(() => {
+          titleEl.textContent = original;
+        }, 1600);
+      } catch {}
+    }
+  });
+</script>

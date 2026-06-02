@@ -316,7 +316,7 @@ const { isRu, catalog } = Astro.props;
     <span class="hist-pro-tag">Pro</span>
     <span
       >{isRu ? 'Облачная синхронизация — ' : 'Cloud Sync — '}<a
-        href={isRu ? '/ru/premium/' : '/premium/'}>{isRu ? 'подробнее' : 'upgrade'}</a
+        href="/premium/">{isRu ? 'подробнее' : 'upgrade'}</a
       ></span
     >
   </div>
@@ -486,14 +486,14 @@ const { isRu, catalog } = Astro.props;
               var hit = catalog.find(function (t) {
                 return t.name.toLowerCase() === (e.tool || '').toLowerCase();
               });
-              if (hit) toolPath = (isRu ? '/ru/tools/' : '/tools/') + hit.slug + '/';
+              if (hit) toolPath = '/tools/' + hit.slug + '/';
             }
             if (!toolPath && e.tool) {
               var slug = e.tool
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-+|-+$/g, '');
-              toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+              toolPath = '/tools/' + slug + '/';
             }
             var hasLink = !!(toolPath && (e.hasInput || e.input || e.inputPreview));
             if (hasLink && preview) previewCache[e.ts] = preview;

@@ -1,0 +1,76 @@
+﻿---
+import Base from '@/layouts/Base.astro';
+import '@/styles/account.css';
+
+const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
+---
+
+<Base
+  title="подтверждение email — whittly"
+  description="Подтвердите адрес электронной почты whittly."
+>
+  <div class="ac-auth-wrap">
+    <div class="ac-auth-card">
+      <div class="ac-auth-top">
+        <div class="ac-auth-tag">// аккаунт</div>
+        <h1 class="ac-auth-title">подтверждение email</h1>
+      </div>
+
+      <div class="ac-auth-body">
+        <div class="ac-error-msg" id="errMsg"></div>
+        <div class="ac-success-msg" id="okMsg"></div>
+        <div id="loadingMsg" style="color:var(--ink-faint);font-size:13px;">проверяем…</div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script is:inline define:vars={{ API }}>
+  (function () {
+    var errEl = document.getElementById('errMsg');
+    var okEl = document.getElementById('okMsg');
+    var loadingEl = document.getElementById('loadingMsg');
+
+    function showError(msg) {
+      loadingEl.style.display = 'none';
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+    }
+
+    function showOk(msg) {
+      loadingEl.style.display = 'none';
+      okEl.textContent = msg;
+      okEl.classList.add('visible');
+    }
+
+    var token = new URLSearchParams(window.location.search).get('token');
+    if (!token) {
+      showError('токен верификации отсутствует');
+      return;
+    }
+
+    fetch(API + '/auth/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+      .then(function (res) {
+        return res.json().then(function (d) {
+          return { ok: res.ok, data: d };
+        });
+      })
+      .then(function (r) {
+        if (r.ok) {
+          showOk('email подтверждён! переходим…');
+          setTimeout(function () {
+            location.replace('/account/');
+          }, 1500);
+        } else {
+          showError(r.data.error ?? 'ошибка верификации — ссылка могла устареть');
+        }
+      })
+      .catch(function () {
+        showError('сервер недоступен — попробуй позже');
+      });
+  })();
+</script>

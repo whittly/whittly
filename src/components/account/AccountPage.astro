@@ -120,7 +120,7 @@ const catalogForPinned = Object.fromEntries(
           <div class="ac-section-head">
             <span class="ac-section-title">{isRu ? '// закреплённые' : '// pinned'}</span>
             <span class="ac-section-count" id="acPinnedCount"></span>
-            <a href={isRu ? '/ru/tools/' : '/tools/'} class="ac-section-link"
+            <a href="/tools/" class="ac-section-link"
               >{isRu ? 'все →' : 'all →'}</a
             >
           </div>
@@ -129,7 +129,7 @@ const catalogForPinned = Object.fromEntries(
         <div class="ac-section">
           <div class="ac-section-head">
             <span class="ac-section-title">{isRu ? '// недавнее' : '// recent'}</span>
-            <a href={isRu ? '/ru/account/history/' : '/account/history/'} class="ac-section-link"
+            <a href="/account/history/" class="ac-section-link"
               >{isRu ? 'вся история →' : 'all history →'}</a
             >
           </div>
@@ -151,7 +151,7 @@ const catalogForPinned = Object.fromEntries(
 <script is:inline define:vars={{ isRu, catalogForPinned }}>
   (function () {
     if (!localStorage.getItem('wh_access')) {
-      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      location.replace('/account/login/');
       return;
     }
 
@@ -216,7 +216,7 @@ const catalogForPinned = Object.fromEntries(
       localStorage.removeItem('wh_access');
       localStorage.removeItem('wh_refresh');
       localStorage.removeItem('wh_user');
-      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      location.replace('/account/login/');
     }
 
     signOutBtn.addEventListener('click', logout);
@@ -281,7 +281,7 @@ const catalogForPinned = Object.fromEntries(
 
         if (effectivePlan === 'free') {
           upgradeEl.innerHTML = isRu
-            ? '<a class="ac-plan-upgrade" href="/ru/premium/">перейти на pro →</a>'
+            ? '<a class="ac-plan-upgrade" href="/premium/">перейти на pro →</a>'
             : '<a class="ac-plan-upgrade" href="/premium/">upgrade to pro →</a>';
         }
 
@@ -299,7 +299,7 @@ const catalogForPinned = Object.fromEntries(
           statPreEl.textContent = isRu ? 'нужен pro' : 'pro required';
           descPreEl.textContent = isRu ? 'обновите тариф для пресетов' : 'upgrade to save presets';
           presetsArrowEl.innerHTML = isRu
-            ? '<a href="/ru/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">обновить →</a>'
+            ? '<a href="/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">обновить →</a>'
             : '<a href="/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">upgrade →</a>';
         } else {
           var pCount = (presetsData.presets || []).length;
@@ -311,7 +311,7 @@ const catalogForPinned = Object.fromEntries(
               (pCount === 1 ? '' : pCount < 5 ? 'а' : 'ов') +
               ' в разных инструментах';
             presetsArrowEl.innerHTML =
-              '<a href="/ru/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">смотреть →</a>';
+              '<a href="/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">смотреть →</a>';
           } else {
             statPreEl.textContent = pCount + ' saved';
             descPreEl.textContent =
@@ -336,7 +336,7 @@ const catalogForPinned = Object.fromEntries(
               (isRu ? 'нет закреплённых инструментов' : 'no pinned tools yet') +
               '</div>';
           } else {
-            var toolsBase = isRu ? '/ru/tools/' : '/tools/';
+            var toolsBase = '/tools/';
             acPinnedListEl.innerHTML =
               '<div class="ac-pinned-chips">' +
               pinnedSlugs
@@ -391,7 +391,7 @@ const catalogForPinned = Object.fromEntries(
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/^-+|-+$/g, '');
-                  toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+                  toolPath = '/tools/' + slug + '/';
                 }
                 var entryPreview = e.inputPreview || e.input || '';
                 try {
@@ -463,7 +463,7 @@ const catalogForPinned = Object.fromEntries(
           presetsCardEl.style.cursor = 'pointer';
           presetsCardEl.addEventListener('click', function (ev) {
             if (ev.target.closest('a')) return;
-            window.location.href = isRu ? '/ru/account/presets/' : '/account/presets/';
+            window.location.href = '/account/presets/';
           });
         }
 

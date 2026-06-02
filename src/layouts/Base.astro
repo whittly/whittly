@@ -16,14 +16,10 @@ interface Props {
 const { title, description, jsonLd } = Astro.props;
 const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
-const SITE = 'https://whittly.dev';
+const isRu = import.meta.env.PUBLIC_SITE_DOMAIN === 'whittly.ru';
+const SITE = isRu ? 'https://whittly.ru' : 'https://whittly.dev';
 const pathname = Astro.url.pathname;
-const isRu = pathname.startsWith('/ru');
-const altUrl = isRu ? pathname.replace(/^\/ru/, '') || '/' : '/ru' + pathname;
 const canonical = SITE + pathname;
-const altAbsolute = SITE + altUrl;
-const enUrl = isRu ? altAbsolute : canonical;
-const ruUrl = isRu ? canonical : altAbsolute;
 
 const catalog = CATALOG.map((t) => ({
   name: t.name,
@@ -127,9 +123,8 @@ const catalog = CATALOG.map((t) => ({
 
     {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
-    <link rel="alternate" hreflang="en" href={enUrl} />
-    <link rel="alternate" hreflang="ru" href={ruUrl} />
-    <link rel="alternate" hreflang="x-default" href={enUrl} />
+    <link rel="alternate" hreflang={isRu ? 'ru' : 'en'} href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -152,21 +147,6 @@ const catalog = CATALOG.map((t) => ({
       )
     }
     <slot name="head" />
-    <script is:inline>
-      /* Auto-redirect CIS browser languages to /ru/ — skips if user explicitly chose EN */
-      (function () {
-        try {
-          if (localStorage.getItem('wh_lang') === 'en') return;
-          var path = location.pathname;
-          if (path.startsWith('/ru')) return;
-
-          var lang = (navigator.language || '').toLowerCase();
-          var isCis = /^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang);
-          if (!isCis) return;
-          location.replace(path === '/' ? '/ru/' : '/ru' + path + location.search);
-        } catch (e) {}
-      })();
-    </script>
   </head>
   <body>
     <!-- Globals: must be defined before <slot /> and component scripts -->
@@ -252,7 +232,7 @@ const catalog = CATALOG.map((t) => ({
 
     <div class="container">
       <nav>
-        <a class="logo" href={isRu ? '/ru/' : '/'}>
+        <a class="logo" href="/">
           <span class="logo-mark">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -281,11 +261,10 @@ const catalog = CATALOG.map((t) => ({
         </button>
 
         <div class="nav-util">
-          <a href={altUrl} class="nav-lang">{isRu ? 'EN' : 'RU'}</a>
           <a
             class="nav-account"
             id="navAccount"
-            href={isRu ? '/ru/account/login/' : '/account/login/'}
+            href="/account/login/"
           >
             <i class="ti ti-user-circle"></i>
             <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
@@ -307,19 +286,13 @@ const catalog = CATALOG.map((t) => ({
             ></span
           >
           <nav class="footer-nav">
-            <a href={isRu ? '/ru/tools/' : '/tools/'} class="meta-link"
-              >{isRu ? 'инструменты' : 'tools'}</a
-            >
-            <a href={isRu ? '/ru/about/' : '/about/'} class="meta-link"
-              >{isRu ? 'о проекте' : 'about'}</a
-            >
-            <a href={isRu ? '/ru/premium/' : '/premium/'} class="meta-link">pro</a>
-            <a href={isRu ? '/ru/privacy/' : '/privacy/'} class="meta-link"
+            <a href="/tools/" class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
+            <a href="/about/" class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
+            <a href="/premium/" class="meta-link">pro</a>
+            <a href="/privacy/" class="meta-link"
               >{isRu ? 'конфиденциальность' : 'privacy'}</a
             >
-            <a href={isRu ? '/ru/terms/' : '/terms/'} class="meta-link"
-              >{isRu ? 'условия' : 'terms'}</a
-            >
+            <a href="/terms/" class="meta-link">{isRu ? 'условия' : 'terms'}</a>
           </nav>
           <span class="meta"
             >v{version}{buildDate ? ` · ${buildDate}` : ''} · <a
@@ -333,10 +306,10 @@ const catalog = CATALOG.map((t) => ({
         <div class="footer-row-legal">
           <div class="footer-legal-links">
             <span class="footer-legal-name">Попелышко Дмитрий Иванович · ИНН 402906501480</span>
-            <a href="/ru/oferta/" class="meta-link">публичная оферта</a>
-            <a href="/ru/privacy/" class="meta-link">политика конфиденциальности</a>
+            <a href="/oferta/" class="meta-link">публичная оферта</a>
+            <a href="/privacy/" class="meta-link">политика конфиденциальности</a>
           </div>
-          <a href="mailto:support@whittly.dev" class="meta-link">support</a>
+          <a href={`mailto:support@${isRu ? 'whittly.ru' : 'whittly.dev'}`} class="meta-link">support</a>
         </div>
       </footer>
     </div>
@@ -351,21 +324,9 @@ const catalog = CATALOG.map((t) => ({
         var navAccount = document.getElementById('navAccount');
         var navAccountLabel = document.getElementById('navAccountLabel');
         if (navAccount && navAccountLabel && localStorage.getItem('wh_access')) {
-          navAccount.href = isRu ? '/ru/account/' : '/account/';
+          navAccount.href = '/account/';
           navAccount.classList.add('authed');
           navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
-        }
-
-        /* ─── Language switcher — persist explicit choice ─── */
-        var langSwitcherEl = document.querySelector('.nav-lang');
-        if (langSwitcherEl) {
-          langSwitcherEl.addEventListener('click', function () {
-            if (isRu) {
-              localStorage.setItem('wh_lang', 'en');
-            } else {
-              localStorage.removeItem('wh_lang');
-            }
-          });
         }
       })();
     </script>

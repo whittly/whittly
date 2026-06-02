@@ -20,7 +20,7 @@ const isRu = lang === 'ru';
       <div class="ac-header">
         <div>
           <div class="ac-breadcrumb">
-            <a href={isRu ? '/ru/account/' : '/account/'}>{isRu ? 'аккаунт' : 'account'}</a>
+            <a href="/account/">{isRu ? 'аккаунт' : 'account'}</a>
             <span class="sep">/</span>
             <span>{isRu ? 'история' : 'history'}</span>
           </div>
@@ -213,7 +213,7 @@ const isRu = lang === 'ru';
 <script is:inline define:vars={{ isRu }}>
   (function () {
     if (!localStorage.getItem('wh_access')) {
-      location.replace(isRu ? '/ru/account/login/' : '/account/login/');
+      location.replace('/account/login/');
       return;
     }
 
@@ -321,7 +321,7 @@ const isRu = lang === 'ru';
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/^-+|-+$/g, '');
-            toolPath = (isRu ? '/ru/tools/' : '/tools/') + slug + '/';
+            toolPath = '/tools/' + slug + '/';
           }
           var preview = e.inputPreview || e.input || '';
           try {
@@ -527,7 +527,7 @@ const isRu = lang === 'ru';
           ? 'бесплатный план: ' + used + ' / 5 записей — '
           : 'free plan: ' + used + ' / 5 entries — ') +
         '<a href="' +
-        (isRu ? '/ru/premium/' : '/premium/') +
+        '/premium/' +
         '">' +
         (isRu ? 'перейти на pro →' : 'upgrade to pro →') +
         '</a>';

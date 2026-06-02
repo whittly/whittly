@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:ru": "cross-env PUBLIC_SITE_DOMAIN=whittly.ru astro build",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
