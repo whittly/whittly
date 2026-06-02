@@ -24,7 +24,7 @@ jobs:
       - name: Build whittly.ru
         run: npm run build:ru
         env:
-          PUBLIC_API_URL: https://api.whittly.dev
+          PUBLIC_API_URL: https://api.whittly.ru
           PUBLIC_SITE_DOMAIN: whittly.ru
 
   e2e:
