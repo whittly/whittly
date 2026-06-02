@@ -141,7 +141,7 @@ const { isRu, catalog } = Astro.props;
       q = (q || '').toLowerCase().trim();
       var items = q
         ? catalog.filter(function (t) {
-            return t.name.indexOf(q) !== -1 || t.desc.indexOf(q) !== -1 || t.cat.indexOf(q) !== -1;
+            return (t.search || t.name + ' ' + t.desc + ' ' + t.cat).indexOf(q) !== -1;
           })
         : catalog;
       if (!items.length) {

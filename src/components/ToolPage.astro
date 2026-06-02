@@ -89,15 +89,16 @@ const related = CATALOG.filter((t) => t.cat === tool.cat && !t.soon && toolSlug(
   3
 );
 
-const seoTitle = SEO_TITLE[slug] ? `${SEO_TITLE[slug]} — whittly` : `${name} — whittly`;
+const seoTitleBase = isRu ? name : (SEO_TITLE[slug] ?? name);
+const seoTitle = `${seoTitleBase} — whittly`;
 const seoDesc = isRu ? (SEO_DESC_RU[slug] ?? desc) : (SEO_DESC[slug] ?? desc);
 
-const SITE = 'https://whittly.dev';
-const toolUrl = `${SITE}${isRu ? '/ru' : ''}/tools/${slug}/`;
+const SITE = isRu ? 'https://whittly.ru' : 'https://whittly.dev';
+const toolUrl = `${SITE}/tools/${slug}/`;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: seoTitle.replace(' — whittly', ''),
+  name: seoTitleBase,
   description: seoDesc,
   url: toolUrl,
   applicationCategory: 'DeveloperApplication',
@@ -851,7 +852,7 @@ const jsonLd = {
             const rName = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
             const rDesc = isRu ? (toolDescRu[t.name] ?? t.desc) : t.desc;
             return (
-              <a class="tool-related-card" href={`${isRu ? '/ru' : ''}/tools/${rSlug}/`}>
+              <a class="tool-related-card" href={`/tools/${rSlug}/`}>
                 <i class={`ti ${t.icon}`} />
                 <span class="tool-related-name">{rName}</span>
                 <span class="tool-related-desc">{rDesc}</span>

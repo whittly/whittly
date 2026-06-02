@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { CATALOG, toolSlug } from '../data/catalog';
+import { toolNameRu, toolDescRu, catLabelRu } from '../data/ru';
 import pkg from '../../package.json';
 import CommandPalette from '../components/CommandPalette.astro';
 import HistorySidebar from '../components/HistorySidebar.astro';
@@ -21,13 +22,20 @@ const SITE = isRu ? 'https://whittly.ru' : 'https://whittly.dev';
 const pathname = Astro.url.pathname;
 const canonical = SITE + pathname;
 
-const catalog = CATALOG.map((t) => ({
-  name: t.name,
-  slug: toolSlug(t),
-  desc: t.desc,
-  cat: t.cat as string,
-  icon: t.icon,
-}));
+const catalog = CATALOG.map((t) => {
+  const name = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
+  const desc = isRu ? (toolDescRu[t.name] ?? t.desc) : t.desc;
+  const cat = isRu ? (catLabelRu[t.cat] ?? t.cat) : (t.cat as string);
+  const search = [name, t.name, desc, t.desc, cat, t.cat].join(' ').toLowerCase();
+  return {
+    name,
+    slug: toolSlug(t),
+    desc,
+    cat,
+    icon: t.icon,
+    search,
+  };
+});
 ---
 
 <style is:global>

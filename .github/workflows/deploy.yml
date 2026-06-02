@@ -76,4 +76,5 @@ jobs:
             npm ci
             BUILD_DATE=$(date +%Y.%m.%d)
             VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev npm run build
+            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.ru PUBLIC_SITE_DOMAIN=whittly.ru npm run build:ru
             echo "✓ frontend (${{ github.ref_name }}) deployed at $(date)"

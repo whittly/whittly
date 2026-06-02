@@ -24,7 +24,7 @@ export const TOOL_UI: Record<Lang, ToolPageUI> = {
     comingSoon: 'скоро',
     toolComingSoon: '// инструмент скоро появится',
     proUpgradeLabel: 'подробнее →',
-    proUpgradePath: '/ru/premium/',
+    proUpgradePath: '/premium/',
   },
 };
 
