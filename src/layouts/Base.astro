@@ -261,11 +261,7 @@ const catalog = CATALOG.map((t) => ({
         </button>
 
         <div class="nav-util">
-          <a
-            class="nav-account"
-            id="navAccount"
-            href="/account/login/"
-          >
+          <a class="nav-account" id="navAccount" href="/account/login/">
             <i class="ti ti-user-circle"></i>
             <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
           </a>
@@ -289,9 +285,7 @@ const catalog = CATALOG.map((t) => ({
             <a href="/tools/" class="meta-link">{isRu ? 'инструменты' : 'tools'}</a>
             <a href="/about/" class="meta-link">{isRu ? 'о проекте' : 'about'}</a>
             <a href="/premium/" class="meta-link">pro</a>
-            <a href="/privacy/" class="meta-link"
-              >{isRu ? 'конфиденциальность' : 'privacy'}</a
-            >
+            <a href="/privacy/" class="meta-link">{isRu ? 'конфиденциальность' : 'privacy'}</a>
             <a href="/terms/" class="meta-link">{isRu ? 'условия' : 'terms'}</a>
           </nav>
           <span class="meta"
@@ -309,7 +303,9 @@ const catalog = CATALOG.map((t) => ({
             <a href="/oferta/" class="meta-link">публичная оферта</a>
             <a href="/privacy/" class="meta-link">политика конфиденциальности</a>
           </div>
-          <a href={`mailto:support@${isRu ? 'whittly.ru' : 'whittly.dev'}`} class="meta-link">support</a>
+          <a href={`mailto:support@${isRu ? 'whittly.ru' : 'whittly.dev'}`} class="meta-link"
+            >support</a
+          >
         </div>
       </footer>
     </div>
