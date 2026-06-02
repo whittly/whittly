@@ -25,6 +25,7 @@ jobs:
         run: npm run build:ru
         env:
           PUBLIC_API_URL: https://api.whittly.dev
+          PUBLIC_SITE_DOMAIN: whittly.ru
 
   e2e:
     name: E2E Smoke Tests
