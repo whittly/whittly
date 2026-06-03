@@ -26,7 +26,7 @@ const UMAMI_WEBSITE_ID = isRu
 const pathname = Astro.url.pathname;
 const canonical = SITE + pathname;
 const altSite = isRu ? 'https://whittly.dev' : 'https://ru.whittly.dev';
-const altUrl = altSite + pathname;
+const altUrl = isRu ? altSite + pathname + '?noredir=1' : altSite + pathname;
 const altLabel = isRu ? 'EN' : 'RU';
 
 const catalog = CATALOG.map((t) => {
@@ -114,6 +114,25 @@ const catalog = CATALOG.map((t) => {
 <html lang={isRu ? 'ru' : 'en'}>
   <head>
     <meta charset="UTF-8" />
+    <script is:inline define:vars={{ isRu }}>
+      if (!isRu)
+        (function () {
+          try {
+            if (sessionStorage.getItem('wh_skip_redir')) return;
+            var params = new URLSearchParams(location.search);
+            if (params.has('noredir')) {
+              sessionStorage.setItem('wh_skip_redir', '1');
+              params.delete('noredir');
+              var qs = params.toString();
+              history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+              return;
+            }
+            var lang = (navigator.language || '').toLowerCase();
+            if (!/^(ru|uk|be|kk|hy|az|ka|uz|tg|ky|tk)/.test(lang)) return;
+            location.replace('https://ru.whittly.dev' + location.pathname + location.search);
+          } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/whittly-logo.svg" />
