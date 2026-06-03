@@ -22,11 +22,11 @@ jobs:
         env:
           PUBLIC_API_URL: https://api.whittly.dev
           PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_DEV }}
-      - name: Build whittly.ru
+      - name: Build ru.whittly.dev
         run: npm run build:ru
         env:
-          PUBLIC_API_URL: https://api.whittly.ru
-          PUBLIC_SITE_DOMAIN: whittly.ru
+          PUBLIC_API_URL: https://api.whittly.dev
+          PUBLIC_SITE_DOMAIN: ru.whittly.dev
           PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.PUBLIC_UMAMI_WEBSITE_ID_RU }}
 
   e2e:
@@ -82,5 +82,5 @@ jobs:
             npm ci
             BUILD_DATE=$(date +%Y.%m.%d)
             VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev PUBLIC_UMAMI_WEBSITE_ID=$UMAMI_ID_DEV npm run build
-            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.ru PUBLIC_SITE_DOMAIN=whittly.ru PUBLIC_UMAMI_WEBSITE_ID=$UMAMI_ID_RU npm run build:ru
+            VITE_BUILD_DATE=$BUILD_DATE PUBLIC_API_URL=https://api.whittly.dev PUBLIC_SITE_DOMAIN=ru.whittly.dev PUBLIC_UMAMI_WEBSITE_ID=$UMAMI_ID_RU npm run build:ru
             echo "✓ frontend (${{ github.ref_name }}) deployed at $(date)"

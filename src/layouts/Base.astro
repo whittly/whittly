@@ -17,14 +17,17 @@ interface Props {
 const { title, description, jsonLd } = Astro.props;
 const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
 
-const isRu = import.meta.env.PUBLIC_SITE_DOMAIN === 'whittly.ru';
-const SITE = isRu ? 'https://whittly.ru' : 'https://whittly.dev';
-const ANALYTICS_SITE = isRu ? 'https://analytics.whittly.ru' : 'https://analytics.whittly.dev';
+const isRu = import.meta.env.PUBLIC_SITE_DOMAIN === 'ru.whittly.dev';
+const SITE = isRu ? 'https://ru.whittly.dev' : 'https://whittly.dev';
+const ANALYTICS_SITE = 'https://analytics.whittly.dev';
 const UMAMI_WEBSITE_ID = isRu
   ? (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID_RU ?? import.meta.env.PUBLIC_UMAMI_WEBSITE_ID)
   : (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID_DEV ?? import.meta.env.PUBLIC_UMAMI_WEBSITE_ID);
 const pathname = Astro.url.pathname;
 const canonical = SITE + pathname;
+const altSite = isRu ? 'https://whittly.dev' : 'https://ru.whittly.dev';
+const altUrl = altSite + pathname;
+const altLabel = isRu ? 'EN' : 'RU';
 
 const catalog = CATALOG.map((t) => {
   const name = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
@@ -273,6 +276,7 @@ const catalog = CATALOG.map((t) => {
         </button>
 
         <div class="nav-util">
+          <a href={altUrl} class="nav-lang">{altLabel}</a>
           <a class="nav-account" id="navAccount" href="/account/login/">
             <i class="ti ti-user-circle"></i>
             <span id="navAccountLabel">{isRu ? 'войти' : 'sign in'}</span>
@@ -317,9 +321,7 @@ const catalog = CATALOG.map((t) => {
               >политика конфиденциальности</a
             >
           </div>
-          <a href={`mailto:support@${isRu ? 'whittly.ru' : 'whittly.dev'}`} class="meta-link"
-            >support</a
-          >
+          <a href="mailto:support@whittly.dev" class="meta-link">support</a>
         </div>
       </footer>
     </div>

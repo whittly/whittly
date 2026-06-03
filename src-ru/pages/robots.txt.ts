@@ -1,6 +1,6 @@
-export function GET() {
+﻿export function GET() {
   return new Response(
-    'User-agent: *\nAllow: /\n\nSitemap: https://whittly.ru/sitemap-index.xml\n',
+    'User-agent: *\nAllow: /\n\nSitemap: https://ru.whittly.dev/sitemap-index.xml\n',
     {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
