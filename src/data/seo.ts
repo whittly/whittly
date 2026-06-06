@@ -26,6 +26,12 @@ export const SEO_TITLE: Record<string, string> = {
   'json-java': 'JSON to Java POJO / Record Generator',
   'maven-gradle': 'Maven ↔ Gradle Dependency Converter',
   'quartz-cron': 'Quartz Cron Expression Parser & Explainer',
+  'sql-formatter': 'SQL Formatter & Beautifier',
+  'html-formatter': 'HTML Formatter & Minifier',
+  'css-formatter': 'CSS Formatter & Minifier',
+  'js-beautifier': 'JavaScript Beautifier — Unminify & Format JS',
+  'json-typescript': 'JSON to TypeScript Interface Generator',
+  'lorem-ipsum': 'Lorem Ipsum Generator — Paragraphs, Sentences, Words',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -79,6 +85,18 @@ export const SEO_DESC: Record<string, string> = {
     'Free online Maven to Gradle dependency converter. Convert Maven XML <dependency> blocks to Gradle Kotlin or Groovy DSL and back. Handles all common scopes.',
   'quartz-cron':
     'Free online Quartz cron expression parser. Decode 6-field Quartz schedules with seconds, explain L/W/# syntax, and preview the next 8 run times.',
+  'sql-formatter':
+    'Free online SQL formatter and beautifier. Reformat SQL queries for any dialect — MySQL, PostgreSQL, SQLite, T-SQL. Prettify or minify, instant results.',
+  'html-formatter':
+    'Free online HTML formatter and minifier. Indent messy HTML, collapse whitespace, and minify markup for production. Runs entirely in your browser.',
+  'css-formatter':
+    'Free online CSS formatter and minifier. Expand compressed CSS for readability or minify for production. Handles nested rules and comments.',
+  'js-beautifier':
+    'Free online JavaScript beautifier. Unminify, indent, and format compressed or obfuscated JS instantly. No data leaves your browser.',
+  'json-typescript':
+    'Free online JSON to TypeScript generator. Convert JSON objects to TypeScript interfaces instantly. Handles nested objects, arrays, and optional fields.',
+  'lorem-ipsum':
+    'Free lorem ipsum generator. Generate placeholder text as paragraphs, sentences, or word lists. Configurable count, classic or random mode.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -132,4 +150,16 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный конвертер зависимостей Maven ↔ Gradle онлайн. Конвертация Maven XML <dependency> в Gradle Kotlin/Groovy DSL и обратно.',
   'quartz-cron':
     'Бесплатный парсер Quartz cron-выражений онлайн. Расшифровка 6-польного формата с секундами, объяснение синтаксиса L/W/#, следующие 8 запусков.',
+  'sql-formatter':
+    'Бесплатный форматтер SQL онлайн. Форматирование SQL-запросов для MySQL, PostgreSQL, SQLite, T-SQL. Красивый или минифицированный вывод, мгновенный результат.',
+  'html-formatter':
+    'Бесплатный форматтер HTML онлайн. Расставь отступы в хаотичном HTML или минифицируй разметку для продакшена. Работает прямо в браузере.',
+  'css-formatter':
+    'Бесплатный форматтер CSS онлайн. Разворачивай сжатый CSS для читаемости или минифицируй для продакшена. Поддержка вложенных правил и комментариев.',
+  'js-beautifier':
+    'Бесплатный JavaScript-бьютификатор онлайн. Анминификация, форматирование и расстановка отступов в сжатом JS. Данные не покидают браузер.',
+  'json-typescript':
+    'Бесплатный генератор TypeScript-интерфейсов из JSON онлайн. Конвертируй JSON-объекты в TypeScript интерфейсы. Поддержка вложенных объектов и массивов.',
+  'lorem-ipsum':
+    'Бесплатный генератор Lorem Ipsum онлайн. Создавай текст-заглушку в виде абзацев, предложений или слов. Настраиваемое количество, классический и случайный режим.',
 };

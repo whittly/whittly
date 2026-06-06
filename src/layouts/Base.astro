@@ -28,6 +28,8 @@ const canonical = SITE + pathname;
 const altSite = isRu ? 'https://whittly.dev' : 'https://ru.whittly.dev';
 const altUrl = isRu ? altSite + pathname + '?noredir=1' : altSite + pathname;
 const altLabel = isRu ? 'EN' : 'RU';
+const hrefEn = (isRu ? altSite : SITE) + pathname;
+const hrefRu = (isRu ? SITE : altSite) + pathname;
 
 const catalog = CATALOG.map((t) => {
   const name = isRu ? (toolNameRu[t.name] ?? t.name) : t.name;
@@ -224,8 +226,9 @@ const catalog = CATALOG.map((t) => {
 
     {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
-    <link rel="alternate" hreflang={isRu ? 'ru' : 'en'} href={canonical} />
-    <link rel="alternate" hreflang="x-default" href={canonical} />
+    <link rel="alternate" hreflang="en" href={hrefEn} />
+    <link rel="alternate" hreflang="ru" href={hrefRu} />
+    <link rel="alternate" hreflang="x-default" href={hrefEn} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
