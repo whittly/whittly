@@ -1,0 +1,451 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  paragraphs: isRu ? 'абзацы' : 'paragraphs',
+  sentences: isRu ? 'предложения' : 'sentences',
+  words: isRu ? 'слова' : 'words',
+  list: isRu ? 'список' : 'list',
+  count: isRu ? 'кол-во' : 'count',
+  classicStart: isRu ? 'классическое начало' : 'classic start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  generate: isRu ? 'сгенерировать' : 'generate',
+  outputPh: isRu ? '// результат появится здесь' : '// result will appear here',
+};
+---
+
+<style is:global>
+  .li {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .li-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .li-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .li-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .li-mode:not(.active):hover {
+    border-color: var(--ink-soft);
+    color: var(--ink-soft);
+  }
+
+  .li-sep {
+    width: 0.5px;
+    height: 16px;
+    background: var(--line);
+    margin: 0 2px;
+    flex-shrink: 0;
+  }
+
+  .li-count-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .li-count-inp {
+    width: 52px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 3px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--ink);
+    text-align: center;
+  }
+
+  .li-count-inp:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .li-classic-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .li-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+
+  .li-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .li-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .li-btn-gen {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .li-btn-gen:hover {
+    background: var(--accent-soft);
+  }
+
+  .li-out {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--surface);
+    border: none;
+    resize: none;
+    padding: 20px;
+    min-height: 320px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .li-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-top: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+</style>
+
+<div class="li">
+  <div class="li-bar">
+    <button class="li-mode active" data-mode="paragraphs">{t.paragraphs}</button>
+    <button class="li-mode" data-mode="sentences">{t.sentences}</button>
+    <button class="li-mode" data-mode="words">{t.words}</button>
+    <button class="li-mode" data-mode="list">{t.list}</button>
+
+    <div class="li-sep"></div>
+
+    <div class="li-count-wrap">
+      <span>{t.count}</span>
+      <input class="li-count-inp" id="liCount" type="number" min="1" max="100" value="3" />
+    </div>
+
+    <div class="li-sep"></div>
+
+    <label class="li-classic-label">
+      <input type="checkbox" id="liClassic" checked />
+      {t.classicStart}
+    </label>
+
+    <div class="li-actions">
+      <button class="li-btn li-btn-gen" id="liGenBtn">{t.generate}</button>
+      <button class="li-btn" id="liCopyBtn">{t.copy}</button>
+      <button class="li-btn" id="liClearBtn">{t.clear}</button>
+    </div>
+  </div>
+
+  <textarea class="li-out" id="liOut" readonly placeholder={t.outputPh}></textarea>
+
+  <div class="li-footer">
+    <span id="liStat"></span>
+  </div>
+</div>
+
+<script
+  is:inline
+  define:vars={{
+    isRu,
+    copyLabel: t.copy,
+    copiedLabel: t.copied,
+    outputPh: t.outputPh,
+  }}
+>
+  (function () {
+    var WORDS = [
+      'lorem',
+      'ipsum',
+      'dolor',
+      'sit',
+      'amet',
+      'consectetur',
+      'adipiscing',
+      'elit',
+      'sed',
+      'do',
+      'eiusmod',
+      'tempor',
+      'incididunt',
+      'ut',
+      'labore',
+      'et',
+      'dolore',
+      'magna',
+      'aliqua',
+      'enim',
+      'ad',
+      'minim',
+      'veniam',
+      'quis',
+      'nostrud',
+      'exercitation',
+      'ullamco',
+      'laboris',
+      'nisi',
+      'aliquip',
+      'ex',
+      'ea',
+      'commodo',
+      'consequat',
+      'duis',
+      'aute',
+      'irure',
+      'in',
+      'reprehenderit',
+      'voluptate',
+      'velit',
+      'esse',
+      'cillum',
+      'eu',
+      'fugiat',
+      'nulla',
+      'pariatur',
+      'excepteur',
+      'sint',
+      'occaecat',
+      'cupidatat',
+      'non',
+      'proident',
+      'sunt',
+      'culpa',
+      'qui',
+      'officia',
+      'deserunt',
+      'mollit',
+      'anim',
+      'id',
+      'est',
+      'laborum',
+      'at',
+      'vero',
+      'eos',
+      'accusamus',
+      'iusto',
+      'odio',
+      'dignissimos',
+      'ducimus',
+      'blanditiis',
+      'praesentium',
+      'voluptatum',
+      'deleniti',
+      'atque',
+      'corrupti',
+      'quos',
+      'quas',
+      'molestias',
+      'excepturi',
+      'similique',
+      'illum',
+      'dolorum',
+      'asperiores',
+      'repellat',
+      'possimus',
+      'omnis',
+      'voluptas',
+      'assumenda',
+      'repellendus',
+      'temporibus',
+      'autem',
+      'quibusdam',
+      'officiis',
+      'debitis',
+      'rerum',
+      'necessitatibus',
+      'saepe',
+      'eveniet',
+      'voluptates',
+      'repudiandae',
+      'recusandae',
+    ];
+
+    var CLASSIC_PARA =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+    var CLASSIC_SENTENCE = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pick() {
+      return WORDS[rand(0, WORDS.length - 1)];
+    }
+
+    function makeSentence(wordCount) {
+      var words = [];
+      for (var i = 0; i < wordCount; i++) words.push(pick());
+      var s = words.join(' ');
+      s = s.charAt(0).toUpperCase() + s.slice(1);
+      var ends = ['.', '.', '.', '!', '?'];
+      return s + ends[rand(0, ends.length - 1)];
+    }
+
+    function makeParagraph() {
+      var sentences = rand(3, 6);
+      var parts = [];
+      for (var i = 0; i < sentences; i++) parts.push(makeSentence(rand(8, 18)));
+      return parts.join(' ');
+    }
+
+    function makeListItem() {
+      var words = [];
+      for (var i = 0; i < rand(2, 5); i++) words.push(pick());
+      var s = words.join(' ');
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function generate(mode, count, classic) {
+      var parts = [];
+      if (mode === 'paragraphs') {
+        for (var i = 0; i < count; i++) {
+          parts.push(i === 0 && classic ? CLASSIC_PARA : makeParagraph());
+        }
+        return parts.join('\n\n');
+      }
+      if (mode === 'sentences') {
+        for (var i = 0; i < count; i++) {
+          parts.push(i === 0 && classic ? CLASSIC_SENTENCE : makeSentence(rand(8, 18)));
+        }
+        return parts.join(' ');
+      }
+      if (mode === 'words') {
+        var first = classic ? ['lorem', 'ipsum', 'dolor', 'sit', 'amet'] : [];
+        while (first.length < count) first.push(pick());
+        return first.slice(0, count).join(', ');
+      }
+      if (mode === 'list') {
+        for (var i = 0; i < count; i++) {
+          parts.push(i === 0 && classic ? 'Lorem ipsum dolor sit amet' : makeListItem());
+        }
+        return parts
+          .map(function (p) {
+            return '• ' + p;
+          })
+          .join('\n');
+      }
+      return '';
+    }
+
+    var out = document.getElementById('liOut');
+    var stat = document.getElementById('liStat');
+    var countInp = document.getElementById('liCount');
+    var classicChk = document.getElementById('liClassic');
+    var genBtn = document.getElementById('liGenBtn');
+    var copyBtn = document.getElementById('liCopyBtn');
+    var clearBtn = document.getElementById('liClearBtn');
+    var modeBtns = document.querySelectorAll('.li-mode');
+
+    var currentMode = 'paragraphs';
+
+    modeBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        modeBtns.forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        run();
+      });
+    });
+
+    countInp.addEventListener('input', run);
+    classicChk.addEventListener('change', run);
+    genBtn.addEventListener('click', run);
+
+    function run() {
+      var count = Math.max(1, Math.min(100, parseInt(countInp.value) || 3));
+      var classic = classicChk.checked;
+      var result = generate(currentMode, count, classic);
+      out.value = result;
+      updateStat(result);
+    }
+
+    function updateStat(text) {
+      if (!text) {
+        stat.textContent = '';
+        return;
+      }
+      var words = text.trim().split(/\s+/).length;
+      var chars = text.length;
+      stat.textContent = isRu
+        ? words + ' слов · ' + chars + ' симв.'
+        : words + ' words · ' + chars + ' chars';
+    }
+
+    copyBtn.addEventListener('click', function () {
+      if (!out.value) return;
+      navigator.clipboard.writeText(out.value).then(function () {
+        copyBtn.textContent = copiedLabel;
+        setTimeout(function () {
+          copyBtn.textContent = copyLabel;
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      out.value = '';
+      stat.textContent = '';
+    });
+
+    run();
+  })();
+</script>

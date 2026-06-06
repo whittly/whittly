@@ -530,6 +530,27 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
     ],
   },
 
+  'lorem-ipsum': {
+    about:
+      'Lorem Ipsum is placeholder text derived from Cicero\'s "De Finibus Bonorum et Malorum" (45 BC). The classic opening — "Lorem ipsum dolor sit amet..." — has been the standard dummy text in typesetting since the 1500s. This generator produces random Latin-style placeholder text in four formats: paragraphs, individual sentences, word lists, and bullet lists, with an option to start with the canonical opening.',
+    useCases: [
+      'Fill UI mockups and wireframes with realistic-looking text before real content is ready',
+      'Test font rendering, line-height, and layout behavior with multi-paragraph dummy content',
+      'Generate placeholder copy for email templates, landing pages, and design handoffs',
+      'Populate database seed scripts or test fixtures with varied text data',
+    ],
+    faq: [
+      {
+        q: 'What is "classic start"?',
+        a: 'When enabled, the first paragraph or sentence always begins with the canonical "Lorem ipsum dolor sit amet..." opening. Subsequent items are randomly generated from the Lorem Ipsum word bank.',
+      },
+      {
+        q: 'Is Lorem Ipsum actual Latin?',
+        a: 'It is scrambled Latin derived from a passage by Cicero, deliberately altered so it has no readable meaning. The purpose is to provide neutral filler text that does not distract from layout evaluation.',
+      },
+    ],
+  },
+
   'sql-formatter': {
     about:
       'A SQL formatter rewrites raw or minified SQL into consistently indented, keyword-uppercased statements. It breaks long queries into readable clauses — SELECT columns on separate lines, WHERE conditions aligned, JOIN chains clearly separated — making it easier to review query logic and spot mistakes.',
@@ -1116,6 +1137,27 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'Что происходит с Maven <exclusions>?',
         a: 'Исключения не конвертируются — их нужно добавить вручную. В Gradle используйте exclude внутри блока зависимости: implementation("group:artifact") { exclude group: "unwanted", module: "dep" }.',
+      },
+    ],
+  },
+
+  'lorem-ipsum': {
+    about:
+      'Lorem Ipsum — это текст-заполнитель, основанный на трактате Цицерона «De Finibus Bonorum et Malorum» (45 г. до н.э.). Классическое начало «Lorem ipsum dolor sit amet...» используется в вёрстке с XVI века. Генератор создаёт случайный псевдолатинский текст в четырёх форматах: абзацы, предложения, список слов и маркированные списки.',
+    useCases: [
+      'Заполнить макеты и вайрфреймы реалистичным текстом до появления реального контента',
+      'Протестировать рендеринг шрифтов, межстрочный интервал и вёрстку на многоабзацном тексте',
+      'Сгенерировать текст-заглушку для шаблонов писем, лендингов и дизайн-макетов',
+      'Заполнить seed-скрипты баз данных и тестовые фикстуры разнообразным текстом',
+    ],
+    faq: [
+      {
+        q: 'Что такое «классическое начало»?',
+        a: 'При включённой опции первый абзац или предложение всегда начинается с канонического «Lorem ipsum dolor sit amet...». Последующие элементы генерируются случайно из словаря Lorem Ipsum.',
+      },
+      {
+        q: 'Lorem Ipsum — это настоящая латынь?',
+        a: 'Это искажённая латынь из текста Цицерона, специально перемешанная так, чтобы не иметь читаемого смысла. Цель — нейтральный текст-заполнитель, который не отвлекает от оценки вёрстки.',
       },
     ],
   },

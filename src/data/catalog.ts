@@ -212,8 +212,8 @@ export const CATALOG: Tool[] = [
     cat: 'generate',
     icon: 'ti-text-size',
     name: 'lorem ipsum',
-    desc: 'paragraphs, words, lists',
-    soon: true,
+    desc: 'paragraphs, sentences, words, lists',
+    new: true,
   },
   {
     cat: 'generate',
