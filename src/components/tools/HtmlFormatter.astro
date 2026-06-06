@@ -1,5 +1,6 @@
 ---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -192,6 +193,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="html-formatter" lang={lang} />
+<BatchPanel
+  toolName="html-formatter"
+  lang={lang}
+  placeholder={isRu ? 'один HTML-блок на строку (минифицированный)…' : 'one HTML block per line (minified)…'}
+/>
 <FileLoader targetId="htfIn" lang={lang} />
 
 <div class="htf">

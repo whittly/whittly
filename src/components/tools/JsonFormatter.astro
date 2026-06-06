@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -196,6 +197,7 @@ const t = {
 </style>
 
 <PresetsBar toolName="json-formatter" lang={lang} />
+<BatchPanel toolName="json-formatter" lang={lang} />
 <FileLoader targetId="jfIn" lang={lang} />
 <div class="jf">
   <div class="jf-bar">

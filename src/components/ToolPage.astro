@@ -854,9 +854,6 @@ const jsonLd = {
       var shareBtn = document.getElementById('toolShareBtn');
       if (!shareRow || !shareBtn) return;
 
-      var plan = window.whApi && window.whApi.getPlan();
-      if (plan !== 'pro' && plan !== 'api') return;
-
       shareRow.style.display = '';
 
       /* ── restore from URL on load ── */

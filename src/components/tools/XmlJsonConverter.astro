@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -190,6 +191,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="xml-json" lang={lang} />
+<BatchPanel
+  toolName="xml-json-converter"
+  lang={lang}
+  placeholder={isRu ? 'один XML или JSON на строку…' : 'one XML or JSON per line…'}
+/>
 <FileLoader targetId="xjIn" lang={lang} />
 <div class="xj">
   <div class="xj-bar">
@@ -423,7 +429,7 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { input: inEl.value };
+      return { input: inEl.value, mode: mode };
     };
     window.toolSetPreset = function (cfg) {
       inEl.value = cfg.input ?? '';

@@ -1,5 +1,6 @@
 ---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -192,6 +193,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="sql-formatter" lang={lang} />
+<BatchPanel
+  toolName="sql-formatter"
+  lang={lang}
+  placeholder={isRu ? 'один SQL-запрос на строку (минифицированный)…' : 'one SQL query per line (minified)…'}
+/>
 <FileLoader targetId="sqfIn" lang={lang} />
 
 <div class="sqf">

@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props {
   lang?: 'en' | 'ru';
 }
@@ -178,6 +179,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="number-base" lang={lang} />
+<BatchPanel
+  toolName="number-base-converter"
+  lang={lang}
+  placeholder={isRu ? 'одно число на строку…' : 'one number per line…'}
+/>
 <div class="nb" id="nb">
   <div class="nb-input-row">
     <input

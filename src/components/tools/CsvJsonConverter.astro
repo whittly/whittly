@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -217,6 +218,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="csv-json" lang={lang} />
+<BatchPanel
+  toolName="csv-json-converter"
+  lang={lang}
+  placeholder={isRu ? 'один CSV или JSON на строку…' : 'one CSV or JSON per line…'}
+/>
 <FileLoader targetId="cjInput" lang={lang} />
 <div class="cj" id="cj">
   <div class="cj-dir-row">
@@ -509,7 +515,7 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { input: inputTA.value };
+      return { input: inputTA.value, mode: mode, delimiter: delimSel.value, hasHeaders: headersCb.checked };
     };
     window.toolSetPreset = function (cfg) {
       inputTA.value = cfg.input ?? '';

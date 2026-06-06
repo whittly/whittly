@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props {
   lang?: 'en' | 'ru';
 }
@@ -214,6 +215,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="timestamp" lang={lang} />
+<BatchPanel
+  toolName="timestamp-converter"
+  lang={lang}
+  placeholder={isRu ? 'unix timestamp или дата, одна на строку…' : 'unix timestamp or date, one per line…'}
+/>
 <div class="tc">
   <div class="tc-bar">
     <button class="tc-now" id="tcNow"

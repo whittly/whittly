@@ -1,5 +1,6 @@
 ---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -189,6 +190,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="js-beautifier" lang={lang} />
+<BatchPanel
+  toolName="js-beautifier"
+  lang={lang}
+  placeholder={isRu ? 'один JS-блок на строку (минифицированный)…' : 'one JS block per line (minified)…'}
+/>
 <FileLoader targetId="jsbIn" lang={lang} />
 
 <div class="jsb">

@@ -1,4 +1,5 @@
 ---
+import BatchPanel from '../BatchPanel.astro';
 interface Props {
   lang?: 'en' | 'ru';
 }
@@ -202,6 +203,11 @@ const t = {
   }
 </style>
 
+<BatchPanel
+  toolName="uuid-generator"
+  lang={lang}
+  placeholder={isRu ? 'одна строка = один UUID…' : 'one line = one UUID…'}
+/>
 <div class="ug">
   <div class="ug-bar">
     <div class="ug-group" id="ugVerGroup">
@@ -436,6 +442,30 @@ const t = {
         }, 1600);
       });
     });
+
+    window.toolGetPreset = function () {
+      return { ver: ver, fmt: fmt, customTpl: customTpl };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.ver !== undefined) {
+        ver = String(cfg.ver);
+        document.querySelectorAll('#ugVerGroup .ug-opt').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.ver === ver);
+        });
+      }
+      if (cfg.fmt !== undefined) {
+        fmt = String(cfg.fmt);
+        document.querySelectorAll('#ugFmtGroup .ug-opt').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.fmt === fmt);
+        });
+        updateCustomVisibility();
+      }
+      if (cfg.customTpl !== undefined) {
+        customTpl = String(cfg.customTpl);
+        customInput.value = customTpl;
+      }
+      generate();
+    };
 
     /* auto-generate on load — deferred so window.pushHistory is defined */
     requestAnimationFrame(generate);

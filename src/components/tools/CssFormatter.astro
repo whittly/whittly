@@ -1,5 +1,6 @@
 ---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 import FileLoader from '../FileLoader.astro';
 interface Props {
   lang?: 'en' | 'ru';
@@ -192,6 +193,11 @@ const t = {
 </style>
 
 <PresetsBar toolName="css-formatter" lang={lang} />
+<BatchPanel
+  toolName="css-formatter"
+  lang={lang}
+  placeholder={isRu ? 'один CSS-блок на строку (минифицированный)…' : 'one CSS block per line (minified)…'}
+/>
 <FileLoader targetId="csfIn" lang={lang} />
 
 <div class="csf">

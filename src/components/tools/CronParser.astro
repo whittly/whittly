@@ -1,5 +1,6 @@
 ﻿---
 import PresetsBar from '../PresetsBar.astro';
+import BatchPanel from '../BatchPanel.astro';
 interface Props {
   lang?: 'en' | 'ru';
 }
@@ -321,6 +322,11 @@ const isRu = lang === 'ru';
 </style>
 
 <PresetsBar toolName="cron-parser" lang={lang} />
+<BatchPanel
+  toolName="cron-parser"
+  lang={lang}
+  placeholder={isRu ? 'одно cron-выражение на строку…' : 'one cron expression per line…'}
+/>
 <div class="cp">
   <div class="cp-top">
     <div class="cp-expr-wrap">
