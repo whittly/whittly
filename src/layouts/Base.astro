@@ -86,6 +86,56 @@ const catalog = CATALOG.map((t) => {
     border-color: var(--accent);
   }
 
+  .bookmark-banner {
+    background: var(--surface-sunken);
+    border-bottom: 0.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    position: relative;
+  }
+
+  .bookmark-banner i {
+    color: var(--accent);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .bookmark-banner kbd {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 1px 5px;
+    border: 0.5px solid var(--line-strong);
+    border-radius: 3px;
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .bookmark-banner-close {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 15px;
+    line-height: 1;
+    transition: color 0.12s;
+  }
+
+  .bookmark-banner-close:hover {
+    color: var(--ink);
+  }
+
   .nav-account {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -183,6 +233,17 @@ const catalog = CATALOG.map((t) => {
     <slot name="head" />
   </head>
   <body>
+    <div id="bookmarkBanner" class="bookmark-banner">
+      <i class="ti ti-bookmark"></i>
+      <span id="bookmarkText"></span>
+      <button
+        class="bookmark-banner-close"
+        id="bookmarkBannerClose"
+        type="button"
+        aria-label="close">×</button
+      >
+    </div>
+
     <!-- Globals: must be defined before <slot /> and component scripts -->
     <script is:inline define:vars={{ API }}>
       (function () {
@@ -347,6 +408,31 @@ const catalog = CATALOG.map((t) => {
 
     <CommandPalette isRu={isRu} catalog={catalog} />
     <HistorySidebar isRu={isRu} catalog={catalog} />
+
+    <script is:inline>
+      (function () {
+        var banner = document.getElementById('bookmarkBanner');
+        var textEl = document.getElementById('bookmarkText');
+        var closeBtn = document.getElementById('bookmarkBannerClose');
+        if (!banner || !textEl || !closeBtn) return;
+        if (localStorage.getItem('wh_bm_ok')) {
+          banner.style.display = 'none';
+          return;
+        }
+        var isMac = /Mac/.test(
+          navigator.platform || (navigator.userAgentData && navigator.userAgentData.platform) || ''
+        );
+        var key = isMac ? '⌘D' : 'Ctrl+D';
+        var isRu = document.documentElement.lang === 'ru';
+        textEl.innerHTML = isRu
+          ? 'добавьте в закладки — <kbd>' + key + '</kbd>'
+          : 'bookmark this site — <kbd>' + key + '</kbd>';
+        closeBtn.addEventListener('click', function () {
+          localStorage.setItem('wh_bm_ok', '1');
+          banner.style.display = 'none';
+        });
+      })();
+    </script>
 
     <script is:inline>
       (function () {
