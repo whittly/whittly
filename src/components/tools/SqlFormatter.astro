@@ -1,0 +1,836 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  btn2: '2 spaces',
+  btn4: '4 spaces',
+  btnMin: isRu ? 'минифицировать' : 'minify',
+  statusEmpty: isRu ? '— вставьте sql' : '— paste sql to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu ? 'вставьте или введите sql…' : 'paste or type sql here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  formatted: isRu ? 'отформатировано' : 'formatted',
+};
+---
+
+<style is:global>
+  .sqf {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .sqf-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .sqf-modes {
+    display: flex;
+    gap: 4px;
+  }
+
+  .sqf-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .sqf-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .sqf-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .sqf-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sqf-status.ok {
+    color: var(--good);
+  }
+
+  .sqf-status.err {
+    color: var(--bad);
+  }
+
+  .sqf-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .sqf-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .sqf-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .sqf-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .sqf-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .sqf-sep {
+    background: var(--line);
+  }
+
+  .sqf-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre;
+  }
+
+  .sqf-out .k {
+    color: var(--accent);
+  }
+  .sqf-out .s {
+    color: var(--good);
+  }
+  .sqf-out .n {
+    color: var(--ink);
+  }
+  .sqf-out .c {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .sqf-out .ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .sqf {
+      height: auto;
+      min-height: 0;
+    }
+    .sqf-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 300px 1px 300px;
+    }
+    .sqf-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .sqf-in,
+    .sqf-out {
+      height: 300px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="sql-formatter" lang={lang} />
+<FileLoader targetId="sqfIn" lang={lang} />
+
+<div class="sqf">
+  <div class="sqf-bar">
+    <div class="sqf-modes">
+      <button class="sqf-mode active" data-spaces="2">{t.btn2}</button>
+      <button class="sqf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="sqf-mode" data-spaces="0">{t.btnMin}</button>
+    </div>
+    <span class="sqf-status" id="sqfStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="sqf-action" id="sqfCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="sqf-action" id="sqfClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="sqf-panels">
+    <textarea class="sqf-in" id="sqfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+    ></textarea>
+    <div class="sqf-sep"></div>
+    <pre class="sqf-out" id="sqfOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var inEl = document.getElementById('sqfIn');
+    var outEl = document.getElementById('sqfOut');
+    var statusEl = document.getElementById('sqfStatus');
+    var copyBtn = document.getElementById('sqfCopy');
+    var clearBtn = document.getElementById('sqfClear');
+
+    var spaces = 2;
+    var lastOutput = '';
+
+    var KWSET = new Set([
+      'SELECT',
+      'DISTINCT',
+      'FROM',
+      'WHERE',
+      'AND',
+      'OR',
+      'NOT',
+      'IN',
+      'EXISTS',
+      'BETWEEN',
+      'LIKE',
+      'ILIKE',
+      'SIMILAR',
+      'TO',
+      'IS',
+      'NULL',
+      'TRUE',
+      'FALSE',
+      'AS',
+      'ON',
+      'USING',
+      'JOIN',
+      'LEFT',
+      'RIGHT',
+      'INNER',
+      'OUTER',
+      'FULL',
+      'CROSS',
+      'NATURAL',
+      'LATERAL',
+      'GROUP',
+      'BY',
+      'HAVING',
+      'ORDER',
+      'LIMIT',
+      'OFFSET',
+      'UNION',
+      'INTERSECT',
+      'EXCEPT',
+      'ALL',
+      'ANY',
+      'SOME',
+      'INTO',
+      'VALUES',
+      'INSERT',
+      'UPDATE',
+      'SET',
+      'DELETE',
+      'RETURNING',
+      'WITH',
+      'RECURSIVE',
+      'CREATE',
+      'TABLE',
+      'INDEX',
+      'VIEW',
+      'ALTER',
+      'DROP',
+      'TRUNCATE',
+      'ADD',
+      'COLUMN',
+      'PRIMARY',
+      'KEY',
+      'FOREIGN',
+      'REFERENCES',
+      'CONSTRAINT',
+      'UNIQUE',
+      'DEFAULT',
+      'CHECK',
+      'IF',
+      'THEN',
+      'ELSE',
+      'END',
+      'CASE',
+      'WHEN',
+      'ASC',
+      'DESC',
+      'NULLS',
+      'FIRST',
+      'LAST',
+      'OVER',
+      'PARTITION',
+      'ROWS',
+      'RANGE',
+      'UNBOUNDED',
+      'PRECEDING',
+      'FOLLOWING',
+      'CURRENT',
+      'ROW',
+      'WINDOW',
+      'FILTER',
+      'CASCADE',
+      'RESTRICT',
+      'TEMPORARY',
+      'TEMP',
+      'BEGIN',
+      'COMMIT',
+      'ROLLBACK',
+      'TRANSACTION',
+      'EXPLAIN',
+      'ANALYZE',
+      'COALESCE',
+      'NULLIF',
+      'CAST',
+      'CONVERT',
+      'EXTRACT',
+      'INTERVAL',
+      'BOOLEAN',
+      'INTEGER',
+      'INT',
+      'BIGINT',
+      'SMALLINT',
+      'DECIMAL',
+      'NUMERIC',
+      'FLOAT',
+      'REAL',
+      'DOUBLE',
+      'PRECISION',
+      'CHAR',
+      'VARCHAR',
+      'TEXT',
+      'DATE',
+      'TIME',
+      'TIMESTAMP',
+      'REPLACE',
+      'IGNORE',
+      'FETCH',
+      'NEXT',
+      'ONLY',
+      'TIES',
+      'MATERIALIZED',
+      'EXCEPT',
+      'SCHEMA',
+      'DATABASE',
+      'FUNCTION',
+      'PROCEDURE',
+      'TRIGGER',
+      'SEQUENCE',
+      'TYPE',
+      'GRANT',
+      'REVOKE',
+      'PRIVILEGES',
+      'PUBLIC',
+      'ROLE',
+    ]);
+
+    // Multi-word clause breaks (longest first)
+    var MULTI_BREAKS = [
+      'LEFT OUTER JOIN',
+      'RIGHT OUTER JOIN',
+      'FULL OUTER JOIN',
+      'LEFT JOIN',
+      'RIGHT JOIN',
+      'INNER JOIN',
+      'CROSS JOIN',
+      'FULL JOIN',
+      'NATURAL JOIN',
+      'GROUP BY',
+      'ORDER BY',
+      'PARTITION BY',
+      'UNION ALL',
+      'UNION DISTINCT',
+      'INSERT INTO',
+      'DELETE FROM',
+    ];
+
+    // Single-word clause breaks
+    var SINGLE_BREAKS = [
+      'SELECT',
+      'FROM',
+      'WHERE',
+      'HAVING',
+      'LIMIT',
+      'OFFSET',
+      'UNION',
+      'INTERSECT',
+      'EXCEPT',
+      'INSERT',
+      'UPDATE',
+      'SET',
+      'DELETE',
+      'WITH',
+      'VALUES',
+      'RETURNING',
+      'ON',
+      'JOIN',
+      'CREATE',
+      'ALTER',
+      'DROP',
+      'TRUNCATE',
+    ];
+
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function tokenize(sql) {
+      var tokens = [];
+      var i = 0,
+        n = sql.length;
+      while (i < n) {
+        var ch = sql[i];
+        // Whitespace
+        if (/\s/.test(ch)) {
+          while (i < n && /\s/.test(sql[i])) i++;
+          continue;
+        }
+        // Line comment
+        if (ch === '-' && sql[i + 1] === '-') {
+          var s = i;
+          while (i < n && sql[i] !== '\n') i++;
+          tokens.push({ t: 'comment', v: sql.slice(s, i) });
+          continue;
+        }
+        // Block comment
+        if (ch === '/' && sql[i + 1] === '*') {
+          var s = i;
+          i += 2;
+          while (i < n - 1 && !(sql[i] === '*' && sql[i + 1] === '/')) i++;
+          i += 2;
+          tokens.push({ t: 'comment', v: sql.slice(s, i) });
+          continue;
+        }
+        // Single-quoted string
+        if (ch === "'") {
+          var s = i++;
+          while (i < n) {
+            if (sql[i] === "'" && sql[i + 1] === "'") {
+              i += 2;
+            } else if (sql[i] === "'") {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'str', v: sql.slice(s, i) });
+          continue;
+        }
+        // Double-quoted identifier
+        if (ch === '"') {
+          var s = i++;
+          while (i < n) {
+            if (sql[i] === '"' && sql[i + 1] === '"') {
+              i += 2;
+            } else if (sql[i] === '"') {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'ident', v: sql.slice(s, i) });
+          continue;
+        }
+        // Backtick identifier
+        if (ch === '`') {
+          var s = i++;
+          while (i < n && sql[i] !== '`') i++;
+          i++;
+          tokens.push({ t: 'ident', v: sql.slice(s, i) });
+          continue;
+        }
+        // Square bracket identifier [SQL Server]
+        if (ch === '[') {
+          var s = i++;
+          while (i < n && sql[i] !== ']') i++;
+          i++;
+          tokens.push({ t: 'ident', v: sql.slice(s, i) });
+          continue;
+        }
+        // Word
+        if (/[a-zA-Z_$@#]/.test(ch)) {
+          var s = i;
+          while (i < n && /[a-zA-Z0-9_$@#]/.test(sql[i])) i++;
+          tokens.push({ t: 'word', v: sql.slice(s, i) });
+          continue;
+        }
+        // Number
+        if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(sql[i + 1] || ''))) {
+          var s = i;
+          while (i < n && /[0-9.]/.test(sql[i])) i++;
+          if (i < n && /[eE]/.test(sql[i])) {
+            i++;
+            if (i < n && /[+-]/.test(sql[i])) i++;
+            while (i < n && /[0-9]/.test(sql[i])) i++;
+          }
+          tokens.push({ t: 'num', v: sql.slice(s, i) });
+          continue;
+        }
+        // Special symbols
+        if (ch === '(') {
+          tokens.push({ t: 'lp', v: '(' });
+          i++;
+          continue;
+        }
+        if (ch === ')') {
+          tokens.push({ t: 'rp', v: ')' });
+          i++;
+          continue;
+        }
+        if (ch === ',') {
+          tokens.push({ t: 'comma', v: ',' });
+          i++;
+          continue;
+        }
+        if (ch === ';') {
+          tokens.push({ t: 'semi', v: ';' });
+          i++;
+          continue;
+        }
+        if (ch === '.') {
+          tokens.push({ t: 'dot', v: '.' });
+          i++;
+          continue;
+        }
+        // Operators
+        var s = i;
+        while (i < n && '=<>!|&~^%*+-/'.includes(sql[i])) i++;
+        if (i === s) i++;
+        tokens.push({ t: 'op', v: sql.slice(s, i) });
+      }
+      return tokens;
+    }
+
+    function formatSQL(input, sp) {
+      var tokens = tokenize(input);
+      if (!tokens.length) return '';
+
+      var ind = sp === 0 ? '' : ' '.repeat(sp);
+      var result = '';
+      var depth = 0; // paren depth
+      var section = ''; // current top-level clause
+      var inSelectList = false;
+
+      // Check if tokens at position i match a multi-word keyword
+      function matchMulti(i) {
+        if (tokens[i].t !== 'word') return null;
+        var upper = tokens[i].v.toUpperCase();
+        for (var m = 0; m < MULTI_BREAKS.length; m++) {
+          var seq = MULTI_BREAKS[m].split(' ');
+          if (seq[0] !== upper) continue;
+          var k = 1,
+            j = i + 1;
+          while (j < tokens.length && k < seq.length) {
+            if (tokens[j].t === 'word') {
+              if (tokens[j].v.toUpperCase() !== seq[k]) {
+                k = -1;
+                break;
+              }
+              k++;
+            }
+            j++;
+          }
+          if (k === seq.length) return { label: MULTI_BREAKS[m], nextI: j - 1 };
+        }
+        return null;
+      }
+
+      function addSpace() {
+        var last = result[result.length - 1];
+        if (result && last !== ' ' && last !== '\n' && last !== '(') result += ' ';
+      }
+
+      function breakClause(label) {
+        result = result.replace(/[ \t]+$/, '');
+        if (result) result += '\n';
+        result += label;
+        section = label.split(' ')[0];
+        inSelectList = section === 'SELECT';
+        if (inSelectList && sp > 0) result += '\n' + ind;
+        else result += ' ';
+      }
+
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+
+        if (tok.t === 'comment') {
+          result = result.replace(/[ \t]+$/, '');
+          if (result) result += '\n';
+          result += tok.v + '\n';
+          continue;
+        }
+
+        if (tok.t === 'lp') {
+          var last = result[result.length - 1];
+          if (last && last !== ' ' && last !== '\n') {
+            result += '(';
+          } else {
+            result += '(';
+          }
+          depth++;
+          continue;
+        }
+
+        if (tok.t === 'rp') {
+          depth = Math.max(0, depth - 1);
+          result = result.replace(/[ \t]+$/, '') + ')';
+          continue;
+        }
+
+        if (tok.t === 'comma') {
+          result = result.replace(/[ \t]+$/, '') + ',';
+          if (depth === 0 && inSelectList && sp > 0) {
+            result += '\n' + ind;
+          } else {
+            result += ' ';
+          }
+          continue;
+        }
+
+        if (tok.t === 'semi') {
+          result = result.replace(/[ \t]+$/, '') + ';\n';
+          inSelectList = false;
+          section = '';
+          continue;
+        }
+
+        if (tok.t === 'dot') {
+          result = result.replace(/[ \t]+$/, '') + '.';
+          continue;
+        }
+
+        if (tok.t === 'word') {
+          var upper = tok.v.toUpperCase();
+
+          if (sp === 0) {
+            // Minify: just uppercase keywords and space-separate
+            addSpace();
+            result += KWSET.has(upper) ? upper : tok.v;
+            continue;
+          }
+
+          if (depth === 0) {
+            // Check multi-word match
+            var multi = matchMulti(i);
+            if (multi) {
+              breakClause(multi.label);
+              i = multi.nextI;
+              continue;
+            }
+
+            // Single-word clause breaks
+            if (SINGLE_BREAKS.indexOf(upper) !== -1) {
+              breakClause(upper);
+              continue;
+            }
+
+            // AND / OR with indent
+            if (upper === 'AND' || upper === 'OR') {
+              result = result.replace(/[ \t]+$/, '');
+              result += '\n' + ind + upper + ' ';
+              continue;
+            }
+          }
+
+          // Regular keyword or identifier
+          var display = KWSET.has(upper) ? upper : tok.v;
+          addSpace();
+          result += display;
+          continue;
+        }
+
+        // str, ident, num, op, other
+        if (tok.t === 'op') {
+          var last = result[result.length - 1];
+          if (last && last !== ' ' && last !== '\n' && last !== '(') result += ' ';
+          result += tok.v;
+          // Don't add trailing space here; next token will add leading space
+          continue;
+        }
+
+        addSpace();
+        result += tok.v;
+      }
+
+      return result.trim();
+    }
+
+    function highlight(sql) {
+      // Tokenize and highlight
+      var tokens = tokenize(sql);
+      var out = '';
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+        var v = esc(tok.v);
+        if (tok.t === 'comment') {
+          out += '<span class="c">' + v + '</span>';
+        } else if (tok.t === 'str') {
+          out += '<span class="s">' + v + '</span>';
+        } else if (tok.t === 'num') {
+          out += '<span class="n">' + v + '</span>';
+        } else if (tok.t === 'word') {
+          var upper = tok.v.toUpperCase();
+          if (KWSET.has(upper)) {
+            out += '<span class="k">' + v + '</span>';
+          } else {
+            out += v;
+          }
+        } else {
+          out += v;
+        }
+      }
+      return out;
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'sqf-status';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var formatted = formatSQL(raw, spaces);
+        lastOutput = formatted;
+        // Re-format for highlighting (apply same formatting)
+        outEl.innerHTML = highlight(formatted);
+
+        var lines = formatted.split('\n').length;
+        var bytes = new Blob([formatted]).size;
+        var sizeStr = bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+        statusEl.textContent =
+          t.formatted + ' · ' + lines + (isRu ? ' строк' : ' lines') + ' · ' + sizeStr;
+        statusEl.className = 'sqf-status ok';
+        if (window.pushHistory)
+          window.pushHistory('sql formatter', statusEl.textContent, raw.trim());
+        flashOutput(outEl);
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span style="color:var(--bad)">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'sqf-status err';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+
+    document.querySelectorAll('.sqf-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.sqf-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        spaces = parseInt(btn.dataset.spaces, 10);
+        process();
+      });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    function flashOutput(el) {
+      if (!el) return;
+      el.classList.remove('flash-ok');
+      void el.offsetWidth;
+      el.classList.add('flash-ok');
+    }
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, spaces: spaces };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.spaces !== undefined) {
+        spaces = cfg.spaces;
+        document.querySelectorAll('.sqf-mode').forEach(function (b) {
+          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+        });
+      }
+      process();
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.sqf');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) clearBtn.click();
+    });
+  })();
+</script>

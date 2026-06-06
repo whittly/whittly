@@ -32,6 +32,10 @@ import JsonToTs from './tools/JsonToTs.astro';
 import JsonToJava from './tools/JsonToJava.astro';
 import MavenGradle from './tools/MavenGradle.astro';
 import QuartzCron from './tools/QuartzCron.astro';
+import SqlFormatter from './tools/SqlFormatter.astro';
+import HtmlFormatter from './tools/HtmlFormatter.astro';
+import CssFormatter from './tools/CssFormatter.astro';
+import JsBeautifier from './tools/JsBeautifier.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -60,6 +64,10 @@ const TOOL_MAP: Record<string, any> = {
   'json-java': JsonToJava,
   'maven-gradle': MavenGradle,
   'quartz-cron': QuartzCron,
+  'sql-formatter': SqlFormatter,
+  'html-formatter': HtmlFormatter,
+  'css-formatter': CssFormatter,
+  'js-beautifier': JsBeautifier,
 };
 
 interface Props {
@@ -258,9 +266,15 @@ const jsonLd = {
     }
   }
 
-  .tool-page-header {
+  .tool-page-top {
+    display: flex;
+    align-items: flex-start;
     margin-bottom: 40px;
+  }
+
+  .tool-page-header {
     max-width: 640px;
+    flex: 1;
   }
 
   .tool-breadcrumb {
@@ -296,7 +310,6 @@ const jsonLd = {
   }
 
   .tool-pin-btn {
-    margin-left: auto;
     background: none;
     border: 0.5px solid var(--line);
     border-radius: 999px;
@@ -603,23 +616,25 @@ const jsonLd = {
       <span>{name}</span>
     </div>
 
-    <header class="tool-page-header">
-      <div class="tool-meta">
-        <span class="tool-cat-badge">// {catLabel}</span>
-        {tool.new && <span class="tool-new-badge">new</span>}
-        <button class="tool-pin-btn" id="toolPinBtn" type="button">
-          <i class="ti ti-star"></i>
-        </button>
-      </div>
-      <h1>
-        <i
-          class={`ti ${tool.icon}`}
-          style="font-size: 0.75em; vertical-align: middle; margin-right: 12px; color: var(--ink-soft);"
-        ></i>
-        {name}
-      </h1>
-      <p class="subhead">{desc}</p>
-    </header>
+    <div class="tool-page-top">
+      <header class="tool-page-header">
+        <div class="tool-meta">
+          <span class="tool-cat-badge">// {catLabel}</span>
+          {tool.new && <span class="tool-new-badge">new</span>}
+        </div>
+        <h1>
+          <i
+            class={`ti ${tool.icon}`}
+            style="font-size: 0.75em; vertical-align: middle; margin-right: 12px; color: var(--ink-soft);"
+          ></i>
+          {name}
+        </h1>
+        <p class="subhead">{desc}</p>
+      </header>
+      <button class="tool-pin-btn" id="toolPinBtn" type="button">
+        <i class="ti ti-star"></i>
+      </button>
+    </div>
 
     {
       ToolComponent ? (

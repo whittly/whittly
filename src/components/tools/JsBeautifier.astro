@@ -1,0 +1,828 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  btn2: '2 spaces',
+  btn4: '4 spaces',
+  btnMin: isRu ? 'минифицировать' : 'minify',
+  statusEmpty: isRu ? '— вставьте javascript' : '— paste js to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu ? 'вставьте или введите javascript…' : 'paste or type javascript here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  formatted: isRu ? 'отформатировано' : 'formatted',
+};
+---
+
+<style is:global>
+  .jsb {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jsb-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .jsb-modes {
+    display: flex;
+    gap: 4px;
+  }
+
+  .jsb-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .jsb-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jsb-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .jsb-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .jsb-status.ok {
+    color: var(--good);
+  }
+  .jsb-status.err {
+    color: var(--bad);
+  }
+
+  .jsb-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .jsb-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jsb-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jsb-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .jsb-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .jsb-sep {
+    background: var(--line);
+  }
+
+  .jsb-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre;
+  }
+
+  .jsb-out .k {
+    color: var(--accent);
+  }
+  .jsb-out .s {
+    color: var(--good);
+  }
+  .jsb-out .n {
+    color: var(--ink);
+  }
+  .jsb-out .c {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .jsb-out .ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .jsb {
+      height: auto;
+      min-height: 0;
+    }
+    .jsb-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 300px 1px 300px;
+    }
+    .jsb-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .jsb-in,
+    .jsb-out {
+      height: 300px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="js-beautifier" lang={lang} />
+<FileLoader targetId="jsbIn" lang={lang} />
+
+<div class="jsb">
+  <div class="jsb-bar">
+    <div class="jsb-modes">
+      <button class="jsb-mode active" data-spaces="2">{t.btn2}</button>
+      <button class="jsb-mode" data-spaces="4">{t.btn4}</button>
+      <button class="jsb-mode" data-spaces="0">{t.btnMin}</button>
+    </div>
+    <span class="jsb-status" id="jsbStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="jsb-action" id="jsbCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="jsb-action" id="jsbClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="jsb-panels">
+    <textarea class="jsb-in" id="jsbIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+    ></textarea>
+    <div class="jsb-sep"></div>
+    <pre class="jsb-out" id="jsbOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var inEl = document.getElementById('jsbIn');
+    var outEl = document.getElementById('jsbOut');
+    var statusEl = document.getElementById('jsbStatus');
+    var copyBtn = document.getElementById('jsbCopy');
+    var clearBtn = document.getElementById('jsbClear');
+
+    var spaces = 2;
+    var lastOutput = '';
+
+    var JS_KEYWORDS = new Set([
+      'break',
+      'case',
+      'catch',
+      'class',
+      'const',
+      'continue',
+      'debugger',
+      'default',
+      'delete',
+      'do',
+      'else',
+      'export',
+      'extends',
+      'finally',
+      'for',
+      'function',
+      'if',
+      'import',
+      'in',
+      'instanceof',
+      'let',
+      'new',
+      'return',
+      'static',
+      'super',
+      'switch',
+      'this',
+      'throw',
+      'try',
+      'typeof',
+      'var',
+      'void',
+      'while',
+      'with',
+      'yield',
+      'async',
+      'await',
+      'of',
+      'from',
+      'as',
+      'null',
+      'undefined',
+      'true',
+      'false',
+      'NaN',
+      'Infinity',
+      'prototype',
+      'constructor',
+    ]);
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Tokenize JS preserving strings, template literals, comments, regex
+    function tokenize(js) {
+      var tokens = [];
+      var i = 0,
+        n = js.length;
+      var prevType = null; // track previous meaningful token type for regex detection
+
+      while (i < n) {
+        var ch = js[i];
+
+        // Whitespace
+        if (/\s/.test(ch)) {
+          var s = i;
+          while (i < n && /\s/.test(js[i])) i++;
+          tokens.push({ t: 'ws', v: js.slice(s, i) });
+          continue;
+        }
+
+        // Line comment
+        if (ch === '/' && js[i + 1] === '/') {
+          var s = i;
+          while (i < n && js[i] !== '\n') i++;
+          tokens.push({ t: 'comment', v: js.slice(s, i) });
+          prevType = 'comment';
+          continue;
+        }
+
+        // Block comment
+        if (ch === '/' && js[i + 1] === '*') {
+          var s = i;
+          i += 2;
+          while (i < n - 1 && !(js[i] === '*' && js[i + 1] === '/')) i++;
+          i += 2;
+          tokens.push({ t: 'comment', v: js.slice(s, i) });
+          prevType = 'comment';
+          continue;
+        }
+
+        // Template literal
+        if (ch === '`') {
+          var s = i++;
+          while (i < n) {
+            if (js[i] === '\\') {
+              i += 2;
+            } else if (js[i] === '`') {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'str', v: js.slice(s, i) });
+          prevType = 'str';
+          continue;
+        }
+
+        // String (double quote)
+        if (ch === '"') {
+          var s = i++;
+          while (i < n) {
+            if (js[i] === '\\') {
+              i += 2;
+            } else if (js[i] === '"') {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'str', v: js.slice(s, i) });
+          prevType = 'str';
+          continue;
+        }
+
+        // String (single quote)
+        if (ch === "'") {
+          var s = i++;
+          while (i < n) {
+            if (js[i] === '\\') {
+              i += 2;
+            } else if (js[i] === "'") {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'str', v: js.slice(s, i) });
+          prevType = 'str';
+          continue;
+        }
+
+        // Regex literal: / not after identifier/number/)/]
+        if (
+          ch === '/' &&
+          prevType !== 'word' &&
+          prevType !== 'num' &&
+          prevType !== 'rp' &&
+          prevType !== 'rb'
+        ) {
+          var s = i++;
+          var inClass = false;
+          while (i < n) {
+            if (js[i] === '\\') {
+              i += 2;
+              continue;
+            }
+            if (js[i] === '[') {
+              inClass = true;
+              i++;
+              continue;
+            }
+            if (js[i] === ']') {
+              inClass = false;
+              i++;
+              continue;
+            }
+            if (js[i] === '/' && !inClass) {
+              i++;
+              break;
+            }
+            if (js[i] === '\n') break; // unterminated
+            i++;
+          }
+          // Flags
+          while (i < n && /[gimsuy]/.test(js[i])) i++;
+          tokens.push({ t: 'str', v: js.slice(s, i) });
+          prevType = 'str';
+          continue;
+        }
+
+        // Number
+        if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(js[i + 1] || ''))) {
+          var s = i;
+          // Hex, binary, octal
+          if (ch === '0' && /[xXbBoO]/.test(js[i + 1] || '')) {
+            i += 2;
+            while (i < n && /[0-9a-fA-F_]/.test(js[i])) i++;
+          } else {
+            while (i < n && /[0-9._]/.test(js[i])) i++;
+            if (i < n && /[eE]/.test(js[i])) {
+              i++;
+              if (i < n && /[+-]/.test(js[i])) i++;
+              while (i < n && /[0-9]/.test(js[i])) i++;
+            }
+            if (i < n && js[i] === 'n') i++; // BigInt
+          }
+          tokens.push({ t: 'num', v: js.slice(s, i) });
+          prevType = 'num';
+          continue;
+        }
+
+        // Word (keyword or identifier)
+        if (/[a-zA-Z_$]/.test(ch)) {
+          var s = i;
+          while (i < n && /[a-zA-Z0-9_$]/.test(js[i])) i++;
+          tokens.push({ t: 'word', v: js.slice(s, i) });
+          prevType = 'word';
+          continue;
+        }
+
+        // Punctuation
+        if (ch === '(') {
+          tokens.push({ t: 'lp', v: '(' });
+          prevType = 'lp';
+          i++;
+          continue;
+        }
+        if (ch === ')') {
+          tokens.push({ t: 'rp', v: ')' });
+          prevType = 'rp';
+          i++;
+          continue;
+        }
+        if (ch === '[') {
+          tokens.push({ t: 'lb', v: '[' });
+          prevType = 'lb';
+          i++;
+          continue;
+        }
+        if (ch === ']') {
+          tokens.push({ t: 'rb', v: ']' });
+          prevType = 'rb';
+          i++;
+          continue;
+        }
+        if (ch === '{') {
+          tokens.push({ t: 'lbr', v: '{' });
+          prevType = 'lbr';
+          i++;
+          continue;
+        }
+        if (ch === '}') {
+          tokens.push({ t: 'rbr', v: '}' });
+          prevType = 'rbr';
+          i++;
+          continue;
+        }
+        if (ch === ';') {
+          tokens.push({ t: 'semi', v: ';' });
+          prevType = 'semi';
+          i++;
+          continue;
+        }
+        if (ch === ',') {
+          tokens.push({ t: 'comma', v: ',' });
+          prevType = 'comma';
+          i++;
+          continue;
+        }
+
+        // Operator
+        var s = i;
+        while (i < n && '=<>!&|^~+*%?:./-'.includes(js[i]) && js[i] !== '/') i++;
+        if (i === s) i++;
+        tokens.push({ t: 'op', v: js.slice(s, i) });
+        prevType = 'op';
+      }
+
+      return tokens;
+    }
+
+    function formatJS(input, sp) {
+      var tokens = tokenize(input);
+      if (!tokens.length) return '';
+
+      if (sp === 0) {
+        // Minify: strip whitespace and comments
+        var out = '';
+        for (var i = 0; i < tokens.length; i++) {
+          var tok = tokens[i];
+          if (tok.t === 'comment') continue;
+          if (tok.t === 'ws') {
+            // Keep single space between word/num tokens
+            var next = tokens[i + 1];
+            if (
+              (next && /[a-zA-Z0-9_$]/.test(out[out.length - 1]) && next.t === 'word') ||
+              (next && next.t === 'num')
+            ) {
+              out += ' ';
+            }
+            continue;
+          }
+          out += tok.v;
+        }
+        return out.trim();
+      }
+
+      var ind = ' '.repeat(sp);
+      var depth = 0; // brace depth
+      var parenDepth = 0; // paren depth (for tracking for(;;) semicolons)
+      var result = '';
+
+      function currentInd() {
+        return ind.repeat(depth);
+      }
+
+      function addNL() {
+        result = result.replace(/[ \t]+$/, '');
+        result += '\n' + currentInd();
+      }
+
+      function addSpace() {
+        if (result && !/[ \t\n([]$/.test(result)) result += ' ';
+      }
+
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+
+        if (tok.t === 'ws') {
+          // Preserve original newlines inside multiline strings, etc.
+          // But otherwise just normalize to space
+          if (tok.v.indexOf('\n') !== -1) {
+            // Has newline — add space for now, real NL added by structure
+          }
+          addSpace();
+          continue;
+        }
+
+        if (tok.t === 'comment') {
+          var isLineComment = tok.v.startsWith('//');
+          if (result && !/\n/.test(result.slice(-4))) result = result.trimEnd();
+          if (result) result += '\n' + currentInd();
+          result += tok.v;
+          if (isLineComment) result += '\n' + currentInd();
+          continue;
+        }
+
+        if (tok.t === 'lbr') {
+          // Opening brace
+          result = result.trimEnd();
+          result += ' {\n';
+          depth++;
+          result += currentInd();
+          // Skip following whitespace
+          while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+          continue;
+        }
+
+        if (tok.t === 'rbr') {
+          // Closing brace
+          depth = Math.max(0, depth - 1);
+          result = result.trimEnd();
+          result += '\n' + currentInd() + '}';
+          // Check what follows: if ; or , or ) — keep on same line
+          var j = i + 1;
+          while (j < tokens.length && tokens[j].t === 'ws') j++;
+          var nextTok = tokens[j];
+          if (
+            !nextTok ||
+            (nextTok.t !== 'semi' &&
+              nextTok.t !== 'comma' &&
+              nextTok.t !== 'rp' &&
+              nextTok.t !== 'rb' &&
+              nextTok.t !== 'rbr')
+          ) {
+            // Next token starts a new statement → add newline
+            var isElse = nextTok && nextTok.t === 'word' && nextTok.v === 'else';
+            var isCatch = nextTok && nextTok.t === 'word' && nextTok.v === 'catch';
+            var isFinally = nextTok && nextTok.t === 'word' && nextTok.v === 'finally';
+            if (isElse || isCatch || isFinally) {
+              result += ' ';
+            } else if (nextTok) {
+              result += '\n' + currentInd();
+            }
+            // Skip whitespace
+            while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+          }
+          continue;
+        }
+
+        if (tok.t === 'semi') {
+          result = result.trimEnd() + ';';
+          if (parenDepth === 0) {
+            // End of statement
+            var j = i + 1;
+            while (j < tokens.length && tokens[j].t === 'ws') j++;
+            if (j < tokens.length && tokens[j].t !== 'rbr') {
+              result += '\n' + currentInd();
+              while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+            }
+          }
+          continue;
+        }
+
+        if (tok.t === 'lp') {
+          parenDepth++;
+          result = result.trimEnd() + '(';
+          // Skip space after (
+          while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+          continue;
+        }
+
+        if (tok.t === 'rp') {
+          parenDepth = Math.max(0, parenDepth - 1);
+          result = result.trimEnd() + ')';
+          continue;
+        }
+
+        if (tok.t === 'lb') {
+          result = result.trimEnd() + '[';
+          while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+          continue;
+        }
+
+        if (tok.t === 'rb') {
+          result = result.trimEnd() + ']';
+          continue;
+        }
+
+        if (tok.t === 'comma') {
+          result = result.trimEnd() + ',';
+          addSpace();
+          continue;
+        }
+
+        if (tok.t === 'op') {
+          var v = tok.v;
+          if (v === '.' || v === '?.') {
+            result = result.trimEnd() + v;
+          } else if (v === '=>') {
+            result = result.trimEnd() + ' => ';
+          } else {
+            result = result.trimEnd() + ' ' + v + ' ';
+          }
+          // Skip following whitespace
+          while (i + 1 < tokens.length && tokens[i + 1].t === 'ws') i++;
+          continue;
+        }
+
+        if (tok.t === 'word') {
+          var kw = JS_KEYWORDS.has(tok.v);
+          // Keywords that introduce a new line before them (at depth 0 mostly)
+          if (
+            kw &&
+            depth === 0 &&
+            result &&
+            !result.match(/\n\s*$/) &&
+            (tok.v === 'function' ||
+              tok.v === 'class' ||
+              tok.v === 'const' ||
+              tok.v === 'let' ||
+              tok.v === 'var' ||
+              tok.v === 'export' ||
+              tok.v === 'import')
+          ) {
+            addNL();
+          } else {
+            addSpace();
+          }
+          result += tok.v;
+          continue;
+        }
+
+        // str, num
+        addSpace();
+        result += tok.v;
+      }
+
+      return result.trim();
+    }
+
+    function highlight(formatted) {
+      var tokens = tokenize(formatted);
+      var out = '';
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+        var v = esc(tok.v);
+        if (tok.t === 'comment') {
+          out += '<span class="c">' + v + '</span>';
+        } else if (tok.t === 'str') {
+          out += '<span class="s">' + v + '</span>';
+        } else if (tok.t === 'num') {
+          out += '<span class="n">' + v + '</span>';
+        } else if (tok.t === 'word') {
+          if (JS_KEYWORDS.has(tok.v)) {
+            out += '<span class="k">' + v + '</span>';
+          } else {
+            out += v;
+          }
+        } else if (tok.t === 'ws') {
+          out += tok.v;
+        } else {
+          out += v;
+        }
+      }
+      return out;
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'jsb-status';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var formatted = formatJS(raw, spaces);
+        lastOutput = formatted;
+        outEl.innerHTML = highlight(formatted);
+
+        var lines = formatted.split('\n').length;
+        var bytes = new Blob([formatted]).size;
+        var sizeStr = bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+        statusEl.textContent =
+          t.formatted + ' · ' + lines + (isRu ? ' строк' : ' lines') + ' · ' + sizeStr;
+        statusEl.className = 'jsb-status ok';
+        if (window.pushHistory)
+          window.pushHistory('js beautifier', statusEl.textContent, raw.trim());
+        flashOutput(outEl);
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span style="color:var(--bad)">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'jsb-status err';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+
+    document.querySelectorAll('.jsb-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.jsb-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        spaces = parseInt(btn.dataset.spaces, 10);
+        process();
+      });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    function flashOutput(el) {
+      if (!el) return;
+      el.classList.remove('flash-ok');
+      void el.offsetWidth;
+      el.classList.add('flash-ok');
+    }
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, spaces: spaces };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.spaces !== undefined) {
+        spaces = cfg.spaces;
+        document.querySelectorAll('.jsb-mode').forEach(function (b) {
+          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+        });
+      }
+      process();
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.jsb');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) clearBtn.click();
+    });
+  })();
+</script>

@@ -1,0 +1,649 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  btn2: '2 spaces',
+  btn4: '4 spaces',
+  btnMin: isRu ? 'минифицировать' : 'minify',
+  statusEmpty: isRu ? '— вставьте css' : '— paste css to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu ? 'вставьте или введите css…' : 'paste or type css here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  formatted: isRu ? 'отформатировано' : 'formatted',
+};
+---
+
+<style is:global>
+  .csf {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .csf-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .csf-modes {
+    display: flex;
+    gap: 4px;
+  }
+
+  .csf-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .csf-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .csf-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .csf-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .csf-status.ok {
+    color: var(--good);
+  }
+  .csf-status.err {
+    color: var(--bad);
+  }
+
+  .csf-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .csf-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .csf-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .csf-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .csf-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .csf-sep {
+    background: var(--line);
+  }
+
+  .csf-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre;
+  }
+
+  .csf-out .sel {
+    color: var(--accent);
+  }
+  .csf-out .prop {
+    color: var(--ink-soft);
+  }
+  .csf-out .val {
+    color: var(--good);
+  }
+  .csf-out .at {
+    color: var(--accent);
+  }
+  .csf-out .cmt {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .csf-out .ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .csf {
+      height: auto;
+      min-height: 0;
+    }
+    .csf-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 300px 1px 300px;
+    }
+    .csf-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .csf-in,
+    .csf-out {
+      height: 300px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="css-formatter" lang={lang} />
+<FileLoader targetId="csfIn" lang={lang} />
+
+<div class="csf">
+  <div class="csf-bar">
+    <div class="csf-modes">
+      <button class="csf-mode active" data-spaces="2">{t.btn2}</button>
+      <button class="csf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="csf-mode" data-spaces="0">{t.btnMin}</button>
+    </div>
+    <span class="csf-status" id="csfStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="csf-action" id="csfCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="csf-action" id="csfClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="csf-panels">
+    <textarea class="csf-in" id="csfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+    ></textarea>
+    <div class="csf-sep"></div>
+    <pre class="csf-out" id="csfOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var inEl = document.getElementById('csfIn');
+    var outEl = document.getElementById('csfOut');
+    var statusEl = document.getElementById('csfStatus');
+    var copyBtn = document.getElementById('csfCopy');
+    var clearBtn = document.getElementById('csfClear');
+
+    var spaces = 2;
+    var lastOutput = '';
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Tokenize CSS into: comment, string, lbrace, rbrace, semi, colon, at, other
+    function tokenize(css) {
+      var tokens = [];
+      var i = 0,
+        n = css.length;
+      while (i < n) {
+        var ch = css[i];
+        // Block comment
+        if (ch === '/' && css[i + 1] === '*') {
+          var s = i;
+          i += 2;
+          while (i < n - 1 && !(css[i] === '*' && css[i + 1] === '/')) i++;
+          i += 2;
+          tokens.push({ t: 'comment', v: css.slice(s, i) });
+          continue;
+        }
+        // Single-line comment (non-standard but common)
+        if (ch === '/' && css[i + 1] === '/') {
+          var s = i;
+          while (i < n && css[i] !== '\n') i++;
+          tokens.push({ t: 'comment', v: css.slice(s, i) });
+          continue;
+        }
+        // String
+        if (ch === '"' || ch === "'") {
+          var q = ch,
+            s = i++;
+          while (i < n) {
+            if (css[i] === '\\') {
+              i += 2;
+            } else if (css[i] === q) {
+              i++;
+              break;
+            } else i++;
+          }
+          tokens.push({ t: 'str', v: css.slice(s, i) });
+          continue;
+        }
+        // url(...) — treat as string-like token
+        if (css.slice(i, i + 4).toLowerCase() === 'url(') {
+          var s = i;
+          i += 4;
+          // skip optional quote
+          var q = css[i] === '"' || css[i] === "'" ? css[i++] : null;
+          if (q) {
+            while (i < n && css[i] !== q) {
+              if (css[i] === '\\') i++;
+              i++;
+            }
+            if (i < n) i++; // closing quote
+          } else {
+            while (i < n && css[i] !== ')') i++;
+          }
+          if (i < n) i++; // closing paren
+          tokens.push({ t: 'str', v: css.slice(s, i) });
+          continue;
+        }
+        // Whitespace
+        if (/\s/.test(ch)) {
+          var s = i;
+          while (i < n && /\s/.test(css[i])) i++;
+          tokens.push({ t: 'ws', v: css.slice(s, i) });
+          continue;
+        }
+        if (ch === '{') {
+          tokens.push({ t: 'lb', v: '{' });
+          i++;
+          continue;
+        }
+        if (ch === '}') {
+          tokens.push({ t: 'rb', v: '}' });
+          i++;
+          continue;
+        }
+        if (ch === ';') {
+          tokens.push({ t: 'semi', v: ';' });
+          i++;
+          continue;
+        }
+        if (ch === ':') {
+          tokens.push({ t: 'colon', v: ':' });
+          i++;
+          continue;
+        }
+        if (ch === '@') {
+          var s = i++;
+          while (i < n && /[a-zA-Z-]/.test(css[i])) i++;
+          tokens.push({ t: 'at', v: css.slice(s, i) });
+          continue;
+        }
+        // Other chars (selectors, property names, values, etc.)
+        var s = i;
+        while (i < n && !'{}:;@/\'"'.includes(css[i]) && !/\s/.test(css[i])) i++;
+        if (i === s) i++;
+        tokens.push({ t: 'other', v: css.slice(s, i) });
+      }
+      return tokens;
+    }
+
+    function formatCSS(input, sp) {
+      if (sp === 0) {
+        // Minify
+        var tokens = tokenize(input);
+        var out = '';
+        for (var i = 0; i < tokens.length; i++) {
+          var tok = tokens[i];
+          if (tok.t === 'comment' || tok.t === 'ws') continue;
+          if (tok.t === 'lb') {
+            out = out.trimEnd() + '{';
+            continue;
+          }
+          if (tok.t === 'rb') {
+            out = out.trimEnd() + '}';
+            continue;
+          }
+          if (tok.t === 'semi') {
+            // Omit semicolons before }
+            var j = i + 1;
+            while (j < tokens.length && tokens[j].t === 'ws') j++;
+            if (j < tokens.length && tokens[j].t === 'rb') {
+              continue;
+            }
+            out += ';';
+            continue;
+          }
+          if (tok.t === 'colon') {
+            out = out.trimEnd() + ':';
+            continue;
+          }
+          out += tok.v;
+        }
+        return out.trim();
+      }
+
+      var ind = ' '.repeat(sp);
+      var tokens = tokenize(input);
+      var depth = 0;
+      var result = '';
+      var lineBuffer = ''; // accumulate selector / @rule text
+
+      function currentInd() {
+        return ind.repeat(depth);
+      }
+
+      function flushLine() {
+        var line = lineBuffer.trim();
+        if (line) {
+          result += currentInd() + line;
+          lineBuffer = '';
+        }
+      }
+
+      var i = 0;
+      // State: 'selector' or 'declaration'
+      // We're in 'selector' until we hit {, then 'declaration' until }
+      var stateStack = []; // 'selector' or 'declaration' per depth
+
+      while (i < tokens.length) {
+        var tok = tokens[i];
+
+        if (tok.t === 'ws') {
+          lineBuffer += ' ';
+          i++;
+          continue;
+        }
+
+        if (tok.t === 'comment') {
+          flushLine();
+          if (lineBuffer.trim()) result += '\n';
+          result += currentInd() + tok.v.trim() + '\n';
+          lineBuffer = '';
+          i++;
+          continue;
+        }
+
+        if (tok.t === 'lb') {
+          flushLine();
+          result += ' {\n';
+          stateStack.push('declaration');
+          depth++;
+          lineBuffer = '';
+          i++;
+          continue;
+        }
+
+        if (tok.t === 'rb') {
+          // Flush any pending declaration (e.g., last property without semicolon)
+          var pending = lineBuffer.trim();
+          if (pending) {
+            result += currentInd() + pending + '\n';
+          }
+          lineBuffer = '';
+          depth = Math.max(0, depth - 1);
+          stateStack.pop();
+          result += currentInd() + '}\n';
+          if (depth === 0) result += '\n';
+          i++;
+          continue;
+        }
+
+        if (tok.t === 'semi') {
+          var line = lineBuffer.trim();
+          if (line) {
+            result += currentInd() + line + ';\n';
+          }
+          lineBuffer = '';
+          i++;
+          continue;
+        }
+
+        if (tok.t === 'at') {
+          flushLine();
+          lineBuffer = tok.v;
+          i++;
+          continue;
+        }
+
+        // colon, str, other
+        lineBuffer += tok.v;
+        i++;
+      }
+
+      // Flush any remaining content
+      var pending = lineBuffer.trim();
+      if (pending) result += pending + '\n';
+
+      return result.trim();
+    }
+
+    function highlight(formatted) {
+      // Simple highlight on formatted output
+      // State machine: track if we're in selector or declaration context
+      var lines = formatted.split('\n');
+      var out = [];
+      var inDecl = false;
+      var depth = 0;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trimStart();
+
+        if (trimmed === '' || trimmed === '}' || trimmed.endsWith('}')) {
+          if (trimmed === '}' || trimmed.endsWith('}')) {
+            inDecl = false;
+            depth = Math.max(0, depth - 1);
+          }
+          out.push(esc(line));
+          continue;
+        }
+
+        if (trimmed.endsWith('{')) {
+          // Selector or @rule line
+          var indent = line.slice(0, line.length - trimmed.length);
+          var content = trimmed.slice(0, -1).trimEnd();
+          if (content.startsWith('@')) {
+            out.push(esc(indent) + '<span class="at">' + esc(content) + '</span>' + esc(' {'));
+          } else {
+            out.push(esc(indent) + '<span class="sel">' + esc(content) + '</span>' + esc(' {'));
+          }
+          inDecl = true;
+          depth++;
+          continue;
+        }
+
+        if (inDecl && trimmed.includes(':')) {
+          // Property: value;
+          var colonIdx = trimmed.indexOf(':');
+          var indent = line.slice(0, line.length - trimmed.length);
+          var prop = trimmed.slice(0, colonIdx);
+          var rest = trimmed.slice(colonIdx + 1);
+          // Separate value from trailing semicolon
+          var hasSemi = rest.trimEnd().endsWith(';');
+          var val = hasSemi ? rest.trimEnd().slice(0, -1) : rest;
+          out.push(
+            esc(indent) +
+              '<span class="prop">' +
+              esc(prop) +
+              '</span>' +
+              esc(':') +
+              '<span class="val">' +
+              esc(val) +
+              '</span>' +
+              (hasSemi ? esc(';') : '')
+          );
+          continue;
+        }
+
+        // Comment or other
+        if (trimmed.startsWith('/*')) {
+          out.push('<span class="cmt">' + esc(line) + '</span>');
+        } else {
+          out.push(esc(line));
+        }
+      }
+
+      return out.join('\n');
+    }
+
+    function countRules(css) {
+      var count = 0;
+      for (var i = 0; i < css.length; i++) {
+        if (css[i] === '{') count++;
+      }
+      return count;
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'csf-status';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var formatted = formatCSS(raw, spaces);
+        lastOutput = formatted;
+        outEl.innerHTML = highlight(formatted);
+
+        var rules = countRules(formatted);
+        var bytes = new Blob([formatted]).size;
+        var sizeStr = bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+        var rulesLabel = isRu
+          ? rules === 1
+            ? '1 правило'
+            : rules + ' правил'
+          : rules === 1
+            ? '1 rule'
+            : rules + ' rules';
+        statusEl.textContent = t.formatted + ' · ' + rulesLabel + ' · ' + sizeStr;
+        statusEl.className = 'csf-status ok';
+        if (window.pushHistory)
+          window.pushHistory('css formatter', statusEl.textContent, raw.trim());
+        flashOutput(outEl);
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span style="color:var(--bad)">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'csf-status err';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+
+    document.querySelectorAll('.csf-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.csf-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        spaces = parseInt(btn.dataset.spaces, 10);
+        process();
+      });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    function flashOutput(el) {
+      if (!el) return;
+      el.classList.remove('flash-ok');
+      void el.offsetWidth;
+      el.classList.add('flash-ok');
+    }
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, spaces: spaces };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.spaces !== undefined) {
+        spaces = cfg.spaces;
+        document.querySelectorAll('.csf-mode').forEach(function (b) {
+          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+        });
+      }
+      process();
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.csf');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) clearBtn.click();
+    });
+  })();
+</script>

@@ -24,6 +24,10 @@ export const toolNameRu: Record<string, string> = {
   'json → java': 'json → java',
   'maven ↔ gradle': 'maven ↔ gradle',
   'quartz cron': 'quartz cron',
+  'sql formatter': 'sql-форматтер',
+  'html formatter': 'html-форматтер',
+  'css formatter': 'css-форматтер',
+  'js beautifier': 'js-бьютифайер',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -53,6 +57,10 @@ export const toolDescRu: Record<string, string> = {
   'json → java': 'генерация java pojo и records из json, lombok, jackson',
   'maven ↔ gradle': 'конвертация зависимостей между maven xml и gradle dsl',
   'quartz cron': 'расшифровка quartz cron-выражений с секундами и L/W/# синтаксисом',
+  'sql formatter': 'форматирование и минификация sql-запросов',
+  'html formatter': 'форматирование, минификация, отступы',
+  'css formatter': 'форматирование, минификация, чистка правил',
+  'js beautifier': 'распаковка и форматирование минифицированного js',
 };
 
 export const catLabelRu: Record<string, string> = {

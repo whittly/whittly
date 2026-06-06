@@ -1,0 +1,597 @@
+---
+import PresetsBar from '../PresetsBar.astro';
+import FileLoader from '../FileLoader.astro';
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  btn2: '2 spaces',
+  btn4: '4 spaces',
+  btnMin: isRu ? 'минифицировать' : 'minify',
+  statusEmpty: isRu ? '— вставьте html' : '— paste html to start',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  ph: isRu ? 'вставьте или введите html…' : 'paste or type html here…',
+  outputPh: isRu ? '// результат появится здесь' : '// output appears here',
+  formatted: isRu ? 'отформатировано' : 'formatted',
+};
+---
+
+<style is:global>
+  .htf {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .htf-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .htf-modes {
+    display: flex;
+    gap: 4px;
+  }
+
+  .htf-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .htf-mode:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .htf-mode.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .htf-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .htf-status.ok {
+    color: var(--good);
+  }
+  .htf-status.err {
+    color: var(--bad);
+  }
+
+  .htf-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .htf-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .htf-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .htf-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .htf-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .htf-sep {
+    background: var(--line);
+  }
+
+  .htf-out {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    overflow: auto;
+    margin: 0;
+    background: var(--surface-sunken);
+    white-space: pre;
+  }
+
+  .htf-out .ht {
+    color: var(--accent);
+  }
+  .htf-out .ha {
+    color: var(--ink-soft);
+  }
+  .htf-out .hv {
+    color: var(--good);
+  }
+  .htf-out .hc {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .htf-out .hd {
+    color: var(--ink-faint);
+  }
+  .htf-out .ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .htf {
+      height: auto;
+      min-height: 0;
+    }
+    .htf-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 300px 1px 300px;
+    }
+    .htf-sep {
+      width: 100%;
+      height: 1px;
+    }
+    .htf-in,
+    .htf-out {
+      height: 300px;
+    }
+  }
+</style>
+
+<PresetsBar toolName="html-formatter" lang={lang} />
+<FileLoader targetId="htfIn" lang={lang} />
+
+<div class="htf">
+  <div class="htf-bar">
+    <div class="htf-modes">
+      <button class="htf-mode active" data-spaces="2">{t.btn2}</button>
+      <button class="htf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="htf-mode" data-spaces="0">{t.btnMin}</button>
+    </div>
+    <span class="htf-status" id="htfStatus">{t.statusEmpty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="htf-action" id="htfCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="htf-action" id="htfClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="htf-panels">
+    <textarea class="htf-in" id="htfIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+    ></textarea>
+    <div class="htf-sep"></div>
+    <pre class="htf-out" id="htfOut"><span class="ph">{t.outputPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var inEl = document.getElementById('htfIn');
+    var outEl = document.getElementById('htfOut');
+    var statusEl = document.getElementById('htfStatus');
+    var copyBtn = document.getElementById('htfCopy');
+    var clearBtn = document.getElementById('htfClear');
+
+    var spaces = 2;
+    var lastOutput = '';
+
+    // Tags that have no closing tag
+    var VOID = new Set([
+      'area',
+      'base',
+      'br',
+      'col',
+      'embed',
+      'hr',
+      'img',
+      'input',
+      'link',
+      'meta',
+      'param',
+      'source',
+      'track',
+      'wbr',
+      'command',
+      'keygen',
+      'menuitem',
+    ]);
+
+    // Tags whose content is raw text (no sub-elements to indent)
+    var RAW = new Set(['script', 'style', 'pre', 'textarea', 'code']);
+
+    // Inline elements (don't get their own line)
+    var INLINE = new Set([
+      'a',
+      'abbr',
+      'acronym',
+      'b',
+      'bdo',
+      'big',
+      'br',
+      'button',
+      'cite',
+      'code',
+      'dfn',
+      'em',
+      'i',
+      'img',
+      'input',
+      'kbd',
+      'label',
+      'map',
+      'output',
+      'q',
+      's',
+      'samp',
+      'select',
+      'small',
+      'span',
+      'strong',
+      'sub',
+      'sup',
+      'textarea',
+      'time',
+      'tt',
+      'u',
+      'var',
+    ]);
+
+    function esc(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Tokenize HTML into an array of tokens
+    function tokenize(html) {
+      var tokens = [];
+      var i = 0,
+        n = html.length;
+      while (i < n) {
+        if (html[i] !== '<') {
+          // Text node
+          var s = i;
+          while (i < n && html[i] !== '<') i++;
+          var text = html.slice(s, i);
+          if (text) tokens.push({ t: 'text', v: text });
+          continue;
+        }
+        // Tag starts here
+        var s = i++;
+        // DOCTYPE
+        if (html.slice(i, i + 8).toUpperCase() === '!DOCTYPE') {
+          while (i < n && html[i] !== '>') i++;
+          i++;
+          tokens.push({ t: 'doctype', v: html.slice(s, i) });
+          continue;
+        }
+        // Comment
+        if (html.slice(i, i + 2) === '--' || html.slice(i, i + 3) === '!--') {
+          // re-find
+          i = s + 1;
+          if (html[i] === '!') i++;
+          if (html[i] === '-' && html[i + 1] === '-') {
+            i += 2;
+            while (i < n - 2 && !(html[i] === '-' && html[i + 1] === '-' && html[i + 2] === '>'))
+              i++;
+            i += 3;
+            tokens.push({ t: 'comment', v: html.slice(s, i) });
+            continue;
+          }
+          // Not a comment, treat as text
+          tokens.push({ t: 'text', v: '<' });
+          i = s + 1;
+          continue;
+        }
+        // Closing tag </tag>
+        if (html[i] === '/') {
+          i++;
+          var tagStart = i;
+          while (i < n && /[a-zA-Z0-9_:-]/.test(html[i])) i++;
+          var tag = html.slice(tagStart, i).toLowerCase();
+          while (i < n && html[i] !== '>') i++;
+          i++;
+          tokens.push({ t: 'close', tag: tag, v: html.slice(s, i) });
+          continue;
+        }
+        // Opening tag <tag ...>
+        if (/[a-zA-Z!]/.test(html[i])) {
+          var tagStart = i;
+          while (i < n && /[a-zA-Z0-9_:-]/.test(html[i])) i++;
+          var tag = html.slice(tagStart, i).toLowerCase();
+          // Read attributes
+          while (i < n && html[i] !== '>' && !(html[i] === '/' && html[i + 1] === '>')) {
+            if (html[i] === '"') {
+              i++;
+              while (i < n && html[i] !== '"') i++;
+              i++;
+            } else if (html[i] === "'") {
+              i++;
+              while (i < n && html[i] !== "'") i++;
+              i++;
+            } else {
+              i++;
+            }
+          }
+          var selfClose = html[i] === '/';
+          if (selfClose) i++;
+          if (i < n && html[i] === '>') i++;
+          tokens.push({
+            t: 'open',
+            tag: tag,
+            self: selfClose || VOID.has(tag),
+            v: html.slice(s, i),
+          });
+          continue;
+        }
+        // Fallback: treat < as text
+        tokens.push({ t: 'text', v: '<' });
+        i = s + 1;
+      }
+      return tokens;
+    }
+
+    function minify(html) {
+      return html
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/>\s+</g, '><')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+
+    function formatHTML(html, sp) {
+      if (sp === 0) return minify(html);
+
+      var ind = ' '.repeat(sp);
+      var tokens = tokenize(html);
+      var depth = 0;
+      var result = '';
+      var rawTag = null; // when inside a raw tag, collect content
+
+      function currentInd() {
+        return ind.repeat(depth);
+      }
+
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+
+        // Inside raw element: collect until closing tag
+        if (rawTag) {
+          if (tok.t === 'close' && tok.tag === rawTag) {
+            result = result.trimEnd();
+            result += '\n' + currentInd() + tok.v + '\n';
+            rawTag = null;
+            depth = Math.max(0, depth - 1);
+          } else {
+            result += tok.v;
+          }
+          continue;
+        }
+
+        if (tok.t === 'doctype') {
+          result += currentInd() + tok.v + '\n';
+          continue;
+        }
+
+        if (tok.t === 'comment') {
+          result += currentInd() + tok.v + '\n';
+          continue;
+        }
+
+        if (tok.t === 'text') {
+          var text = tok.v.replace(/\s+/g, ' ').trim();
+          if (!text) continue;
+          result += currentInd() + text + '\n';
+          continue;
+        }
+
+        if (tok.t === 'open') {
+          var isInline = INLINE.has(tok.tag);
+          var isVoid = tok.self;
+          var isRawEl = RAW.has(tok.tag);
+
+          if (isInline) {
+            // Inline: append to current line if possible, else start new
+            result += tok.v;
+          } else {
+            result += currentInd() + tok.v + '\n';
+          }
+
+          if (!isVoid && !isInline) {
+            if (isRawEl) {
+              rawTag = tok.tag;
+              depth++;
+            } else {
+              depth++;
+            }
+          }
+          continue;
+        }
+
+        if (tok.t === 'close') {
+          var isInline = INLINE.has(tok.tag);
+          depth = Math.max(0, depth - 1);
+          if (isInline) {
+            result += tok.v;
+          } else {
+            result = result.trimEnd();
+            result += '\n' + currentInd() + tok.v + '\n';
+          }
+          continue;
+        }
+      }
+
+      return result.trim();
+    }
+
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="ph">' + t.outputPh + '</span>';
+        statusEl.textContent = t.statusEmpty;
+        statusEl.className = 'htf-status';
+        lastOutput = '';
+        return;
+      }
+
+      try {
+        var formatted = formatHTML(raw, spaces);
+        lastOutput = formatted;
+        var highlighted = esc(formatted)
+          .replace(
+            /(&lt;\/?)([\w][^&\s>]*)([^&]*?)(\/?&gt;)/g,
+            function (_, open, name, attrs, close) {
+              return open + '<span class="ht">' + name + '</span>' + attrs + close;
+            }
+          )
+          .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="hc">$1</span>')
+          .replace(/(&lt;!DOCTYPE[^&]*?&gt;)/gi, '<span class="hd">$1</span>');
+        outEl.innerHTML = highlighted;
+
+        var lines = formatted.split('\n').length;
+        var bytes = new Blob([formatted]).size;
+        var sizeStr = bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+        statusEl.textContent =
+          t.formatted + ' · ' + lines + (isRu ? ' строк' : ' lines') + ' · ' + sizeStr;
+        statusEl.className = 'htf-status ok';
+        if (window.pushHistory)
+          window.pushHistory('html formatter', statusEl.textContent, raw.trim());
+        flashOutput(outEl);
+      } catch (e) {
+        lastOutput = '';
+        outEl.innerHTML = '<span style="color:var(--bad)">// ' + esc(e.message) + '</span>';
+        statusEl.textContent = e.message;
+        statusEl.className = 'htf-status err';
+      }
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    inEl.addEventListener('input', process);
+
+    document.querySelectorAll('.htf-mode').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.htf-mode').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        spaces = parseInt(btn.dataset.spaces, 10);
+        process();
+      });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    function flashOutput(el) {
+      if (!el) return;
+      el.classList.remove('flash-ok');
+      void el.offsetWidth;
+      el.classList.add('flash-ok');
+    }
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, spaces: spaces };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.spaces !== undefined) {
+        spaces = cfg.spaces;
+        document.querySelectorAll('.htf-mode').forEach(function (b) {
+          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+        });
+      }
+      process();
+    };
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.htf');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && !e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        process();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod && !e.shiftKey && !e.altKey) clearBtn.click();
+    });
+  })();
+</script>

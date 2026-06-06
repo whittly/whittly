@@ -119,28 +119,28 @@ export const CATALOG: Tool[] = [
     icon: 'ti-sql',
     name: 'sql formatter',
     desc: 'reformat any sql dialect cleanly',
-    soon: true,
+    new: true,
   },
   {
     cat: 'format',
     icon: 'ti-brand-html5',
     name: 'html formatter',
     desc: 'indent, minify, validate',
-    soon: true,
+    new: true,
   },
   {
     cat: 'format',
     icon: 'ti-brand-css3',
     name: 'css formatter',
-    desc: 'sort properties, expand shorthands',
-    soon: true,
+    desc: 'expand, minify, clean up rules',
+    new: true,
   },
   {
     cat: 'format',
     icon: 'ti-code',
     name: 'js beautifier',
     desc: 'unminify and format messy js',
-    soon: true,
+    new: true,
   },
 
   // encode
