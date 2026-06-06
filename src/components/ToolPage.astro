@@ -761,11 +761,9 @@ const jsonLd = {
             '</span>';
         }
         function isProUser() {
-          return (
-            window.whApi &&
-            typeof window.whApi.getPlan === 'function' &&
-            window.whApi.getPlan() !== 'free'
-          );
+          if (!window.whApi || typeof window.whApi.getPlan !== 'function') return false;
+          var p = window.whApi.getPlan();
+          return p === 'pro' || p === 'api';
         }
         function pushRemotePins(slugs) {
           if (!isProUser()) return;
