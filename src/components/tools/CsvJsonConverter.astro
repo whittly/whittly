@@ -515,7 +515,12 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { input: inputTA.value, mode: mode, delimiter: delimSel.value, hasHeaders: headersCb.checked };
+      return {
+        input: inputTA.value,
+        mode: mode,
+        delimiter: delimSel.value,
+        hasHeaders: headersCb.checked,
+      };
     };
     window.toolSetPreset = function (cfg) {
       inputTA.value = cfg.input ?? '';

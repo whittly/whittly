@@ -193,7 +193,9 @@ const t = {
 <BatchPanel
   toolName="js-beautifier"
   lang={lang}
-  placeholder={isRu ? 'один JS-блок на строку (минифицированный)…' : 'one JS block per line (minified)…'}
+  placeholder={isRu
+    ? 'один JS-блок на строку (минифицированный)…'
+    : 'one JS block per line (minified)…'}
 />
 <FileLoader targetId="jsbIn" lang={lang} />
 

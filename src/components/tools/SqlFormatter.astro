@@ -196,7 +196,9 @@ const t = {
 <BatchPanel
   toolName="sql-formatter"
   lang={lang}
-  placeholder={isRu ? 'один SQL-запрос на строку (минифицированный)…' : 'one SQL query per line (minified)…'}
+  placeholder={isRu
+    ? 'один SQL-запрос на строку (минифицированный)…'
+    : 'one SQL query per line (minified)…'}
 />
 <FileLoader targetId="sqfIn" lang={lang} />
 
