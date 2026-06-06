@@ -760,7 +760,40 @@ const jsonLd = {
             (pinned ? (isRu ? 'в закреплённых' : 'pinned') : isRu ? 'закрепить' : 'pin') +
             '</span>';
         }
+        function isProUser() {
+          return (
+            window.whApi &&
+            typeof window.whApi.getPlan === 'function' &&
+            window.whApi.getPlan() !== 'free'
+          );
+        }
+        function pushRemotePins(slugs) {
+          if (!isProUser()) return;
+          window.whApi
+            .fetch('/user/pins', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ slugs: slugs }),
+            })
+            .catch(function () {});
+        }
+        function fetchRemotePins() {
+          if (!isProUser()) return;
+          window.whApi
+            .fetch('/user/pins')
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              if (Array.isArray(data.pins)) {
+                localStorage.setItem(PINNED_KEY, JSON.stringify(data.pins));
+                syncPinBtn();
+              }
+            })
+            .catch(function () {});
+        }
         syncPinBtn();
+        fetchRemotePins();
         pinBtn.addEventListener('click', function () {
           var slugs = getPinnedSlugs();
           var idx = slugs.indexOf(toolSlug);
@@ -768,6 +801,7 @@ const jsonLd = {
           else slugs.splice(idx, 1);
           localStorage.setItem(PINNED_KEY, JSON.stringify(slugs));
           syncPinBtn();
+          pushRemotePins(slugs);
         });
       }
 

@@ -18,6 +18,10 @@ const t = {
   converted: isRu ? 'конвертировано' : 'converted',
   error: isRu ? 'ошибка разбора' : 'parse error',
   noUrl: isRu ? 'URL не найден' : 'no URL found in command',
+  importHar: isRu ? 'импорт HAR' : 'import HAR',
+  harPickReq: isRu ? 'выберите запрос из HAR:' : 'pick a request from HAR:',
+  harProOnly: isRu ? 'импорт HAR доступен на тарифе Pro' : 'HAR import is a Pro feature',
+  harInvalid: isRu ? 'не удалось прочитать HAR-файл' : 'could not parse HAR file',
 };
 ---
 
@@ -152,6 +156,69 @@ const t = {
     color: var(--bad);
   }
 
+  .cc-har-list {
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cc-har-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .cc-har-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .cc-har-entry {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cc-har-entry:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .cc-har-entry.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .cc-action-pro {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 0.5px solid var(--accent);
+    border-radius: 3px;
+    padding: 1px 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
   @media (max-width: 640px) {
     .cc-in {
       height: 120px;
@@ -164,16 +231,24 @@ const t = {
 
 <PresetsBar toolName="curl-converter" lang={lang} />
 <FileLoader targetId="ccIn" lang={lang} />
+<input type="file" id="ccHarFile" accept=".har" style="display:none" />
 <div class="cc">
   <div class="cc-bar">
     <span class="cc-status" id="ccStatus">{t.paste}</span>
     <span class="local-badge">// client-only</span>
+    <button class="cc-action" id="ccHarBtn">
+      <i class="ti ti-file-import"></i>{t.importHar}<span class="cc-action-pro">pro</span>
+    </button>
     <button class="cc-action" id="ccCopy"
       ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
     >
     <button class="cc-action" id="ccClear"
       ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
     >
+  </div>
+  <div class="cc-har-list" id="ccHarList" style="display:none">
+    <span class="cc-har-label" id="ccHarLabel"></span>
+    <div class="cc-har-entries" id="ccHarEntries"></div>
   </div>
   <div class="cc-input-wrap">
     <textarea class="cc-in" id="ccIn" data-hist-main-input spellcheck="false" placeholder={t.phIn}
@@ -615,6 +690,95 @@ const t = {
       inEl.value = '';
       process();
       inEl.focus();
+    });
+
+    /* ── HAR import ─────────────────────────────────────── */
+    var harBtn = document.getElementById('ccHarBtn');
+    var harFile = document.getElementById('ccHarFile');
+    var harList = document.getElementById('ccHarList');
+    var harLabel = document.getElementById('ccHarLabel');
+    var harEntries = document.getElementById('ccHarEntries');
+
+    function harEntryToCurl(req) {
+      var parts = ['curl'];
+      if (req.method && req.method !== 'GET') parts.push('-X ' + req.method);
+      if (req.headers) {
+        req.headers.forEach(function (h) {
+          if (h.name.startsWith(':')) return;
+          if (h.name.toLowerCase() === 'cookie') return;
+          parts.push('-H ' + JSON.stringify(h.name + ': ' + h.value));
+        });
+      }
+      if (req.cookies && req.cookies.length) {
+        var cookieStr = req.cookies
+          .map(function (c) {
+            return c.name + '=' + c.value;
+          })
+          .join('; ');
+        parts.push('-b ' + JSON.stringify(cookieStr));
+      }
+      if (req.postData && req.postData.text) parts.push('-d ' + JSON.stringify(req.postData.text));
+      parts.push(JSON.stringify(req.url));
+      return parts.join(' \\\n  ');
+    }
+
+    function showHarEntries(entries) {
+      harEntries.innerHTML = '';
+      entries.forEach(function (entry) {
+        var req = entry.request;
+        var btn = document.createElement('button');
+        btn.className = 'cc-har-entry';
+        btn.type = 'button';
+        var displayUrl = req.url || '';
+        try {
+          var parsed = new URL(req.url);
+          displayUrl = parsed.pathname + parsed.search;
+        } catch (e) {}
+        btn.textContent = req.method + ' ' + displayUrl;
+        btn.title = req.url;
+        btn.addEventListener('click', function () {
+          harEntries.querySelectorAll('.cc-har-entry').forEach(function (b) {
+            b.classList.remove('active');
+          });
+          btn.classList.add('active');
+          inEl.value = harEntryToCurl(req);
+          inEl.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        harEntries.appendChild(btn);
+      });
+      harLabel.textContent = t.harPickReq;
+      harList.style.display = '';
+    }
+
+    harBtn.addEventListener('click', function () {
+      if (window.whApi && typeof window.whApi.getPlan === 'function') {
+        var plan = window.whApi.getPlan();
+        if (!plan || plan === 'free') {
+          statusEl.textContent = t.harProOnly;
+          statusEl.className = 'cc-status err';
+          return;
+        }
+      }
+      harFile.click();
+    });
+
+    harFile.addEventListener('change', function () {
+      var file = harFile.files && harFile.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          var har = JSON.parse(e.target.result);
+          var entries = (har.log && har.log.entries) || [];
+          if (!entries.length) throw new Error('empty');
+          showHarEntries(entries);
+        } catch (_) {
+          statusEl.textContent = t.harInvalid;
+          statusEl.className = 'cc-status err';
+        }
+        harFile.value = '';
+      };
+      reader.readAsText(file);
     });
 
     window.toolGetPreset = function () {

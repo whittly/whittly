@@ -159,6 +159,23 @@ const catalog = CATALOG.map((t) => {
     border-color: var(--accent);
     background: var(--accent-soft);
   }
+
+  .nav-theme-btn {
+    background: none;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 7px;
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    transition: all 0.12s;
+  }
+  .nav-theme-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 </style>
 
 <html lang={isRu ? 'ru' : 'en'}>
@@ -233,6 +250,15 @@ const catalog = CATALOG.map((t) => {
     <slot name="head" />
   </head>
   <body>
+    <script is:inline>
+      (function () {
+        var saved = localStorage.getItem('wh_theme');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      })();
+    </script>
+
     <div id="bookmarkBanner" class="bookmark-banner">
       <i class="ti ti-bookmark"></i>
       <span id="bookmarkText"></span>
@@ -356,6 +382,9 @@ const catalog = CATALOG.map((t) => {
         </button>
 
         <div class="nav-util">
+          <button class="nav-theme-btn" id="navThemeBtn" type="button" aria-label="toggle theme">
+            <i class="ti ti-moon" id="navThemeIcon"></i>
+          </button>
           <a href={altUrl} class="nav-lang">{altLabel}</a>
           <a class="nav-account" id="navAccount" href="/account/login/">
             <i class="ti ti-user-circle"></i>
@@ -445,6 +474,32 @@ const catalog = CATALOG.map((t) => {
           navAccount.classList.add('authed');
           navAccountLabel.textContent = isRu ? 'аккаунт' : 'account';
         }
+
+        /* ─── Theme toggle ─── */
+        var themeBtn = document.getElementById('navThemeBtn');
+        var themeIcon = document.getElementById('navThemeIcon');
+
+        function getTheme() {
+          var saved = localStorage.getItem('wh_theme');
+          if (saved) return saved;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          if (themeIcon) {
+            themeIcon.className = theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+          }
+        }
+
+        applyTheme(getTheme());
+
+        themeBtn &&
+          themeBtn.addEventListener('click', function () {
+            var next = getTheme() === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('wh_theme', next);
+            applyTheme(next);
+          });
       })();
     </script>
   </body>

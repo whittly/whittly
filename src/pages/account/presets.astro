@@ -25,10 +25,16 @@ const catalogMap = Object.fromEntries(
           </div>
           <h1 style="font-size:24px; margin:0;">Saved presets</h1>
         </div>
-        <button class="ac-btn-ghost" id="signOutBtn">
-          <i class="ti ti-logout"></i>
-          sign out
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="ac-btn-ghost" id="exportBtn">
+            <i class="ti ti-download"></i>
+            export JSON
+          </button>
+          <button class="ac-btn-ghost" id="signOutBtn">
+            <i class="ti ti-logout"></i>
+            sign out
+          </button>
+        </div>
       </div>
 
       <div class="ac-presets-list" id="presetsList"></div>
@@ -123,6 +129,8 @@ const catalogMap = Object.fromEntries(
     var contentEl = document.getElementById('acContent');
     var listEl = document.getElementById('presetsList');
     var signOutBtn = document.getElementById('signOutBtn');
+    var exportBtn = document.getElementById('exportBtn');
+    var allPresets = [];
 
     function logout() {
       var rt = localStorage.getItem('wh_refresh');
@@ -142,6 +150,19 @@ const catalogMap = Object.fromEntries(
 
     signOutBtn.addEventListener('click', logout);
 
+    exportBtn.addEventListener('click', function () {
+      if (!allPresets.length) return;
+      var blob = new Blob([JSON.stringify({ presets: allPresets }, null, 2)], {
+        type: 'application/json',
+      });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'whittly-presets.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
     function formatDate(iso) {
       return new Date(iso).toLocaleDateString('en', {
         day: 'numeric',
@@ -158,6 +179,7 @@ const catalogMap = Object.fromEntries(
       }
       var data = await res.json();
       var presets = data.presets || [];
+      allPresets = presets;
 
       listEl.innerHTML = '';
 
