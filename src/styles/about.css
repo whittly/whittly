@@ -1,4 +1,4 @@
-.about-hero {
+﻿.about-hero {
   padding: 64px 0 36px;
   max-width: 720px;
 }
@@ -13,7 +13,7 @@
 
 .h-section {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink-soft);
   letter-spacing: 0.06em;
@@ -32,7 +32,7 @@
 
 .diff {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.9;
 }
 .diff-line {
@@ -74,7 +74,7 @@
   border-bottom: 0.5px solid var(--line);
   background: var(--surface-sunken);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12\.5px;
   color: var(--ink-soft);
   display: flex;
   align-items: center;
@@ -91,7 +91,7 @@
   padding: 18px 22px;
   margin: 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.8;
   color: var(--ink);
   overflow-x: auto;
@@ -116,7 +116,7 @@
 
 .faq-cluster-head {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -144,7 +144,7 @@
 .faq-q .marker {
   font-family: 'JetBrains Mono', monospace;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 .faq-q .text {
@@ -158,7 +158,7 @@
 .faq-q .toggle {
   color: var(--ink-faint);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
   transition: transform 0.2s;
 }
 .faq-item.open .toggle {
@@ -166,7 +166,7 @@
 }
 .faq-a {
   margin: 10px 0 0 32px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--ink-soft);
   line-height: 1.7;
   display: none;

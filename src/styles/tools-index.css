@@ -1,4 +1,4 @@
-.tools-header {
+﻿.tools-header {
   padding: 56px 0 28px;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -41,7 +41,7 @@
 
 .filter-chip {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12\.5px;
   background: var(--surface);
   border: 0.5px solid var(--line);
   color: var(--ink-soft);
@@ -93,13 +93,13 @@
 
 .cat-count {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12\.5px;
   color: var(--ink-faint);
 }
 
 .cat-desc {
   margin-left: auto;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-faint);
   font-style: italic;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -135,7 +135,7 @@
   color: var(--ink-faint);
   padding: 2px 4px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
   opacity: 0;
   transition:
@@ -168,7 +168,7 @@
 }
 
 .tool-row .name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   display: flex;
@@ -178,7 +178,7 @@
 
 .tool-row .name .new {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
+  font-size: 12px;
   color: var(--accent);
   background: var(--accent-soft);
   padding: 1px 5px;
@@ -188,7 +188,7 @@
 }
 
 .tool-row .desc {
-  font-size: 12.5px;
+  font-size: 13\.5px;
   color: var(--ink-faint);
   margin-top: 2px;
   overflow: hidden;
@@ -207,7 +207,7 @@
 
 .tool-row .name .soon-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
+  font-size: 12px;
   color: var(--ink-faint);
   background: var(--surface-sunken);
   border: 0.5px solid var(--line);
@@ -223,7 +223,7 @@
   text-align: center;
   color: var(--ink-faint);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .empty .em {

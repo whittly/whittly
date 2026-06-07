@@ -1,4 +1,4 @@
-.premium-hero {
+﻿.premium-hero {
   padding: 64px 0 28px;
   max-width: 680px;
 }
@@ -8,7 +8,7 @@
 
 .h-section {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink-soft);
   letter-spacing: 0.06em;
@@ -35,7 +35,7 @@
 
 .bt-opt {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12\.5px;
   padding: 5px 14px;
   border-radius: 999px;
   border: none;
@@ -58,7 +58,7 @@
 
 .bt-save {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
+  font-size: 12px;
   background: var(--good);
   color: white;
   padding: 1px 5px;
@@ -91,7 +91,7 @@
 
 .plan-tier {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -111,7 +111,7 @@
 
 .plan-price {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-soft);
   display: flex;
   align-items: baseline;
@@ -127,11 +127,11 @@
 }
 
 .plan-price .period {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-faint);
 }
 .plan-price .annual-note {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--good);
   margin-left: 4px;
   display: none;
@@ -149,7 +149,7 @@
 }
 
 .plan-features li {
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--ink-soft);
   display: flex;
   align-items: baseline;
@@ -180,7 +180,7 @@
   justify-content: center;
   padding: 9px 18px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.15s;
@@ -233,7 +233,7 @@
 
 .plan-cta-hint {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--bad);
   text-align: center;
   margin-top: 6px;
@@ -265,7 +265,7 @@
 
 .runs-col-head {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -276,7 +276,7 @@
 }
 
 .runs-col-head i {
-  font-size: 13px;
+  font-size: 14px;
 }
 .runs-col-head.local i {
   color: var(--good);
@@ -295,7 +295,7 @@
 }
 
 .runs-list li {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-soft);
   display: flex;
   align-items: center;
@@ -343,13 +343,13 @@
   margin-top: 2px;
 }
 .free-card .title {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   margin-bottom: 3px;
 }
 .free-card .desc {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-soft);
   line-height: 1.5;
 }
