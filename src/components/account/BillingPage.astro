@@ -483,6 +483,15 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
         var isExpired = me.planExpiresAt && new Date(me.planExpiresAt).getTime() < now;
         var effectivePlan = isExpired ? 'free' : me.plan || 'free';
 
+        // set billing toggle to user's actual period
+        if (me.planPeriod && effectivePlan !== 'free') {
+          isAnnual = me.planPeriod === 'annual';
+          toggle.querySelectorAll('.bt-opt').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.period === (isAnnual ? 'yr' : 'mo'));
+          });
+          updatePrices();
+        }
+
         // account card
         var acCardEmail = document.getElementById('acCardEmail');
         var acCardSince = document.getElementById('acCardSince');

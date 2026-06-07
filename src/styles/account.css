@@ -152,7 +152,7 @@
 .ac-btn-sm {
   padding: 6px 12px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   background: var(--ink);
   color: var(--bg);
   border: none;
@@ -176,7 +176,7 @@
   width: 100%;
   padding: 10px 16px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   background: none;
   color: var(--ink-soft);
   border: 0.5px solid var(--line);
@@ -237,7 +237,7 @@
 
 .ac-footer-link {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
   text-decoration: none;
   transition: color 0.12s;
@@ -361,7 +361,7 @@
 
 .ac-plan-upgrade {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--accent);
   text-decoration: none;
   transition: opacity 0.12s;
@@ -450,7 +450,7 @@
 
 .ac-action-desc {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
 }
 
@@ -565,7 +565,7 @@
 
 .ac-reveal-warn {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--good);
   margin-bottom: 10px;
   display: flex;
@@ -575,7 +575,7 @@
 
 .ac-reveal-key {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--ink);
   background: var(--surface);
   border: 0.5px solid var(--line);
@@ -649,7 +649,7 @@
   border-radius: var(--radius-lg);
   margin-bottom: 20px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--good);
   transition: opacity 0.4s;
 }
@@ -671,7 +671,7 @@
   border-radius: var(--radius-md);
   margin-bottom: 24px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--ink-soft);
 }
 .ac-verify-banner-left {
@@ -690,7 +690,7 @@
   border: 0.5px solid var(--accent);
   color: var(--accent);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 5px;
@@ -758,7 +758,7 @@
 
 .ac-section-empty {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
 }
 
@@ -777,7 +777,7 @@
   border-radius: 999px;
   padding: 4px 11px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-soft);
   text-decoration: none;
   transition: all 0.12s;
@@ -1119,7 +1119,7 @@
 }
 .tl-empty {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
   padding: 8px 2px;
 }
@@ -1202,7 +1202,7 @@
   align-items: center;
   gap: 9px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-soft);
 }
 .plan-feat i {
@@ -1368,7 +1368,7 @@
 }
 .ak-intro {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
   max-width: 540px;
   line-height: 1.6;
@@ -1418,7 +1418,7 @@
 }
 .ak-key {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--accent);
   white-space: nowrap;
   overflow: hidden;
@@ -1493,7 +1493,7 @@
 }
 .ak-lock-txt {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--ink-soft);
 }
 .ak-lock-txt strong {
@@ -1730,7 +1730,7 @@
   background: var(--surface);
   margin-bottom: 32px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--ink-soft);
 }
 .next-charge i {
@@ -1878,7 +1878,7 @@
   align-items: flex-start;
   gap: 8px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-soft);
   line-height: 1.5;
 }
@@ -1895,7 +1895,7 @@
   justify-content: center;
   gap: 6px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   padding: 10px 16px;
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -1975,7 +1975,7 @@
 }
 .inv-amt {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13\.5px;
+  font-size: 14.5px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
@@ -2013,7 +2013,7 @@
 }
 .dz-txt {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
   line-height: 1.6;
   max-width: 620px;

@@ -318,7 +318,7 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--ink-faint);
 }
 
@@ -336,7 +336,7 @@ footer {
   padding-top: 14px;
   border-top: 0.5px dashed var(--line);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--ink-faint);
 }
 
@@ -354,14 +354,14 @@ footer {
 
 footer .meta {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .footer-nav {
   display: flex;
   gap: 20px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 @media (max-width: 640px) {
@@ -450,7 +450,7 @@ footer .by:hover {
 }
 .kbd-hint {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12\.5px;
+  font-size: 13.5px;
   color: var(--ink-faint);
   opacity: 0.55;
   margin-left: 4px;

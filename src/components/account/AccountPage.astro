@@ -236,7 +236,6 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
         <div class="panel" style="margin-top:16px">
           <div class="panel-head">
             <span class="panel-title">{isRu ? '// api ключи' : '// api keys'}</span>
-            <span class="panel-sub">api</span>
             <span class="cs-badge">
               <i class="ti ti-lock"></i>
               {isRu ? 'скоро' : 'coming soon'}
@@ -580,7 +579,21 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
                 expStr +
                 '</span>';
             } else {
-              var price = effectivePlan === 'api' ? '$149 / yr' : '$49 / yr';
+              var period = me.planPeriod || 'annual';
+              var price;
+              if (isRu) {
+                if (effectivePlan === 'api') {
+                  price = period === 'monthly' ? '1 990 ₽ / мес' : '14 900 ₽ / год';
+                } else {
+                  price = period === 'monthly' ? '390 ₽ / мес' : '2 900 ₽ / год';
+                }
+              } else {
+                if (effectivePlan === 'api') {
+                  price = period === 'monthly' ? '$24 / mo' : '$199 / yr';
+                } else {
+                  price = period === 'monthly' ? '$6 / mo' : '$49 / yr';
+                }
+              }
               planRenewEl.textContent =
                 (isRu ? 'продление ' : 'auto-renews ') + expStr + ' · ' + price;
             }
