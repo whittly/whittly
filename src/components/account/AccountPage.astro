@@ -16,9 +16,21 @@ const catalogForPinned = Object.fromEntries(
     { name: isRu ? toolNameRu[t.name] || t.name : t.name, icon: t.icon },
   ])
 );
+
+// icon lookup by tool name (lowercase) for history timeline
+const iconByName = Object.fromEntries(CATALOG.map((t) => [t.name.toLowerCase(), t.icon]));
+
+// quick run chips — 4 popular tools
+const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
 ---
 
 <Base title={isRu ? 'аккаунт — whittly' : 'account — whittly'}>
+  <link
+    slot="head"
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,1,400&display=swap"
+    rel="stylesheet"
+  />
+
   <div class="ac-page" id="acPage">
     <div class="ac-loading" id="acLoading">
       <i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>
@@ -26,112 +38,243 @@ const catalogForPinned = Object.fromEntries(
     </div>
 
     <div id="acContent" style="display:none">
+      <!-- payment success banner -->
       <div class="ac-payment-banner" id="paymentBanner" style="display:none">
         <i class="ti ti-circle-check"></i>
         <span id="paymentBannerText"></span>
       </div>
 
+      <!-- email verification banner -->
       <div class="ac-verify-banner" id="verifyBanner" style="display:none">
         <div class="ac-verify-banner-left">
           <i class="ti ti-mail"></i>
-          <span
-            >{
+          <span>
+            {
               isRu
                 ? 'пожалуйста, подтвердите адрес электронной почты.'
                 : 'please verify your email address.'
-            }</span
-          >
+            }
+          </span>
         </div>
         <button id="resendBtn" class="ac-verify-resend">{isRu ? 'отправить →' : 'resend →'}</button>
       </div>
 
-      <div class="ac-header">
-        <div>
-          <div class="ac-heading">{isRu ? '// аккаунт' : '// account'}</div>
-          <h1 id="acEmail" style="font-size:24px; margin:0;"></h1>
-        </div>
-        <button class="ac-btn-ghost" id="signOutBtn">
-          <i class="ti ti-logout"></i>
-          {isRu ? 'выйти' : 'sign out'}
-        </button>
-      </div>
-
-      <div class="ac-top-row">
-        <!-- Plan card -->
-        <div class="ac-card">
-          <div class="ac-card-label">{isRu ? 'тариф' : 'plan'}</div>
-          <div class="ac-plan-badge" id="planBadge">—</div>
-          <div class="ac-plan-expires" id="planExpires"></div>
-          <div id="upgradeWrap"></div>
-        </div>
-
-        <!-- Stats card -->
-        <div class="ac-card">
-          <div class="ac-card-label">{isRu ? 'обзор' : 'overview'}</div>
-          <div class="ac-stat-grid">
-            <div class="ac-stat-row">
-              <span class="ac-stat-label">{isRu ? 'api ключи' : 'api keys'}</span>
-              <span class="ac-stat-val" id="statKeys">—</span>
-            </div>
-            <div class="ac-stat-row">
-              <span class="ac-stat-label">{isRu ? 'пресеты' : 'saved presets'}</span>
-              <span class="ac-stat-val" id="statPresets">—</span>
-            </div>
-            <div class="ac-stat-row">
-              <span class="ac-stat-label">{isRu ? 'история' : 'history'}</span>
-              <span class="ac-stat-val" id="statHistory">—</span>
-            </div>
-            <div class="ac-stat-row">
-              <span class="ac-stat-label">{isRu ? 'с нами с' : 'member since'}</span>
-              <span class="ac-stat-val" id="statSince">—</span>
+      <div class="dash">
+        <!-- header -->
+        <div class="dash-head">
+          <div>
+            <div class="eyebrow">{isRu ? '// аккаунт' : '// account'}</div>
+            <h1>{isRu ? 'добро пожаловать, ' : 'welcome back, '}<em id="acName">—</em>.</h1>
+            <div class="dash-meta">
+              <span id="acEmail">—</span>
+              <span class="dot"></span>
+              <span class="pro" id="acPlanLabel">—</span>
+              <span class="dot"></span>
+              <span id="acMemberSince">—</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="ac-bottom-row">
-        <div class="ac-action-card ac-action-card-cs">
-          <div class="ac-action-icon"><i class="ti ti-key"></i></div>
-          <div class="ac-action-title">
-            {isRu ? 'API ключи' : 'API keys'}
-            <span class="ac-action-cs-badge">{isRu ? 'developer — скоро' : 'developer — soon'}</span
-            >
-          </div>
-          <div class="ac-action-desc">
-            {isRu ? 'доступно в тарифе developer' : 'available on the developer plan'}
-          </div>
-          <div class="ac-action-arrow" style="color:var(--ink-faint)">
-            {isRu ? 'скоро →' : 'coming soon →'}
+          <div class="dash-head-actions">
+            <button class="btn-ghost" id="signOutBtn" type="button">
+              <i class="ti ti-logout"></i>
+              {isRu ? 'выйти' : 'sign out'}
+            </button>
           </div>
         </div>
 
-        <div class="ac-action-card" id="presetsCard">
-          <div class="ac-action-icon"><i class="ti ti-bookmark"></i></div>
-          <div class="ac-action-title">{isRu ? 'сохранённые пресеты' : 'saved presets'}</div>
-          <div class="ac-action-desc" id="descPresets">
-            {isRu ? 'конфигурации инструментов' : 'tool configurations'}
-          </div>
-          <div class="ac-action-arrow" id="presetsArrow"></div>
+        <!-- quick run -->
+        <div class="quick-row">
+          <span class="quick-label">{isRu ? 'запустить' : 'quick run'}</span>
+          {
+            quickTools.map((t) => (
+              <a class="quick-chip" href={`/tools/${toolSlug(t)}/`}>
+                <i class={`ti ${t.icon}`} />
+                {isRu ? toolNameRu[t.name] || t.name : t.name}
+              </a>
+            ))
+          }
+          <button class="quick-chip" id="quickPalette" type="button">
+            <i class="ti ti-search"></i>
+            {isRu ? 'поиск' : 'search all'}
+          </button>
         </div>
-      </div>
 
-      <div class="ac-local-row">
-        <div class="ac-section">
-          <div class="ac-section-head">
-            <span class="ac-section-title">{isRu ? '// закреплённые' : '// pinned'}</span>
-            <span class="ac-section-count" id="acPinnedCount"></span>
-            <a href="/tools/" class="ac-section-link">{isRu ? 'все →' : 'all →'}</a>
+        <div class="dash-main">
+          <!-- primary column -->
+          <div class="dash-col">
+            <!-- pick up where you left off -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">
+                  {isRu ? '// продолжить' : '// pick up where you left off'}
+                </span>
+                <a href="/account/history/" class="panel-link">
+                  {isRu ? 'вся история →' : 'full history →'}
+                </a>
+              </div>
+              <div class="tl" id="timeline"></div>
+            </div>
+
+            <!-- pinned -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">{isRu ? '// закреплённые' : '// pinned'}</span>
+                <span class="panel-sub" id="acPinnedCount"></span>
+                <a href="/tools/" class="panel-link">{isRu ? 'все инструменты →' : 'manage →'}</a>
+              </div>
+              <div class="pin-grid" id="acPinnedList"></div>
+            </div>
           </div>
-          <div id="acPinnedList"></div>
+
+          <!-- rail -->
+          <div class="dash-col">
+            <!-- plan -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">{isRu ? '// тариф' : '// plan'}</span>
+              </div>
+              <div class="plan-badge" id="planBadge">—</div>
+              <div class="plan-renew" id="planRenew"></div>
+              <div class="plan-feats" id="planFeats"></div>
+              <div id="planUsage"></div>
+              <div id="upgradeWrap"></div>
+              <a
+                class="btn-block"
+                href={isRu ? '/ru/account/billing/' : '/account/billing/'}
+                id="billingBtn"
+              >
+                <i class="ti ti-credit-card"></i>
+                {isRu ? 'управление подпиской' : 'manage billing'}
+              </a>
+            </div>
+
+            <!-- preferences -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">{isRu ? '// настройки' : '// preferences'}</span>
+              </div>
+              <div class="pref">
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'тема' : 'theme'}</div>
+                    <div class="pref-desc">
+                      {isRu ? 'как выглядит whittly' : 'how whittly looks'}
+                    </div>
+                  </div>
+                  <div class="seg" id="prefTheme" data-pref="theme">
+                    <button data-val="light">{isRu ? 'свет' : 'light'}</button>
+                    <button data-val="dark">{isRu ? 'тёмн' : 'dark'}</button>
+                    <button data-val="system">{isRu ? 'сист' : 'system'}</button>
+                  </div>
+                </div>
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'отступы' : 'default indent'}</div>
+                    <div class="pref-desc">
+                      {isRu ? 'json, html, css' : 'json, html, css output'}
+                    </div>
+                  </div>
+                  <div class="seg" id="prefIndent" data-pref="indent">
+                    <button data-val="2">2</button>
+                    <button data-val="4">4</button>
+                    <button data-val="tab">tab</button>
+                  </div>
+                </div>
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'автокопирование' : 'auto-copy result'}</div>
+                    <div class="pref-desc">
+                      {isRu ? 'копировать при вводе' : 'copy output as you type'}
+                    </div>
+                  </div>
+                  <div class="sw" id="prefAutocopy" data-pref="autocopy" role="switch" tabindex="0">
+                  </div>
+                </div>
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'сохранять историю' : 'save to history'}</div>
+                    <div class="pref-desc">
+                      {
+                        isRu
+                          ? 'синхронизация между устройствами'
+                          : 'keep runs synced across devices'
+                      }
+                    </div>
+                  </div>
+                  <div
+                    class="sw on"
+                    id="prefHistory"
+                    data-pref="history"
+                    role="switch"
+                    tabindex="0"
+                  >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="ac-section">
-          <div class="ac-section-head">
-            <span class="ac-section-title">{isRu ? '// недавнее' : '// recent'}</span>
-            <a href="/account/history/" class="ac-section-link"
-              >{isRu ? 'вся история →' : 'all history →'}</a
-            >
+
+        <!-- api keys — full width, coming soon -->
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-head">
+            <span class="panel-title">{isRu ? '// api ключи' : '// api keys'}</span>
+            <span class="panel-sub">api</span>
+            <span class="cs-badge">
+              <i class="ti ti-lock"></i>
+              {isRu ? 'скоро' : 'coming soon'}
+            </span>
           </div>
-          <div id="acRecentList"></div>
+          <div class="ak-relative">
+            <div class="ak-content" aria-hidden="true">
+              <div class="ak-top">
+                <div class="ak-intro">
+                  {
+                    isRu
+                      ? 'вызывайте любой инструмент программно с личным ключом. ключи scoped, revocable и rate-limited.'
+                      : 'call any tool programmatically with a personal key. scoped, revocable, and rate-limited per key — keep it secret, keep it server-side.'
+                  }
+                </div>
+                <button class="ak-gen" type="button" tabindex="-1">
+                  <i class="ti ti-plus"></i>
+                  {isRu ? 'создать ключ' : 'generate key'}
+                </button>
+              </div>
+              <div>
+                <div class="ak-usage-row">
+                  <span>{isRu ? 'запросы за месяц' : 'requests this month'}</span>
+                  <span>— / 50,000</span>
+                </div>
+                <div class="meter"><span style="width:0%"></span></div>
+              </div>
+              <div class="ak-list">
+                <div class="ak-row">
+                  <code class="ak-key">wht_live_••••••••••••••••</code>
+                  <div>
+                    <div class="ak-name">production</div>
+                    <div class="ak-meta">{isRu ? 'пример ключа' : 'example key'}</div>
+                  </div>
+                  <span class="ak-status">{isRu ? 'активен' : 'active'}</span>
+                  <div class="ak-actions">
+                    <button class="ak-act" tabindex="-1"><i class="ti ti-eye"></i></button>
+                    <button class="ak-act" tabindex="-1"><i class="ti ti-copy"></i></button>
+                    <button class="ak-act" tabindex="-1">{isRu ? 'отозвать' : 'revoke'}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ak-lock">
+              <div class="ak-lock-ic"><i class="ti ti-lock"></i></div>
+              <div class="ak-lock-txt">
+                {isRu ? 'личные ключи доступны в тарифе ' : 'personal keys ship with the '}
+                <strong>api</strong>
+                {isRu ? ' — скоро' : ' plan — coming soon'}
+              </div>
+              <button class="ak-notify" id="akNotify" type="button">
+                <i class="ti ti-bell"></i>
+                {isRu ? 'уведомить, когда будет готово' : "notify me when it's ready"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -146,14 +289,14 @@ const catalogForPinned = Object.fromEntries(
   }
 </style>
 
-<script is:inline define:vars={{ isRu, catalogForPinned }}>
+<script is:inline define:vars={{ isRu, catalogForPinned, iconByName }}>
   (function () {
     if (!localStorage.getItem('wh_access')) {
       location.replace('/account/login/');
       return;
     }
 
-    // Show payment success banner if redirected from Robokassa
+    // payment success banner from Robokassa redirect
     var urlParams = new URLSearchParams(location.search);
     if (urlParams.has('InvId')) {
       var paymentBanner = document.getElementById('paymentBanner');
@@ -162,7 +305,6 @@ const catalogForPinned = Object.fromEntries(
         ? 'оплата принята — ваша подписка активна!'
         : 'payment confirmed — your subscription is now active!';
       paymentBanner.style.display = 'flex';
-      // Clean URL without reloading
       history.replaceState(null, '', location.pathname);
       setTimeout(function () {
         paymentBanner.style.opacity = '0';
@@ -174,21 +316,36 @@ const catalogForPinned = Object.fromEntries(
 
     var loadingEl = document.getElementById('acLoading');
     var contentEl = document.getElementById('acContent');
+    var nameEl = document.getElementById('acName');
     var emailEl = document.getElementById('acEmail');
+    var planLabelEl = document.getElementById('acPlanLabel');
+    var memberSinceEl = document.getElementById('acMemberSince');
     var planEl = document.getElementById('planBadge');
-    var planExpiresEl = document.getElementById('planExpires');
+    var planRenewEl = document.getElementById('planRenew');
+    var planFeatsEl = document.getElementById('planFeats');
+    var planUsageEl = document.getElementById('planUsage');
     var upgradeEl = document.getElementById('upgradeWrap');
-    var statKeysEl = document.getElementById('statKeys');
-    var statPreEl = document.getElementById('statPresets');
-    var statSinceEl = document.getElementById('statSince');
-    var descPreEl = document.getElementById('descPresets');
-    var presetsArrowEl = document.getElementById('presetsArrow');
     var signOutBtn = document.getElementById('signOutBtn');
+    var billingBtn = document.getElementById('billingBtn');
 
     function formatDate(iso) {
       return isRu
         ? new Date(iso).toLocaleDateString('ru', { month: 'long', year: 'numeric' })
         : new Date(iso).toLocaleDateString('en', { month: 'short', year: 'numeric' });
+    }
+
+    function formatDateShort(iso) {
+      return isRu
+        ? new Date(iso).toLocaleDateString('ru', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : new Date(iso).toLocaleDateString('en', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          });
     }
 
     async function authFetch(path) {
@@ -219,107 +376,251 @@ const catalogForPinned = Object.fromEntries(
 
     signOutBtn.addEventListener('click', logout);
 
+    // quick palette button wires into nav ⌘K
+    var quickPaletteBtn = document.getElementById('quickPalette');
+    if (quickPaletteBtn) {
+      quickPaletteBtn.addEventListener('click', function () {
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
+        );
+      });
+    }
+
+    // api keys notify button
+    var akNotify = document.getElementById('akNotify');
+    if (akNotify) {
+      akNotify.addEventListener('click', function () {
+        akNotify.classList.add('done');
+        akNotify.innerHTML =
+          '<i class="ti ti-check"></i> ' +
+          (isRu ? 'уведомим по email' : "we'll email you when it ships");
+      });
+    }
+
+    // ── theme (nav button + pref segment stay in sync) ──
+    var Theme = (function () {
+      var themeIcon = document.getElementById('navThemeIcon');
+      function getPref() {
+        return localStorage.getItem('wh_theme') || 'system';
+      }
+      function resolved(p) {
+        return p === 'system'
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+          : p;
+      }
+      function apply(p) {
+        var r = resolved(p);
+        document.documentElement.setAttribute('data-theme', r);
+        if (themeIcon) themeIcon.className = r === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+        document.querySelectorAll('#prefTheme button').forEach(function (b) {
+          b.classList.toggle('on', b.dataset.val === p);
+        });
+      }
+      function set(p) {
+        localStorage.setItem('wh_theme', p);
+        apply(p);
+      }
+      apply(getPref());
+      return {
+        get: getPref,
+        set: set,
+        toggle: function () {
+          set(resolved(getPref()) === 'dark' ? 'light' : 'dark');
+        },
+      };
+    })();
+
+    var navThemeBtn = document.getElementById('navThemeBtn');
+    if (navThemeBtn) navThemeBtn.addEventListener('click', Theme.toggle);
+
+    var prefTheme = document.getElementById('prefTheme');
+    if (prefTheme) {
+      prefTheme.addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (b) Theme.set(b.dataset.val);
+      });
+    }
+
+    // ── indent + switches ──
+    (function () {
+      var indent = document.getElementById('prefIndent');
+      var savedIndent = localStorage.getItem('wh_indent') || '2';
+      if (indent) {
+        indent.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('on', b.dataset.val === savedIndent);
+        });
+        indent.addEventListener('click', function (e) {
+          var b = e.target.closest('button');
+          if (!b) return;
+          indent.querySelectorAll('button').forEach(function (x) {
+            x.classList.remove('on');
+          });
+          b.classList.add('on');
+          localStorage.setItem('wh_indent', b.dataset.val);
+        });
+      }
+
+      document.querySelectorAll('.sw').forEach(function (sw) {
+        var key = 'wh_' + sw.dataset.pref;
+        var saved = localStorage.getItem(key);
+        if (saved !== null) sw.classList.toggle('on', saved === '1');
+        function flip() {
+          sw.classList.toggle('on');
+          localStorage.setItem(key, sw.classList.contains('on') ? '1' : '0');
+        }
+        sw.addEventListener('click', flip);
+        sw.addEventListener('keydown', function (e) {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            flip();
+          }
+        });
+      });
+    })();
+
     async function load() {
       try {
-        var [meRes, keysRes, presetsRes] = await Promise.all([
-          authFetch('/user/me'),
-          authFetch('/user/keys'),
-          authFetch('/user/presets'),
-        ]);
+        var [meRes] = await Promise.all([authFetch('/user/me')]);
 
         if (!meRes) return;
         var me = (await meRes.json()).user;
-
         localStorage.setItem('wh_user', JSON.stringify(me));
-        emailEl.textContent = me.email;
 
+        // name from email
+        var namePart = me.email ? me.email.split('@')[0] : '—';
+        if (nameEl) nameEl.textContent = namePart;
+        if (emailEl) emailEl.textContent = me.email;
+
+        // email verification banner
         if (!me.emailVerifiedAt) {
-          document.getElementById('verifyBanner').style.display = 'flex';
-          document.getElementById('resendBtn').addEventListener('click', async function () {
-            var btn = document.getElementById('resendBtn');
-            btn.disabled = true;
-            btn.textContent = isRu ? 'отправлено ✓' : 'sent ✓';
-            try {
-              await window.whApi.fetch('/auth/resend-verification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: me.email }),
-              });
-            } catch {}
-          });
+          var verifyBanner = document.getElementById('verifyBanner');
+          if (verifyBanner) verifyBanner.style.display = 'flex';
+          var resendBtn = document.getElementById('resendBtn');
+          if (resendBtn) {
+            resendBtn.addEventListener('click', async function () {
+              resendBtn.disabled = true;
+              resendBtn.textContent = isRu ? 'отправлено ✓' : 'sent ✓';
+              try {
+                await window.whApi.fetch('/auth/resend-verification', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: me.email }),
+                });
+              } catch {}
+            });
+          }
         }
 
         var now = Date.now();
         var isExpired = me.planExpiresAt && new Date(me.planExpiresAt).getTime() < now;
         var effectivePlan = isExpired ? 'free' : me.plan;
 
-        var planLabel = effectivePlan === 'api' ? 'Developer' : effectivePlan.toUpperCase();
-        planEl.textContent = planLabel;
-        planEl.className = 'ac-plan-badge ' + effectivePlan;
+        // plan badge
+        var planLabel = effectivePlan === 'api' ? 'API' : effectivePlan === 'pro' ? 'PRO' : 'FREE';
+        var planIcon = effectivePlan === 'free' ? 'ti-user' : 'ti-bolt';
+        if (planEl) {
+          planEl.innerHTML = '<i class="ti ' + planIcon + '"></i> ' + planLabel;
+          planEl.className = 'plan-badge' + (effectivePlan === 'free' ? ' free' : '');
+        }
+        if (planLabelEl) {
+          planLabelEl.textContent = effectivePlan;
+          planLabelEl.style.color = effectivePlan === 'free' ? 'var(--ink-faint)' : '';
+        }
 
-        if (me.plan !== 'free' && me.planExpiresAt) {
-          var expDate = new Date(me.planExpiresAt);
-          var expStr = isRu
-            ? expDate.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' })
-            : expDate.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' });
-          if (isExpired) {
-            planExpiresEl.innerHTML =
-              '<span style="color:var(--bad);font-size:11px;">' +
-              (isRu ? '⚠ истекла ' : '⚠ expired ') +
-              expStr +
-              '</span>';
-          } else {
-            planExpiresEl.innerHTML =
-              '<span style="color:var(--ink-faint);font-size:11px;">' +
-              (isRu ? 'до ' : 'until ') +
-              expStr +
-              '</span>';
+        // plan renew / expiry
+        if (planRenewEl) {
+          if (effectivePlan !== 'free' && me.planExpiresAt) {
+            var expStr = formatDateShort(me.planExpiresAt);
+            if (isExpired) {
+              planRenewEl.innerHTML =
+                '<span style="color:var(--bad)">⚠ ' +
+                (isRu ? 'истекла ' : 'expired ') +
+                expStr +
+                '</span>';
+            } else {
+              var price = effectivePlan === 'api' ? '$149 / yr' : '$49 / yr';
+              planRenewEl.textContent =
+                (isRu ? 'продление ' : 'auto-renews ') + expStr + ' · ' + price;
+            }
           }
         }
 
+        // plan features list
+        if (planFeatsEl) {
+          var feats = [];
+          if (effectivePlan === 'pro' || effectivePlan === 'api') {
+            feats = isRu
+              ? [
+                  'batch — до 500 элементов',
+                  'большие файлы — до 100 MB',
+                  'история — 500 записей',
+                  'пресеты — без ограничений',
+                ]
+              : [
+                  'batch — up to 500 items',
+                  'large files — up to 100 MB',
+                  'synced history — 500 entries',
+                  'saved presets — unlimited',
+                ];
+          }
+          if (effectivePlan === 'api') {
+            feats.push(isRu ? 'api ключи — 50 000 запросов / мес' : 'api keys — 50,000 req / mo');
+          }
+          planFeatsEl.innerHTML = feats
+            .map(function (f) {
+              return '<div class="plan-feat"><i class="ti ti-circle-check"></i>' + f + '</div>';
+            })
+            .join('');
+        }
+
+        // usage meter (history)
+        var histCount = 0;
+        try {
+          histCount = JSON.parse(localStorage.getItem('wh_hist') || '[]').length;
+        } catch {}
+        var histMax = effectivePlan === 'pro' || effectivePlan === 'api' ? 500 : 5;
+        if (planUsageEl) {
+          var pct = Math.min(100, Math.round((histCount / histMax) * 100));
+          planUsageEl.innerHTML =
+            '<div class="plan-usage-row"><span>' +
+            (isRu ? 'история' : 'synced history') +
+            '</span><span>' +
+            histCount +
+            ' / ' +
+            histMax +
+            '</span></div>' +
+            '<div class="meter"><span style="width:' +
+            pct +
+            '%"></span></div>';
+        }
+
+        // upgrade link for free plan
         if (effectivePlan === 'free') {
-          upgradeEl.innerHTML = isRu
-            ? '<a class="ac-plan-upgrade" href="/premium/">перейти на pro →</a>'
-            : '<a class="ac-plan-upgrade" href="/premium/">upgrade to pro →</a>';
-        }
-
-        statSinceEl.textContent = formatDate(me.createdAt);
-
-        var keysData = keysRes ? await keysRes.json() : { keys: [] };
-        var presetsData = presetsRes ? await presetsRes.json() : { presets: [] };
-
-        var activeKeys = (keysData.keys || []).filter(function (k) {
-          return !k.revokedAt;
-        }).length;
-        statKeysEl.textContent = isRu ? activeKeys + ' активных' : activeKeys + ' active';
-
-        if (me.plan === 'free') {
-          statPreEl.textContent = isRu ? 'нужен pro' : 'pro required';
-          descPreEl.textContent = isRu ? 'обновите тариф для пресетов' : 'upgrade to save presets';
-          presetsArrowEl.innerHTML = isRu
-            ? '<a href="/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">обновить →</a>'
-            : '<a href="/premium/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">upgrade →</a>';
-        } else {
-          var pCount = (presetsData.presets || []).length;
-          if (isRu) {
-            statPreEl.textContent = pCount + ' сохранено';
-            descPreEl.textContent =
-              pCount +
-              ' пресет' +
-              (pCount === 1 ? '' : pCount < 5 ? 'а' : 'ов') +
-              ' в разных инструментах';
-            presetsArrowEl.innerHTML =
-              '<a href="/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">смотреть →</a>';
-          } else {
-            statPreEl.textContent = pCount + ' saved';
-            descPreEl.textContent =
-              pCount + ' preset' + (pCount === 1 ? '' : 's') + ' across all tools';
-            presetsArrowEl.innerHTML =
-              '<a href="/account/presets/" style="color:var(--accent);text-decoration:none;font-family:\'JetBrains Mono\',monospace;font-size:11.5px;">manage →</a>';
+          var billingHref = isRu ? '/ru/account/billing/' : '/account/billing/';
+          if (upgradeEl) {
+            upgradeEl.innerHTML = isRu
+              ? '<a class="ac-plan-upgrade" href="' +
+                billingHref +
+                '" style="font-family:\'JetBrains Mono\',monospace;font-size:11.5px;color:var(--accent);text-decoration:none;">перейти на pro →</a>'
+              : '<a class="ac-plan-upgrade" href="' +
+                billingHref +
+                '" style="font-family:\'JetBrains Mono\',monospace;font-size:11.5px;color:var(--accent);text-decoration:none;">upgrade to pro →</a>';
+          }
+          if (billingBtn) {
+            billingBtn.href = billingHref;
+            billingBtn.textContent = isRu ? 'посмотреть тарифы →' : 'view plans →';
           }
         }
 
-        // ── Pinned tools (localStorage) ──
+        // member since
+        if (memberSinceEl) {
+          memberSinceEl.textContent =
+            (isRu ? 'с нами с ' : 'member since ') + formatDate(me.createdAt);
+        }
+
+        // ── pinned tools (localStorage) ──
         var pinnedSlugs = [];
         try {
           pinnedSlugs = JSON.parse(localStorage.getItem('wh_pinned') || '[]');
@@ -330,43 +631,45 @@ const catalogForPinned = Object.fromEntries(
         if (acPinnedListEl) {
           if (!pinnedSlugs.length) {
             acPinnedListEl.innerHTML =
-              '<div class="ac-section-empty">' +
-              (isRu ? 'нет закреплённых инструментов' : 'no pinned tools yet') +
-              '</div>';
+              '<a class="pin-card pin-add" href="/tools/"><i class="ti ti-plus"></i>' +
+              (isRu ? 'закрепить инструмент' : 'pin a tool') +
+              '</a>';
           } else {
-            var toolsBase = '/tools/';
-            acPinnedListEl.innerHTML =
-              '<div class="ac-pinned-chips">' +
-              pinnedSlugs
-                .map(function (s) {
-                  var t = catalogForPinned[s] || { name: s, icon: 'ti-tool' };
-                  return (
-                    '<a class="ac-pinned-chip" href="' +
-                    toolsBase +
-                    s +
-                    '/"><i class="ti ' +
-                    t.icon +
-                    '"></i>' +
-                    t.name +
-                    '</a>'
-                  );
-                })
-                .join('') +
-              '</div>';
+            var chips = pinnedSlugs
+              .map(function (s) {
+                var t = catalogForPinned[s] || { name: s, icon: 'ti-tool' };
+                return (
+                  '<a class="pin-card" href="/tools/' +
+                  s +
+                  '/"><i class="ti ' +
+                  t.icon +
+                  '"></i>' +
+                  t.name +
+                  '</a>'
+                );
+              })
+              .join('');
+            chips +=
+              '<a class="pin-card pin-add" href="/tools/"><i class="ti ti-plus"></i>' +
+              (isRu ? 'ещё' : 'add') +
+              '</a>';
+            acPinnedListEl.innerHTML = chips;
           }
         }
 
-        // ── Recent history (localStorage) ──
+        // ── recent history timeline (localStorage) ──
         var histEntries = [];
         try {
-          histEntries = JSON.parse(localStorage.getItem('wh_hist') || '[]').slice(0, 5);
+          histEntries = JSON.parse(localStorage.getItem('wh_hist') || '[]').slice(0, 6);
         } catch {}
-        var acRecentListEl = document.getElementById('acRecentList');
-        if (acRecentListEl) {
+        var timelineEl = document.getElementById('timeline');
+        if (timelineEl) {
           if (!histEntries.length) {
-            acRecentListEl.innerHTML =
-              '<div class="ac-section-empty">' +
-              (isRu ? 'история пуста' : 'no history yet') +
+            timelineEl.innerHTML =
+              '<div class="tl-empty">' +
+              (isRu
+                ? 'история пуста — используйте инструменты, чтобы она появилась'
+                : 'no history yet — run a few tools to see them here') +
               '</div>';
           } else {
             function timeAgoShort(ts) {
@@ -381,7 +684,7 @@ const catalogForPinned = Object.fromEntries(
             function esc(s) {
               return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
-            acRecentListEl.innerHTML = histEntries
+            timelineEl.innerHTML = histEntries
               .map(function (e) {
                 var toolPath = e.path;
                 if (!toolPath && e.tool) {
@@ -397,9 +700,11 @@ const catalogForPinned = Object.fromEntries(
                   if (_ep && typeof _ep.t === 'string') entryPreview = _ep.t;
                 } catch {}
                 var hasLink = !!(toolPath && (e.hasInput || e.input || e.inputPreview));
+                var icon = iconByName[e.tool ? e.tool.toLowerCase() : ''] || 'ti-tool';
+                var toolName = isRu ? e.toolRu || e.tool || '—' : e.tool || '—';
                 return (
-                  '<div class="ac-hist-row' +
-                  (hasLink ? ' ac-hist-row-link' : '') +
+                  '<a class="tl-row" href="' +
+                  esc(toolPath || '#') +
                   '"' +
                   (hasLink
                     ? ' data-path="' +
@@ -411,58 +716,40 @@ const catalogForPinned = Object.fromEntries(
                       '"'
                     : '') +
                   '>' +
-                  '<span class="ac-hist-tool">' +
-                  esc(e.tool) +
+                  '<span class="tl-ic"><i class="ti ' +
+                  esc(icon) +
+                  '"></i></span>' +
+                  '<span class="tl-tool">' +
+                  esc(toolName) +
                   '</span>' +
-                  '<span class="ac-hist-summary">' +
-                  esc(e.summary || '') +
+                  '<span class="tl-sum">' +
+                  esc(e.summary || entryPreview || '') +
                   '</span>' +
-                  '<span class="ac-hist-ts">' +
+                  '<span class="tl-meta">' +
+                  '<span class="tl-restore"><i class="ti ti-rotate-2" style="font-size:12px"></i> ' +
+                  (isRu ? 'открыть' : 'restore') +
+                  '</span>' +
+                  '<span class="tl-ts">' +
                   timeAgoShort(e.ts) +
-                  (hasLink
-                    ? ' <i class="ti ti-corner-down-left" style="font-size:10px"></i>'
-                    : '') +
                   '</span>' +
-                  '</div>'
+                  '</span>' +
+                  '</a>'
                 );
               })
               .join('');
 
-            acRecentListEl.addEventListener('click', function (ev) {
-              var row = ev.target.closest('.ac-hist-row-link');
-              if (!row) return;
-              var path = row.dataset.path;
+            timelineEl.addEventListener('click', function (ev) {
+              var row = ev.target.closest('.tl-row');
+              if (!row || !row.dataset.path) return;
               var ts = row.dataset.ts;
-              if (!path) return;
               if (ts) {
                 sessionStorage.setItem('wh_restore_ts', ts);
                 var preview = row.dataset.preview;
                 if (preview) sessionStorage.setItem('wh_restore_preview', preview);
               }
-              window.location.href = path;
+              window.location.href = row.dataset.path;
             });
           }
-        }
-
-        // History count stat (localStorage)
-        var statHistEl = document.getElementById('statHistory');
-        if (statHistEl) {
-          var histCount = 0;
-          try {
-            histCount = JSON.parse(localStorage.getItem('wh_hist') || '[]').length;
-          } catch {}
-          var histMax = effectivePlan === 'pro' || effectivePlan === 'api' ? 500 : 5;
-          statHistEl.textContent = histCount + ' / ' + histMax;
-        }
-
-        // Make presetsCard clickable for Pro
-        var presetsCardEl = document.getElementById('presetsCard');
-        if (presetsCardEl && effectivePlan !== 'free') {
-          presetsCardEl.style.cursor = 'pointer';
-          presetsCardEl.addEventListener('click', function (ev) {
-            if (ev.target.closest('a')) return;
-            window.location.href = '/account/presets/';
-          });
         }
 
         loadingEl.style.display = 'none';
