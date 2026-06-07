@@ -81,7 +81,7 @@
 
 .cat-name {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -99,7 +99,7 @@
 
 .cat-desc {
   margin-left: auto;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink-faint);
   font-style: italic;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -135,7 +135,7 @@
   color: var(--ink-faint);
   padding: 2px 4px;
   border-radius: 4px;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1;
   opacity: 0;
   transition:
@@ -160,7 +160,7 @@
   transform: translateY(-1px);
 }
 .tool-row .icon {
-  font-size: 18px;
+  font-size: 19px;
   color: var(--ink-soft);
 }
 .tool-row .body {
@@ -168,7 +168,7 @@
 }
 
 .tool-row .name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--ink);
   display: flex;
@@ -178,7 +178,7 @@
 
 .tool-row .name .new {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent);
   background: var(--accent-soft);
   padding: 1px 5px;
@@ -207,7 +207,7 @@
 
 .tool-row .name .soon-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-faint);
   background: var(--surface-sunken);
   border: 0.5px solid var(--line);
@@ -223,11 +223,11 @@
   text-align: center;
   color: var(--ink-faint);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .empty .em {
-  font-size: 32px;
+  font-size: 33px;
   margin-bottom: 12px;
   color: var(--ink-soft);
 }

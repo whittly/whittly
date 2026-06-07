@@ -13,7 +13,7 @@
 
 .h-section {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ink-soft);
   letter-spacing: 0.06em;
@@ -32,7 +32,7 @@
 
 .diff {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.9;
 }
 .diff-line {
@@ -91,7 +91,7 @@
   padding: 18px 22px;
   margin: 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.8;
   color: var(--ink);
   overflow-x: auto;
@@ -116,7 +116,7 @@
 
 .faq-cluster-head {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -144,12 +144,12 @@
 .faq-q .marker {
   font-family: 'JetBrains Mono', monospace;
   color: var(--accent);
-  font-size: 14px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 .faq-q .text {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 500;
   color: var(--ink);
   letter-spacing: -0.01em;
@@ -158,7 +158,7 @@
 .faq-q .toggle {
   color: var(--ink-faint);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: 15px;
   transition: transform 0.2s;
 }
 .faq-item.open .toggle {
@@ -166,7 +166,7 @@
 }
 .faq-a {
   margin: 10px 0 0 32px;
-  font-size: 16px;
+  font-size: 17px;
   color: var(--ink-soft);
   line-height: 1.7;
   display: none;
