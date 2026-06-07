@@ -8,7 +8,7 @@ interface Props {
 const { lang } = Astro.props;
 const isRu = lang === 'ru';
 
-const accountHref = isRu ? '/ru/account/' : '/account/';
+const accountHref = '/account/';
 ---
 
 <Base title={isRu ? 'биллинг — whittly' : 'billing — whittly'}>
