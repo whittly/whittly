@@ -33,7 +33,7 @@ const isRu = lang === 'ru';
           </button>
           <span class="ac-keys-cs-badge">
             <i class="ti ti-lock"></i>
-            {isRu ? 'developer — скоро' : 'developer — coming soon'}
+            {isRu ? 'api — скоро' : 'api — coming soon'}
           </span>
         </div>
       </div>
@@ -43,8 +43,8 @@ const isRu = lang === 'ru';
         <div class="ac-keys-empty">
           {
             isRu
-              ? 'api ключи доступны в тарифе developer — скоро'
-              : 'api keys are available on the developer plan — coming soon'
+              ? 'api ключи доступны в тарифе api — скоро'
+              : 'api keys are available on the api plan — coming soon'
           }
         </div>
       </div>
@@ -131,8 +131,8 @@ const isRu = lang === 'ru';
         var empty = document.createElement('div');
         empty.className = 'ac-keys-empty';
         empty.textContent = isRu
-          ? 'api ключи доступны в тарифе developer — скоро'
-          : 'api keys are available on the developer plan — coming soon';
+          ? 'api ключи доступны в тарифе api — скоро'
+          : 'api keys are available on the api plan — coming soon';
         keysListEl.appendChild(empty);
         return;
       }
