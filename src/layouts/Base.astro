@@ -259,6 +259,13 @@ const catalog = CATALOG.map((t) => {
         if (saved === 'dark' || saved === 'light') {
           document.documentElement.setAttribute('data-theme', saved);
         }
+        if (localStorage.getItem('wh_wrap') === '1') {
+          document.documentElement.setAttribute('data-wrap', '1');
+        }
+        var fs = localStorage.getItem('wh_font_size');
+        if (fs && fs !== 'md') {
+          document.documentElement.setAttribute('data-font-size', fs);
+        }
       })();
     </script>
 

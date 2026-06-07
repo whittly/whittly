@@ -204,6 +204,7 @@ const t = {
     <div class="jf-modes">
       <button class="jf-mode active" data-indent="2">{t.btn2}</button>
       <button class="jf-mode" data-indent="4">{t.btn4}</button>
+      <button class="jf-mode" data-indent="tab">tab</button>
       <button class="jf-mode" data-indent="0">{t.btnMin}</button>
     </div>
     <span class="jf-status" id="jfStatus">{t.statusEmpty}</span>
@@ -231,7 +232,14 @@ const t = {
     const copyBtn = document.getElementById('jfCopy');
     const clearBtn = document.getElementById('jfClear');
 
-    let indent = 2;
+    let indent = (function () {
+      var p = localStorage.getItem('wh_indent') || '2';
+      if (p === 'tab') return 'tab';
+      return p === '4' ? 4 : 2;
+    })();
+    document.querySelectorAll('.jf-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.indent === String(indent));
+    });
     let lastOutput = '';
 
     function esc(s) {
@@ -295,8 +303,9 @@ const t = {
 
       try {
         const parsed = JSON.parse(raw);
-        const formatted = JSON.stringify(parsed, null, indent || undefined);
+        const formatted = JSON.stringify(parsed, null, indent === 'tab' ? '\t' : (indent || undefined));
         lastOutput = formatted;
+        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = highlight(formatted);
 
         const size = new Blob([formatted]).size;
@@ -321,7 +330,7 @@ const t = {
           b.classList.remove('active');
         });
         btn.classList.add('active');
-        indent = parseInt(btn.dataset.indent, 10);
+        indent = btn.dataset.indent === 'tab' ? 'tab' : parseInt(btn.dataset.indent, 10);
         process();
       });
     });
@@ -372,7 +381,7 @@ const t = {
       if (cfg.indent !== undefined) {
         indent = cfg.indent;
         document.querySelectorAll('.jf-mode').forEach(function (b) {
-          b.classList.toggle('active', parseInt(b.dataset.indent, 10) === indent);
+          b.classList.toggle('active', b.dataset.indent === String(indent));
         });
       }
       process();

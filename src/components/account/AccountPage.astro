@@ -205,6 +205,28 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
                   >
                   </div>
                 </div>
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'перенос строк' : 'word wrap'}</div>
+                    <div class="pref-desc">
+                      {isRu ? 'переносить длинные строки в выводе' : 'wrap long lines in output'}
+                    </div>
+                  </div>
+                  <div class="sw" id="prefWrap" data-pref="wrap" role="switch" tabindex="0"></div>
+                </div>
+                <div class="pref-row">
+                  <div>
+                    <div class="pref-name">{isRu ? 'размер вывода' : 'output font size'}</div>
+                    <div class="pref-desc">
+                      {isRu ? 'шрифт в области вывода' : 'monospace text in tools'}
+                    </div>
+                  </div>
+                  <div class="seg" id="prefFontSize">
+                    <button data-val="sm">{isRu ? 'мал' : 'S'}</button>
+                    <button data-val="md" class="on">{isRu ? 'ср' : 'M'}</button>
+                    <button data-val="lg">{isRu ? 'бол' : 'L'}</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -458,13 +480,35 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
         });
       }
 
+      var fontSize = document.getElementById('prefFontSize');
+      var savedFontSize = localStorage.getItem('wh_font_size') || 'md';
+      if (fontSize) {
+        fontSize.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('on', b.dataset.val === savedFontSize);
+        });
+        fontSize.addEventListener('click', function (e) {
+          var b = e.target.closest('button');
+          if (!b) return;
+          fontSize.querySelectorAll('button').forEach(function (x) {
+            x.classList.remove('on');
+          });
+          b.classList.add('on');
+          localStorage.setItem('wh_font_size', b.dataset.val);
+          document.documentElement.setAttribute('data-font-size', b.dataset.val);
+        });
+      }
+
       document.querySelectorAll('.sw').forEach(function (sw) {
         var key = 'wh_' + sw.dataset.pref;
         var saved = localStorage.getItem(key);
         if (saved !== null) sw.classList.toggle('on', saved === '1');
         function flip() {
           sw.classList.toggle('on');
-          localStorage.setItem(key, sw.classList.contains('on') ? '1' : '0');
+          var val = sw.classList.contains('on') ? '1' : '0';
+          localStorage.setItem(key, val);
+          if (sw.dataset.pref === 'wrap') {
+            document.documentElement.setAttribute('data-wrap', val);
+          }
         }
         sw.addEventListener('click', flip);
         sw.addEventListener('keydown', function (e) {

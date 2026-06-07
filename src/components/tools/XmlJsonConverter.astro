@@ -234,6 +234,11 @@ const t = {
 
     var mode = 'xml2json';
     var lastOutput = '';
+    var spaces = (function () {
+      var p = localStorage.getItem('wh_indent') || '2';
+      if (p === 'tab') return 'tab';
+      return p === '4' ? 4 : 2;
+    })();
 
     function esc(s) {
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -288,12 +293,12 @@ const t = {
       if (err.length > 0) throw new Error(err[0].textContent.split('\n')[0].trim());
       var result = {};
       result[doc.documentElement.tagName] = nodeToObj(doc.documentElement);
-      return JSON.stringify(result, null, 2);
+      return JSON.stringify(result, null, spaces === 'tab' ? '\t' : spaces);
     }
 
     /* JSON → XML */
     function buildXml(tag, value, depth) {
-      var indent = '  '.repeat(depth);
+      var indent = (spaces === 'tab' ? '\t' : ' '.repeat(spaces)).repeat(depth);
       if (value === null || value === undefined) return indent + '<' + tag + ' />';
       if (typeof value !== 'object') {
         return (
@@ -368,6 +373,7 @@ const t = {
       try {
         var result = mode === 'xml2json' ? xmlToJson(raw) : jsonToXml(raw);
         lastOutput = result;
+        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
         var lines = result.split('\n').length;
         statusEl.textContent = t.converted + ' · ' + lines + ' lines';

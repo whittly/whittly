@@ -476,3 +476,18 @@ footer .by:hover {
 .flash-ok {
   animation: tool-flash-ok 0.8s ease-in-out;
 }
+
+/* ─── user prefs ─── */
+[data-wrap='1'] pre[class$='-out'],
+[data-wrap='1'] textarea[class$='-out'] {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+[data-font-size='sm'] pre[class$='-out'],
+[data-font-size='sm'] textarea[class$='-out'] {
+  font-size: 12px;
+}
+[data-font-size='lg'] pre[class$='-out'],
+[data-font-size='lg'] textarea[class$='-out'] {
+  font-size: 16px;
+}

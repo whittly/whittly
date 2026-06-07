@@ -207,6 +207,7 @@ const t = {
     <div class="sqf-modes">
       <button class="sqf-mode active" data-spaces="2">{t.btn2}</button>
       <button class="sqf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="sqf-mode" data-spaces="tab">tab</button>
       <button class="sqf-mode" data-spaces="0">{t.btnMin}</button>
     </div>
     <span class="sqf-status" id="sqfStatus">{t.statusEmpty}</span>
@@ -234,7 +235,14 @@ const t = {
     var copyBtn = document.getElementById('sqfCopy');
     var clearBtn = document.getElementById('sqfClear');
 
-    var spaces = 2;
+    var spaces = (function () {
+      var p = localStorage.getItem('wh_indent') || '2';
+      if (p === 'tab') return 'tab';
+      return p === '4' ? 4 : 2;
+    })();
+    document.querySelectorAll('.sqf-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.spaces === String(spaces));
+    });
     var lastOutput = '';
 
     var KWSET = new Set([
@@ -562,7 +570,7 @@ const t = {
       var tokens = tokenize(input);
       if (!tokens.length) return '';
 
-      var ind = sp === 0 ? '' : ' '.repeat(sp);
+      var ind = sp === 0 ? '' : sp === 'tab' ? '\t' : ' '.repeat(sp);
       var result = '';
       var depth = 0; // paren depth
       var section = ''; // current top-level clause
@@ -752,6 +760,7 @@ const t = {
       try {
         var formatted = formatSQL(raw, spaces);
         lastOutput = formatted;
+        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
         // Re-format for highlighting (apply same formatting)
         outEl.innerHTML = highlight(formatted);
 
@@ -780,7 +789,7 @@ const t = {
           b.classList.remove('active');
         });
         btn.classList.add('active');
-        spaces = parseInt(btn.dataset.spaces, 10);
+        spaces = btn.dataset.spaces === 'tab' ? 'tab' : parseInt(btn.dataset.spaces, 10);
         process();
       });
     });
@@ -818,7 +827,7 @@ const t = {
       if (cfg.spaces !== undefined) {
         spaces = cfg.spaces;
         document.querySelectorAll('.sqf-mode').forEach(function (b) {
-          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+          b.classList.toggle('active', b.dataset.spaces === String(spaces));
         });
       }
       process();

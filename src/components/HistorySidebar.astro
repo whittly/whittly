@@ -416,7 +416,7 @@ const { isRu, catalog } = Astro.props;
           });
         }
         var plan = window.whApi.getPlan();
-        if (plan === 'pro' || plan === 'api') {
+        if (localStorage.getItem('wh_history') !== '0' && (plan === 'pro' || plan === 'api')) {
           window.whApi
             .fetch('/user/history', {
               method: 'POST',

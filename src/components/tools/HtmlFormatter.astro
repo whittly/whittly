@@ -207,6 +207,7 @@ const t = {
     <div class="htf-modes">
       <button class="htf-mode active" data-spaces="2">{t.btn2}</button>
       <button class="htf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="htf-mode" data-spaces="tab">tab</button>
       <button class="htf-mode" data-spaces="0">{t.btnMin}</button>
     </div>
     <span class="htf-status" id="htfStatus">{t.statusEmpty}</span>
@@ -234,7 +235,14 @@ const t = {
     var copyBtn = document.getElementById('htfCopy');
     var clearBtn = document.getElementById('htfClear');
 
-    var spaces = 2;
+    var spaces = (function () {
+      var p = localStorage.getItem('wh_indent') || '2';
+      if (p === 'tab') return 'tab';
+      return p === '4' ? 4 : 2;
+    })();
+    document.querySelectorAll('.htf-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.spaces === String(spaces));
+    });
     var lastOutput = '';
 
     // Tags that have no closing tag
@@ -406,7 +414,7 @@ const t = {
     function formatHTML(html, sp) {
       if (sp === 0) return minify(html);
 
-      var ind = ' '.repeat(sp);
+      var ind = sp === 'tab' ? '\t' : ' '.repeat(sp);
       var tokens = tokenize(html);
       var depth = 0;
       var result = '';
@@ -501,6 +509,7 @@ const t = {
       try {
         var formatted = formatHTML(raw, spaces);
         lastOutput = formatted;
+        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
         var highlighted = esc(formatted)
           .replace(
             /(&lt;\/?)([\w][^&\s>]*)([^&]*?)(\/?&gt;)/g,
@@ -541,7 +550,7 @@ const t = {
           b.classList.remove('active');
         });
         btn.classList.add('active');
-        spaces = parseInt(btn.dataset.spaces, 10);
+        spaces = btn.dataset.spaces === 'tab' ? 'tab' : parseInt(btn.dataset.spaces, 10);
         process();
       });
     });
@@ -579,7 +588,7 @@ const t = {
       if (cfg.spaces !== undefined) {
         spaces = cfg.spaces;
         document.querySelectorAll('.htf-mode').forEach(function (b) {
-          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+          b.classList.toggle('active', b.dataset.spaces === String(spaces));
         });
       }
       process();

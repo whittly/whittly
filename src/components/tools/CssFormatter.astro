@@ -207,6 +207,7 @@ const t = {
     <div class="csf-modes">
       <button class="csf-mode active" data-spaces="2">{t.btn2}</button>
       <button class="csf-mode" data-spaces="4">{t.btn4}</button>
+      <button class="csf-mode" data-spaces="tab">tab</button>
       <button class="csf-mode" data-spaces="0">{t.btnMin}</button>
     </div>
     <span class="csf-status" id="csfStatus">{t.statusEmpty}</span>
@@ -234,7 +235,14 @@ const t = {
     var copyBtn = document.getElementById('csfCopy');
     var clearBtn = document.getElementById('csfClear');
 
-    var spaces = 2;
+    var spaces = (function () {
+      var p = localStorage.getItem('wh_indent') || '2';
+      if (p === 'tab') return 'tab';
+      return p === '4' ? 4 : 2;
+    })();
+    document.querySelectorAll('.csf-mode').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.spaces === String(spaces));
+    });
     var lastOutput = '';
 
     function esc(s) {
@@ -375,7 +383,7 @@ const t = {
         return out.trim();
       }
 
-      var ind = ' '.repeat(sp);
+      var ind = sp === 'tab' ? '\t' : ' '.repeat(sp);
       var tokens = tokenize(input);
       var depth = 0;
       var result = '';
@@ -560,6 +568,7 @@ const t = {
       try {
         var formatted = formatCSS(raw, spaces);
         lastOutput = formatted;
+        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = highlight(formatted);
 
         var rules = countRules(formatted);
@@ -593,7 +602,7 @@ const t = {
           b.classList.remove('active');
         });
         btn.classList.add('active');
-        spaces = parseInt(btn.dataset.spaces, 10);
+        spaces = btn.dataset.spaces === 'tab' ? 'tab' : parseInt(btn.dataset.spaces, 10);
         process();
       });
     });
@@ -631,7 +640,7 @@ const t = {
       if (cfg.spaces !== undefined) {
         spaces = cfg.spaces;
         document.querySelectorAll('.csf-mode').forEach(function (b) {
-          b.classList.toggle('active', parseInt(b.dataset.spaces, 10) === spaces);
+          b.classList.toggle('active', b.dataset.spaces === String(spaces));
         });
       }
       process();
