@@ -137,11 +137,7 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
               <div class="plan-feats" id="planFeats"></div>
               <div id="planUsage"></div>
               <div id="upgradeWrap"></div>
-              <a
-                class="btn-block"
-                href={isRu ? '/ru/account/billing/' : '/account/billing/'}
-                id="billingBtn"
-              >
+              <a class="btn-block" href="/account/billing/" id="billingBtn">
                 <i class="ti ti-credit-card"></i>
                 {isRu ? 'управление подпиской' : 'manage billing'}
               </a>
@@ -598,7 +594,7 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
 
         // upgrade link for free plan
         if (effectivePlan === 'free') {
-          var billingHref = isRu ? '/ru/account/billing/' : '/account/billing/';
+          var billingHref = '/account/billing/';
           if (upgradeEl) {
             upgradeEl.innerHTML = isRu
               ? '<a class="ac-plan-upgrade" href="' +

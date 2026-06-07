@@ -53,25 +53,14 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
 
           <div class="card">
             <div class="card-head">
-              <span class="panel-title">{isRu ? '// оплата' : '// payment'}</span>
+              <span class="panel-title">{isRu ? '// аккаунт' : '// account'}</span>
             </div>
             <div class="pm-row">
-              <span class="pm-brand"><i class="ti ti-shield-lock"></i></span>
+              <span class="pm-brand"><i class="ti ti-user"></i></span>
               <div>
-                <div class="pm-num">
-                  {isRu ? 'оплата через Робокассу' : 'payments via Robokassa'}
-                </div>
-                <div class="pm-exp">
-                  {
-                    isRu
-                      ? 'защищённый редирект при каждом платеже'
-                      : 'secure redirect on each payment'
-                  }
-                </div>
+                <div class="pm-num" id="acCardEmail">—</div>
+                <div class="pm-exp" id="acCardSince">—</div>
               </div>
-            </div>
-            <div class="pm-meta">
-              <span>{isRu ? 'чек → ' : 'receipt → '}<span id="receiptEmail">—</span></span>
             </div>
           </div>
         </div>
@@ -109,7 +98,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
               <div class="bill-plan-cap">{isRu ? 'в браузере' : 'runs in your browser'}</div>
             </div>
             <div class="bill-plan-price">
-              <span class="bill-plan-amount">$0</span>
+              <span class="bill-plan-amount">{isRu ? '0 ₽' : '$0'}</span>
             </div>
             <div class="bill-plan-note">&nbsp;</div>
             <ul class="bill-plan-feats">
@@ -140,7 +129,11 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
               </div>
             </div>
             <div class="bill-plan-price">
-              <span class="bill-plan-amount" data-mo="$6" data-yr="$49">$49</span>
+              <span
+                class="bill-plan-amount"
+                data-mo={isRu ? '390 ₽' : '$6'}
+                data-yr={isRu ? '2 900 ₽' : '$49'}>{isRu ? '2 900 ₽' : '$49'}</span
+              >
               <span
                 class="bill-plan-period"
                 data-mo={isRu ? '/ мес' : '/ mo'}
@@ -148,7 +141,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
               >
             </div>
             <div class="bill-plan-note" id="proNote">
-              {isRu ? '≈ $4,08 / мес, при оплате за год' : '≈ $4.08 / mo, billed annually'}
+              {isRu ? '≈ 242 ₽ / мес, при оплате за год' : '≈ $4.08 / mo, billed annually'}
             </div>
             <ul class="bill-plan-feats">
               <li>
@@ -184,7 +177,11 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
               </div>
             </div>
             <div class="bill-plan-price">
-              <span class="bill-plan-amount" data-mo="$24" data-yr="$199">$199</span>
+              <span
+                class="bill-plan-amount"
+                data-mo={isRu ? '1 990 ₽' : '$24'}
+                data-yr={isRu ? '14 900 ₽' : '$199'}>{isRu ? '14 900 ₽' : '$199'}</span
+              >
               <span
                 class="bill-plan-period"
                 data-mo={isRu ? '/ мес' : '/ mo'}
@@ -192,7 +189,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
               >
             </div>
             <div class="bill-plan-note" id="apiNote">
-              {isRu ? '≈ $16,58 / мес, при оплате за год' : '≈ $16.58 / mo, billed annually'}
+              {isRu ? '≈ 1 242 ₽ / мес, при оплате за год' : '≈ $16.58 / mo, billed annually'}
             </div>
             <ul class="bill-plan-feats">
               <li><i class="ti ti-check"></i>{isRu ? 'всё из pro' : 'everything in pro'}</li>
@@ -361,7 +358,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
       if (proNote)
         proNote.textContent = isAnnual
           ? isRu
-            ? '≈ $4,08 / мес, при оплате за год'
+            ? '≈ 242 ₽ / мес, при оплате за год'
             : '≈ $4.08 / mo, billed annually'
           : isRu
             ? 'оплата ежемесячно'
@@ -369,7 +366,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
       if (apiNote)
         apiNote.textContent = isAnnual
           ? isRu
-            ? '≈ $16,58 / мес, при оплате за год'
+            ? '≈ 1 242 ₽ / мес, при оплате за год'
             : '≈ $16.58 / mo, billed annually'
           : isRu
             ? 'оплата ежемесячно'
@@ -486,9 +483,13 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
         var isExpired = me.planExpiresAt && new Date(me.planExpiresAt).getTime() < now;
         var effectivePlan = isExpired ? 'free' : me.plan || 'free';
 
-        // receipt email
-        var receiptEmailEl = document.getElementById('receiptEmail');
-        if (receiptEmailEl) receiptEmailEl.textContent = me.email || '—';
+        // account card
+        var acCardEmail = document.getElementById('acCardEmail');
+        var acCardSince = document.getElementById('acCardSince');
+        if (acCardEmail) acCardEmail.textContent = me.email || '—';
+        if (acCardSince)
+          acCardSince.textContent =
+            (isRu ? 'участник с ' : 'member since ') + formatDateShort(me.createdAt);
 
         // subscription card
         var subContent = document.getElementById('subContent');
