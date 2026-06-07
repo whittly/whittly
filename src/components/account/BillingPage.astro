@@ -225,14 +225,7 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
             <span>{isRu ? 'статус' : 'status'}</span>
             <span></span>
           </div>
-          <div class="inv-empty">
-            <i class="ti ti-mail"></i>
-            {
-              isRu
-                ? 'чеки отправляются на ваш email после каждого платежа'
-                : 'receipts are sent to your email after each payment'
-            }
-          </div>
+          <div id="invList"><!-- rendered by JS --></div>
         </div>
 
         <!-- danger zone -->
@@ -426,11 +419,68 @@ const accountHref = isRu ? '/ru/account/' : '/account/';
       initPayment('pro');
     });
 
+    function renderHistory(pmts) {
+      var el = document.getElementById('invList');
+      if (!el) return;
+      if (!pmts || pmts.length === 0) {
+        el.innerHTML =
+          '<div class="inv-empty"><i class="ti ti-mail"></i> ' +
+          (isRu
+            ? 'чеки отправляются на ваш email после каждого платежа'
+            : 'receipts are sent to your email after each payment') +
+          '</div>';
+        return;
+      }
+      var planLabel = { pro: 'Pro', developer: 'Developer' };
+      var periodLabel = isRu
+        ? { monthly: 'ежемесячно', annual: 'ежегодно' }
+        : { monthly: 'monthly', annual: 'annual' };
+      el.innerHTML = pmts
+        .map(function (p) {
+          var date = p.paidAt
+            ? new Date(p.paidAt).toLocaleDateString(isRu ? 'ru' : 'en', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })
+            : '—';
+          var desc =
+            'Whittly ' +
+            (planLabel[p.plan] || p.plan) +
+            ' · ' +
+            (periodLabel[p.period] || p.period);
+          var amt = p.amount.toLocaleString(isRu ? 'ru-RU' : 'en') + ' ₽';
+          return (
+            '<div class="inv-row">' +
+            '<span class="inv-date">' +
+            date +
+            '</span>' +
+            '<span class="inv-desc">' +
+            desc +
+            '</span>' +
+            '<span class="inv-amt">' +
+            amt +
+            '</span>' +
+            '<span class="inv-status">' +
+            (isRu ? 'оплачено' : 'paid') +
+            '</span>' +
+            '<span></span>' +
+            '</div>'
+          );
+        })
+        .join('');
+    }
+
     async function load() {
       try {
-        var meRes = await authFetch('/user/me');
+        var [meRes, paymentsRes] = await Promise.all([
+          authFetch('/user/me'),
+          authFetch('/billing/payments'),
+        ]);
         if (!meRes) return;
         var me = (await meRes.json()).user;
+        var pmtsData = paymentsRes ? await paymentsRes.json() : null;
+        renderHistory(pmtsData && pmtsData.ok ? pmtsData.payments : []);
 
         var now = Date.now();
         var isExpired = me.planExpiresAt && new Date(me.planExpiresAt).getTime() < now;
