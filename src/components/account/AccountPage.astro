@@ -407,10 +407,18 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
     var akNotify = document.getElementById('akNotify');
     if (akNotify) {
       akNotify.addEventListener('click', function () {
-        akNotify.classList.add('done');
-        akNotify.innerHTML =
-          '<i class="ti ti-check"></i> ' +
-          (isRu ? 'уведомим по email' : "we'll email you when it ships");
+        akNotify.disabled = true;
+        window.whApi
+          .fetch('/user/waitlist', { method: 'POST' })
+          .then(function () {
+            akNotify.classList.add('done');
+            akNotify.innerHTML =
+              '<i class="ti ti-check"></i> ' +
+              (isRu ? 'уведомим по email' : "we'll email you when it ships");
+          })
+          .catch(function () {
+            akNotify.disabled = false;
+          });
       });
     }
 
