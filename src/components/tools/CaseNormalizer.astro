@@ -365,14 +365,5 @@ const CASES = [
         clearBtn.click();
       }
     });
-
-    window.toolBatchProcess = function (lines) {
-      return lines.map(function (line) {
-        var words = splitWords(line);
-        return CASES.map(function (c) {
-          return c.key + ': ' + (CONVERTERS[c.key] ? CONVERTERS[c.key](words) : '');
-        }).join('\n');
-      });
-    };
   })();
 </script>

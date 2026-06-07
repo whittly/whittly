@@ -13,6 +13,5 @@ declare global {
     pushHistory(tool: string, summary: string, input?: string): void;
     toolGetPreset?: () => unknown;
     toolSetPreset?: (config: unknown) => void;
-    toolBatchProcess?: (lines: string[]) => string[] | Promise<string[]>;
   }
 }

@@ -884,27 +884,5 @@ const t = {
       sessionStorage.removeItem('magic_box_payload');
       process();
     }
-
-    window.toolBatchProcess = function (lines) {
-      return lines.map(function (line) {
-        try {
-          var parts = line.trim().split('.');
-          if (parts.length < 2) return '// invalid jwt';
-          function b64d(s) {
-            s = s.replace(/-/g, '+').replace(/_/g, '/');
-            while (s.length % 4) s += '=';
-            var bin = atob(s);
-            var bytes = new Uint8Array(bin.length);
-            for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-            return JSON.parse(new TextDecoder().decode(bytes));
-          }
-          var header = b64d(parts[0]);
-          var payload = b64d(parts[1]);
-          return 'header:  ' + JSON.stringify(header) + '\npayload: ' + JSON.stringify(payload);
-        } catch (e) {
-          return '// error: ' + e.message;
-        }
-      });
-    };
   })();
 </script>

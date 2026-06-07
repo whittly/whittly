@@ -443,13 +443,6 @@ const t = {
       }
     });
 
-    window.toolBatchProcess = function (lines) {
-      var sep = sepEl.value;
-      var maxLen = parseInt(maxEl.value, 10) || 0;
-      return lines.map(function (line) {
-        return slugify(line, sep, maxLen) || '// (empty)';
-      });
-    };
     // ── History restore ──
     var _rts = sessionStorage.getItem('wh_restore_ts');
     if (_rts) {

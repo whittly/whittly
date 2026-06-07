@@ -466,16 +466,6 @@ const t = {
       }
     });
 
-    window.toolBatchProcess = function (lines) {
-      var safe = urlSafe.checked;
-      return lines.map(function (line) {
-        try {
-          return mode === 'encode' ? encodeText(line, safe) : decodeText(line, safe);
-        } catch (e) {
-          return '// error: ' + e.message;
-        }
-      });
-    };
     // ── History restore ──
     var _rts = sessionStorage.getItem('wh_restore_ts');
     if (_rts) {

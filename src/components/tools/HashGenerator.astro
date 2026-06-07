@@ -327,31 +327,5 @@ const t = {
         process();
       }
     } catch (e) {}
-
-    window.toolBatchProcess = function (lines) {
-      var encode = new TextEncoder();
-      return Promise.all(
-        lines.map(function (line) {
-          var bytes = encode.encode(line);
-          return Promise.all([
-            crypto.subtle.digest('SHA-1', bytes).then(toHex),
-            crypto.subtle.digest('SHA-256', bytes).then(toHex),
-            crypto.subtle.digest('SHA-384', bytes).then(toHex),
-            crypto.subtle.digest('SHA-512', bytes).then(toHex),
-          ]).then(function (hashes) {
-            return (
-              'SHA-1:   ' +
-              hashes[0] +
-              '\nSHA-256: ' +
-              hashes[1] +
-              '\nSHA-384: ' +
-              hashes[2] +
-              '\nSHA-512: ' +
-              hashes[3]
-            );
-          });
-        })
-      );
-    };
   })();
 </script>

@@ -214,7 +214,7 @@ const t = {
 </style>
 
 <PresetsBar toolName="html-entities" lang={lang} />
-<BatchPanel toolName="html-entities" lang={lang} />
+<BatchPanel toolName="html-entity-encoder" lang={lang} />
 <div class="he">
   <div class="he-bar">
     <div class="he-modes">
@@ -398,16 +398,6 @@ const t = {
       }
     });
 
-    window.toolBatchProcess = function (lines) {
-      var encodeAll = allNonAscii.checked;
-      return lines.map(function (line) {
-        try {
-          return mode === 'decode' ? decodeEntities(line) : encodeEntities(line, encodeAll);
-        } catch (e) {
-          return '// error: ' + e.message;
-        }
-      });
-    };
     // ── History restore ──
     var _rts = sessionStorage.getItem('wh_restore_ts');
     if (_rts) {
