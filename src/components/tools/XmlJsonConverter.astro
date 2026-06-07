@@ -373,7 +373,8 @@ const t = {
       try {
         var result = mode === 'xml2json' ? xmlToJson(raw) : jsonToXml(raw);
         lastOutput = result;
-        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
+        if (localStorage.getItem('wh_autocopy') === '1')
+          navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = '<span class="ok">' + esc(result) + '</span>';
         var lines = result.split('\n').length;
         statusEl.textContent = t.converted + ' · ' + lines + ' lines';

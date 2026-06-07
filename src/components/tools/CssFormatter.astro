@@ -568,7 +568,8 @@ const t = {
       try {
         var formatted = formatCSS(raw, spaces);
         lastOutput = formatted;
-        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
+        if (localStorage.getItem('wh_autocopy') === '1')
+          navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = highlight(formatted);
 
         var rules = countRules(formatted);

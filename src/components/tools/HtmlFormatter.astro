@@ -509,7 +509,8 @@ const t = {
       try {
         var formatted = formatHTML(raw, spaces);
         lastOutput = formatted;
-        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
+        if (localStorage.getItem('wh_autocopy') === '1')
+          navigator.clipboard.writeText(lastOutput).catch(function () {});
         var highlighted = esc(formatted)
           .replace(
             /(&lt;\/?)([\w][^&\s>]*)([^&]*?)(\/?&gt;)/g,

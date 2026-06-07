@@ -760,7 +760,8 @@ const t = {
       try {
         var formatted = formatSQL(raw, spaces);
         lastOutput = formatted;
-        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
+        if (localStorage.getItem('wh_autocopy') === '1')
+          navigator.clipboard.writeText(lastOutput).catch(function () {});
         // Re-format for highlighting (apply same formatting)
         outEl.innerHTML = highlight(formatted);
 

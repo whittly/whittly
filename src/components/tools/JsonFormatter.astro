@@ -303,9 +303,14 @@ const t = {
 
       try {
         const parsed = JSON.parse(raw);
-        const formatted = JSON.stringify(parsed, null, indent === 'tab' ? '\t' : (indent || undefined));
+        const formatted = JSON.stringify(
+          parsed,
+          null,
+          indent === 'tab' ? '\t' : indent || undefined
+        );
         lastOutput = formatted;
-        if (localStorage.getItem('wh_autocopy') === '1') navigator.clipboard.writeText(lastOutput).catch(function () {});
+        if (localStorage.getItem('wh_autocopy') === '1')
+          navigator.clipboard.writeText(lastOutput).catch(function () {});
         outEl.innerHTML = highlight(formatted);
 
         const size = new Blob([formatted]).size;
