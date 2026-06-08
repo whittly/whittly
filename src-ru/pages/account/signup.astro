@@ -105,7 +105,7 @@ const API = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001';
         var res = await fetch(API + '/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email, password, lang: 'ru' }),
         });
         var data = await res.json();
 

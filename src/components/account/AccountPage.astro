@@ -553,7 +553,7 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
                 await window.whApi.fetch('/auth/resend-verification', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: me.email }),
+                  body: JSON.stringify({ email: me.email, lang: isRu ? 'ru' : 'en' }),
                 });
               } catch {}
             });
