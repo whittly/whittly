@@ -315,11 +315,7 @@ const t = {
       render();
       var label = ver === 'nano' ? 'nanoid' : 'v' + ver;
       if (window.pushHistory)
-        window.pushHistory(
-          'uuid generator',
-          uuids.length + ' · ' + label,
-          count + '·' + ver + '·' + fmt
-        );
+        window.pushHistory('uuid generator', uuids.length + ' · ' + label, uuids.join('\n'));
       var listEl2 = document.getElementById('ugList');
       if (listEl2) {
         listEl2.classList.remove('flash-ok');
@@ -472,7 +468,21 @@ const t = {
     };
 
     /* auto-generate on load — deferred so window.pushHistory is defined */
-    requestAnimationFrame(generate);
+    requestAnimationFrame(function () {
+      var restoreData = sessionStorage.getItem('wh_restore_preview');
+      var restoreTs = sessionStorage.getItem('wh_restore_ts');
+      if (restoreData && restoreTs) {
+        sessionStorage.removeItem('wh_restore_preview');
+        sessionStorage.removeItem('wh_restore_ts');
+        var restored = restoreData.split('\n').filter(Boolean);
+        if (restored.length > 0) {
+          uuids = restored;
+          render();
+          return;
+        }
+      }
+      generate();
+    });
 
     document.addEventListener('keydown', function (e) {
       var toolEl = document.querySelector('.ug');
