@@ -315,7 +315,7 @@ const t = {
       render();
       var label = ver === 'nano' ? 'nanoid' : 'v' + ver;
       if (window.pushHistory)
-        window.pushHistory('uuid generator', uuids.length + ' · ' + label, uuids.join('\n'));
+        window.pushHistory('uuid generator', uuids.length + ' · ' + label, uuids.join('|'));
       var listEl2 = document.getElementById('ugList');
       if (listEl2) {
         listEl2.classList.remove('flash-ok');
@@ -474,7 +474,7 @@ const t = {
       if (restoreData && restoreTs) {
         sessionStorage.removeItem('wh_restore_preview');
         sessionStorage.removeItem('wh_restore_ts');
-        var restored = restoreData.split('\n').filter(Boolean);
+        var restored = restoreData.split('|').filter(Boolean);
         if (restored.length > 0) {
           uuids = restored;
           render();
