@@ -208,6 +208,7 @@ const t = {
   lang={lang}
   placeholder={isRu ? 'одна строка = один UUID…' : 'one line = one UUID…'}
 />
+<input type="hidden" data-hist-main-input id="ugRestoreInput" />
 <div class="ug">
   <div class="ug-bar">
     <div class="ug-group" id="ugVerGroup">
@@ -467,21 +468,23 @@ const t = {
       generate();
     };
 
+    /* restore from history sidebar — fires via setTimeout before rAF */
+    var _restored = false;
+    var ugRestoreInput = document.getElementById('ugRestoreInput');
+    if (ugRestoreInput) {
+      ugRestoreInput.addEventListener('input', function () {
+        var parts = ugRestoreInput.value.split('|').filter(Boolean);
+        if (parts.length > 0) {
+          _restored = true;
+          uuids = parts;
+          render();
+        }
+      });
+    }
+
     /* auto-generate on load — deferred so window.pushHistory is defined */
     requestAnimationFrame(function () {
-      var restoreData = sessionStorage.getItem('wh_restore_preview');
-      var restoreTs = sessionStorage.getItem('wh_restore_ts');
-      if (restoreData && restoreTs) {
-        sessionStorage.removeItem('wh_restore_preview');
-        sessionStorage.removeItem('wh_restore_ts');
-        var restored = restoreData.split('|').filter(Boolean);
-        if (restored.length > 0) {
-          uuids = restored;
-          render();
-          return;
-        }
-      }
-      generate();
+      if (!_restored) generate();
     });
 
     document.addEventListener('keydown', function (e) {
