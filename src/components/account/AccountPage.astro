@@ -675,6 +675,15 @@ const quickTools = CATALOG.filter((t) => t.popular && !t.soon).slice(0, 4);
           }
         }
 
+        // api waitlist button state
+        if (me.apiWaitlist && akNotify) {
+          akNotify.disabled = true;
+          akNotify.classList.add('done');
+          akNotify.innerHTML =
+            '<i class="ti ti-check"></i> ' +
+            (isRu ? 'уведомим по email' : "we'll email you when it ships");
+        }
+
         // member since
         if (memberSinceEl) {
           memberSinceEl.textContent =
