@@ -461,6 +461,20 @@ const t = {
       runBtn.disabled = true;
     });
 
+    window.toolGetPreset = function () {
+      return { code: input.value, style: activeStyle };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.code != null) input.value = cfg.code;
+      if (cfg.style === 'aosp' || cfg.style === 'google') {
+        activeStyle = cfg.style;
+        document.querySelectorAll('.jfmt-style').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.style === activeStyle);
+        });
+      }
+      runBtn.disabled = !input.value.trim();
+    };
+
     document.addEventListener('keydown', function (e) {
       if (!document.querySelector('.jfmt')) return;
       var pal = document.getElementById('whPalette');

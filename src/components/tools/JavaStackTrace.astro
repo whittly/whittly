@@ -388,5 +388,15 @@ const t = {
       render('');
       inEl.focus();
     });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input != null) {
+        inEl.value = cfg.input;
+        render(cfg.input);
+      }
+    };
   })();
 </script>

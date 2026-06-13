@@ -556,5 +556,21 @@ const t = {
       onFmtChange();
       fmtEl.focus();
     });
+
+    window.toolGetPreset = function () {
+      return { fmt: fmtEl.value, mode: mode };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.mode === 'str' || cfg.mode === 'msg') {
+        mode = cfg.mode;
+        document.querySelectorAll('.jfs-mode').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.mode === mode);
+        });
+      }
+      if (cfg.fmt != null) {
+        fmtEl.value = cfg.fmt;
+        onFmtChange();
+      }
+    };
   })();
 </script>

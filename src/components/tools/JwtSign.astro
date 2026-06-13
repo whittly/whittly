@@ -539,5 +539,19 @@ const defaultPayload = JSON.stringify(
         if (lastToken) copyBtn.click();
       }
     });
+
+    window.toolGetPreset = function () {
+      return { payload: payloadEl.value, alg: activeAlg };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.alg === 'HS256' || cfg.alg === 'RS256' || cfg.alg === 'ES256') {
+        activeAlg = cfg.alg;
+        document.querySelectorAll('.jsign-algo').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.alg === activeAlg);
+        });
+        keyLabelEl.textContent = keyLabels[activeAlg];
+      }
+      if (cfg.payload != null) payloadEl.value = cfg.payload;
+    };
   })();
 </script>

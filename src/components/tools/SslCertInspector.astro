@@ -664,5 +664,14 @@ const t = {
         if (lastResult) copyBtn.click();
       }
     });
+
+    window.toolGetPreset = function () {
+      return { pem: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.pem != null) {
+        inputEl.value = cfg.pem;
+      }
+    };
   })();
 </script>

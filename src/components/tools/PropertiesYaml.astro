@@ -412,6 +412,19 @@ const t = {
       t.copy
     );
 
+    window.toolGetPreset = function () {
+      return { left: leftEl.value, right: rightEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.left != null) {
+        leftEl.value = cfg.left;
+        leftEl.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (cfg.right != null) {
+        rightEl.value = cfg.right;
+        rightEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    };
+
     clearBtn.addEventListener('click', function () {
       leftEl.value = '';
       rightEl.value = '';

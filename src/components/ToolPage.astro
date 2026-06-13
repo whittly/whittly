@@ -561,6 +561,14 @@ const jsonLd = {
     color: var(--good);
     border-color: var(--good);
   }
+  .tool-share-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .tool-share-btn:disabled:hover {
+    color: var(--ink-faint);
+    border-color: var(--line);
+  }
 
   /* ── Pro hint strip ── */
   .tool-pro-strip {
@@ -871,6 +879,11 @@ const jsonLd = {
       if (!shareRow || !shareBtn) return;
 
       shareRow.style.display = '';
+
+      if (!window.toolGetPreset) {
+        shareBtn.disabled = true;
+        shareBtn.title = isRu ? 'недоступно для этого инструмента' : 'not available for this tool';
+      }
 
       /* ── restore from URL on load ── */
       var sp = new URLSearchParams(location.search);
