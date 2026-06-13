@@ -494,3 +494,299 @@ const t = {
     }
   })();
 </script>
+
+<style is:global>
+  .b64-file {
+    margin-top: 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .b64-file-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .b64-file-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+  }
+
+  .b64-file-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .b64-file-status.ok {
+    color: var(--good);
+  }
+  .b64-file-status.err {
+    color: var(--bad);
+  }
+
+  .b64-file-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 9px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .b64-file-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .b64-file-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .b64-file-drop {
+    margin: 16px;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .b64-file-drop:hover,
+  .b64-file-drop.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .b64-file-drop i {
+    font-size: 28px;
+    color: var(--ink-faint);
+    transition: color 0.15s;
+  }
+  .b64-file-drop:hover i,
+  .b64-file-drop.over i {
+    color: var(--accent);
+  }
+  .b64-file-drop-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .b64-file-drop-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .b64-file-out-wrap {
+    padding: 0 16px 16px;
+    display: none;
+  }
+  .b64-file-out {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-height: 160px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+</style>
+
+<div class="b64-file" id="b64FileTool">
+  <div class="b64-file-bar">
+    <span class="b64-file-title">// binary file → base64</span>
+    <span class="b64-file-status" id="b64FileStatus">&nbsp;</span>
+    <span class="local-badge" id="b64FileBadge">// browser · free / pro</span>
+    <button class="b64-file-action" id="b64FileCopy" style="display:none">
+      <i class="ti ti-copy"></i><span id="b64FileCopyTxt"></span>
+    </button>
+  </div>
+  <div class="b64-file-drop" id="b64FileDrop">
+    <i class="ti ti-file-upload"></i>
+    <span class="b64-file-drop-label" id="b64FileDropLabel"></span>
+    <span class="b64-file-drop-sub" id="b64FileDropSub"></span>
+    <input type="file" id="b64FileInput" style="display:none" />
+  </div>
+  <div class="b64-file-out-wrap" id="b64FileOutWrap">
+    <div class="b64-file-out" id="b64FileOut"></div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ isRu }}>
+  (function () {
+    var FREE_MB = 5;
+    var PRO_MB = 50;
+    var FREE_BYTES = FREE_MB * 1024 * 1024;
+    var PRO_BYTES = PRO_MB * 1024 * 1024;
+
+    var dropEl = document.getElementById('b64FileDrop');
+    var fileInput = document.getElementById('b64FileInput');
+    var statusEl = document.getElementById('b64FileStatus');
+    var dropLabel = document.getElementById('b64FileDropLabel');
+    var dropSub = document.getElementById('b64FileDropSub');
+    var copyBtn = document.getElementById('b64FileCopy');
+    var copyTxt = document.getElementById('b64FileCopyTxt');
+    var outWrap = document.getElementById('b64FileOutWrap');
+    var outEl = document.getElementById('b64FileOut');
+    var badgeEl = document.getElementById('b64FileBadge');
+
+    var copyLabel = isRu ? 'копировать' : 'copy';
+    var copiedLabel = isRu ? 'скопировано' : 'copied';
+    copyTxt.textContent = copyLabel;
+
+    dropLabel.textContent = isRu ? 'перетащите файл сюда' : 'drop any file here';
+    dropSub.textContent = isRu
+      ? 'до ' + FREE_MB + ' МБ бесплатно · до ' + PRO_MB + ' МБ для Pro'
+      : 'up to ' + FREE_MB + ' MB free · up to ' + PRO_MB + ' MB for Pro';
+
+    var lastB64 = '';
+
+    function fmtSize(n) {
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function showResult(b64, fname, bytes) {
+      lastB64 = b64;
+      outEl.textContent =
+        b64.slice(0, 2000) + (b64.length > 2000 ? '\n…(' + b64.length + ' chars total)' : '');
+      outWrap.style.display = '';
+      copyBtn.style.display = '';
+      statusEl.className = 'b64-file-status ok';
+      statusEl.textContent =
+        fname + ' · ' + fmtSize(bytes) + ' → ' + fmtSize(b64.length) + ' base64';
+    }
+
+    function encodeInBrowser(buf, fname, size) {
+      badgeEl.textContent = '// browser · free';
+      statusEl.textContent = isRu ? 'кодирую…' : 'encoding…';
+      var bytes = new Uint8Array(buf);
+      var bin = '';
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      var b64 = btoa(bin);
+      showResult(b64, fname, size);
+    }
+
+    function encodeOnServer(file) {
+      badgeEl.textContent = '// server · pro';
+      statusEl.textContent = isRu ? 'отправляю…' : 'uploading…';
+      statusEl.className = 'b64-file-status';
+      var fd = new FormData();
+      fd.append('file', file, file.name);
+      window.whApi
+        .fetch('/api/pro/base64/file', { method: 'POST', body: fd })
+        .then(function (r) {
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
+        })
+        .then(function (data) {
+          showResult(data.output, file.name, data.bytes);
+        })
+        .catch(function (e) {
+          statusEl.textContent = '// error: ' + (e.message || 'failed');
+          statusEl.className = 'b64-file-status err';
+          outWrap.style.display = 'none';
+          copyBtn.style.display = 'none';
+        });
+    }
+
+    function processFile(file) {
+      var plan = (window.whApi && window.whApi.getPlan()) || 'free';
+      var isPro = plan === 'pro' || plan === 'api';
+      outWrap.style.display = 'none';
+      copyBtn.style.display = 'none';
+      lastB64 = '';
+
+      if (file.size > PRO_BYTES) {
+        statusEl.textContent = isRu ? '// файл > ' + PRO_MB + ' МБ' : '// file > ' + PRO_MB + ' MB';
+        statusEl.className = 'b64-file-status err';
+        return;
+      }
+      if (file.size > FREE_BYTES) {
+        if (!isPro) {
+          statusEl.textContent = isRu
+            ? '// файл > ' + FREE_MB + ' МБ — требуется Pro'
+            : '// file > ' + FREE_MB + ' MB — Pro required';
+          statusEl.className = 'b64-file-status err';
+          return;
+        }
+        encodeOnServer(file);
+        return;
+      }
+      statusEl.className = 'b64-file-status';
+      statusEl.textContent = isRu ? 'читаю…' : 'reading…';
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        encodeInBrowser(e.target.result, file.name, file.size);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastB64) return;
+      navigator.clipboard.writeText(lastB64).then(function () {
+        copyTxt.textContent = copiedLabel;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyTxt.textContent = copyLabel;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    dropEl.addEventListener('click', function () {
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files[0]) processFile(fileInput.files[0]);
+      fileInput.value = '';
+    });
+    dropEl.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropEl.classList.add('over');
+    });
+    dropEl.addEventListener('dragleave', function () {
+      dropEl.classList.remove('over');
+    });
+    dropEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropEl.classList.remove('over');
+      var f = e.dataTransfer && e.dataTransfer.files[0];
+      if (f) processFile(f);
+    });
+  })();
+</script>

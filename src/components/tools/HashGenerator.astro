@@ -329,3 +329,316 @@ const t = {
     } catch (e) {}
   })();
 </script>
+
+<style is:global>
+  .hg-file {
+    margin-top: 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .hg-file-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .hg-file-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+  }
+
+  .hg-file-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hg-file-status.ok {
+    color: var(--good);
+  }
+  .hg-file-status.err {
+    color: var(--bad);
+  }
+
+  .hg-file-drop {
+    margin: 16px;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .hg-file-drop:hover,
+  .hg-file-drop.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .hg-file-drop i {
+    font-size: 28px;
+    color: var(--ink-faint);
+    transition: color 0.15s;
+  }
+  .hg-file-drop:hover i,
+  .hg-file-drop.over i {
+    color: var(--accent);
+  }
+  .hg-file-drop-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .hg-file-drop-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .hg-file-results {
+    display: flex;
+    flex-direction: column;
+  }
+</style>
+
+<div class="hg-file" id="hgFileTool">
+  <div class="hg-file-bar">
+    <span class="hg-file-title">// binary file hash</span>
+    <span class="hg-file-status" id="hgFileStatus">&nbsp;</span>
+    <span class="local-badge" id="hgFileBadge">// browser · free / pro</span>
+  </div>
+  <div class="hg-file-drop" id="hgFileDrop">
+    <i class="ti ti-file-upload"></i>
+    <span class="hg-file-drop-label" id="hgFileDropLabel"></span>
+    <span class="hg-file-drop-sub" id="hgFileDropSub"></span>
+    <input type="file" id="hgFileInput" style="display:none" />
+  </div>
+  <div class="hg-file-results" id="hgFileResults" style="display:none">
+    <div class="hg-row">
+      <span class="hg-algo">sha-1</span>
+      <span class="hg-hash ph" id="hgFSha1">—</span>
+      <button class="hg-copy" id="hgFCopy1" title="copy SHA-1"><i class="ti ti-copy"></i></button>
+    </div>
+    <div class="hg-row">
+      <span class="hg-algo">sha-256</span>
+      <span class="hg-hash ph" id="hgFSha256">—</span>
+      <button class="hg-copy" id="hgFCopy256" title="copy SHA-256"
+        ><i class="ti ti-copy"></i></button
+      >
+    </div>
+    <div class="hg-row">
+      <span class="hg-algo">sha-384</span>
+      <span class="hg-hash ph" id="hgFSha384">—</span>
+      <button class="hg-copy" id="hgFCopy384" title="copy SHA-384"
+        ><i class="ti ti-copy"></i></button
+      >
+    </div>
+    <div class="hg-row">
+      <span class="hg-algo">sha-512</span>
+      <span class="hg-hash ph" id="hgFSha512">—</span>
+      <button class="hg-copy" id="hgFCopy512" title="copy SHA-512"
+        ><i class="ti ti-copy"></i></button
+      >
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ isRu }}>
+  (function () {
+    var FREE_MB = 5;
+    var PRO_MB = 500;
+    var FREE_BYTES = FREE_MB * 1024 * 1024;
+    var PRO_BYTES = PRO_MB * 1024 * 1024;
+
+    var dropEl = document.getElementById('hgFileDrop');
+    var fileInput = document.getElementById('hgFileInput');
+    var statusEl = document.getElementById('hgFileStatus');
+    var dropLabel = document.getElementById('hgFileDropLabel');
+    var dropSub = document.getElementById('hgFileDropSub');
+    var resultsEl = document.getElementById('hgFileResults');
+    var badgeEl = document.getElementById('hgFileBadge');
+
+    dropLabel.textContent = isRu ? 'перетащите файл сюда' : 'drop any file here';
+    dropSub.textContent = isRu
+      ? 'до ' + FREE_MB + ' МБ бесплатно · до ' + PRO_MB + ' МБ для Pro'
+      : 'up to ' + FREE_MB + ' MB free · up to ' + PRO_MB + ' MB for Pro';
+
+    var algos = [
+      {
+        name: 'SHA-1',
+        el: document.getElementById('hgFSha1'),
+        btn: document.getElementById('hgFCopy1'),
+      },
+      {
+        name: 'SHA-256',
+        el: document.getElementById('hgFSha256'),
+        btn: document.getElementById('hgFCopy256'),
+      },
+      {
+        name: 'SHA-384',
+        el: document.getElementById('hgFSha384'),
+        btn: document.getElementById('hgFCopy384'),
+      },
+      {
+        name: 'SHA-512',
+        el: document.getElementById('hgFSha512'),
+        btn: document.getElementById('hgFCopy512'),
+      },
+    ];
+
+    algos.forEach(function (a) {
+      a.btn.addEventListener('click', function () {
+        if (a.el.classList.contains('ph')) return;
+        navigator.clipboard.writeText(a.el.textContent).then(function () {
+          a.btn.innerHTML = '<i class="ti ti-check"></i>';
+          a.btn.classList.add('done');
+          setTimeout(function () {
+            a.btn.innerHTML = '<i class="ti ti-copy"></i>';
+            a.btn.classList.remove('done');
+          }, 1400);
+        });
+      });
+    });
+
+    function toHex(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(function (b) {
+          return b.toString(16).padStart(2, '0');
+        })
+        .join('');
+    }
+
+    function fmtSize(n) {
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function showDigests(d) {
+      var keys = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
+      var vals = [d['sha-1'], d['sha-256'], d['sha-384'], d['sha-512']];
+      algos.forEach(function (a, i) {
+        a.el.textContent = vals[i] || '—';
+        a.el.className = 'hg-hash' + (vals[i] ? '' : ' ph');
+      });
+      resultsEl.style.display = '';
+    }
+
+    function hashInBrowser(buf, fname) {
+      statusEl.textContent = isRu ? 'хэширую…' : 'hashing…';
+      statusEl.className = 'hg-file-status';
+      badgeEl.textContent = '// browser · free';
+      Promise.all(
+        algos.map(function (a) {
+          return crypto.subtle.digest(a.name, buf).then(function (h) {
+            return { name: a.name.toLowerCase(), hex: toHex(h) };
+          });
+        })
+      ).then(function (results) {
+        var d = {};
+        results.forEach(function (r) {
+          d[r.name] = r.hex;
+        });
+        showDigests(d);
+        statusEl.textContent = fname + ' · ' + fmtSize(buf.byteLength);
+        statusEl.className = 'hg-file-status ok';
+      });
+    }
+
+    function hashOnServer(file) {
+      statusEl.textContent = isRu ? 'отправляю…' : 'uploading…';
+      statusEl.className = 'hg-file-status';
+      badgeEl.textContent = '// server · pro';
+      var fd = new FormData();
+      fd.append('file', file, file.name);
+      window.whApi
+        .fetch('/api/pro/hash/file', { method: 'POST', body: fd })
+        .then(function (r) {
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
+        })
+        .then(function (data) {
+          showDigests(data.digests);
+          statusEl.textContent = file.name + ' · ' + fmtSize(data.bytes);
+          statusEl.className = 'hg-file-status ok';
+        })
+        .catch(function (e) {
+          statusEl.textContent = '// error: ' + (e.message || 'failed');
+          statusEl.className = 'hg-file-status err';
+        });
+    }
+
+    function processFile(file) {
+      var plan = (window.whApi && window.whApi.getPlan()) || 'free';
+      var isPro = plan === 'pro' || plan === 'api';
+      resultsEl.style.display = 'none';
+      algos.forEach(function (a) {
+        a.el.textContent = '—';
+        a.el.className = 'hg-hash ph';
+      });
+
+      if (file.size > PRO_BYTES) {
+        statusEl.textContent = '// file > ' + PRO_MB + ' MB';
+        statusEl.className = 'hg-file-status err';
+        return;
+      }
+      if (file.size > FREE_BYTES) {
+        if (!isPro) {
+          statusEl.textContent = isRu
+            ? '// файл > ' + FREE_MB + ' МБ — требуется Pro'
+            : '// file > ' + FREE_MB + ' MB — Pro required';
+          statusEl.className = 'hg-file-status err';
+          return;
+        }
+        hashOnServer(file);
+        return;
+      }
+      // browser path
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        hashInBrowser(e.target.result, file.name);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    dropEl.addEventListener('click', function () {
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files[0]) processFile(fileInput.files[0]);
+      fileInput.value = '';
+    });
+    dropEl.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropEl.classList.add('over');
+    });
+    dropEl.addEventListener('dragleave', function () {
+      dropEl.classList.remove('over');
+    });
+    dropEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropEl.classList.remove('over');
+      var f = e.dataTransfer && e.dataTransfer.files[0];
+      if (f) processFile(f);
+    });
+  })();
+</script>

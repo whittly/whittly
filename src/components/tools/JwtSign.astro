@@ -1,0 +1,543 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  phPayload: isRu ? '// payload (json)' : '// payload (json)',
+  phSecret: isRu ? 'введите секрет или PEM-ключ…' : 'enter secret or PEM private key…',
+  phOut: isRu ? '// подписанный токен появится здесь' : '// signed token appears here',
+  sign: isRu ? 'подписать →' : 'sign →',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  keyLabel: isRu ? 'ключ / секрет' : 'key / secret',
+  payload: isRu ? 'payload' : 'payload',
+  expAdd: isRu ? '+ exp' : '+ exp',
+  iatAdd: isRu ? '+ iat' : '+ iat',
+  addExpSub: isRu ? 'добавить expiry (1 ч)' : 'add expiry (1 h)',
+  addIat: isRu ? 'добавить iat (сейчас)' : 'add iat (now)',
+  errPayload: isRu ? 'невалидный json' : 'invalid payload json',
+  errKey: isRu ? 'введите секрет или ключ' : 'enter a secret or key',
+  errKeyPem: isRu ? 'невалидный pem-ключ' : 'invalid pem key',
+};
+
+const defaultPayload = JSON.stringify(
+  { sub: '1234567890', name: 'John Doe', iat: 1516239022 },
+  null,
+  2
+);
+---
+
+<style is:global>
+  .jsign {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+  }
+
+  .jsign-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .jsign-algos {
+    display: flex;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .jsign-algo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .jsign-algo.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .jsign-algo:not(.active):hover {
+    color: var(--ink);
+  }
+
+  .jsign-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jsign-status.ok {
+    color: var(--good);
+  }
+  .jsign-status.err {
+    color: var(--bad);
+  }
+
+  .jsign-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jsign-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jsign-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jsign-run {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 5px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    white-space: nowrap;
+  }
+  .jsign-run:hover {
+    opacity: 0.85;
+  }
+
+  .jsign-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .jsign-left {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .jsign-panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 6px 14px 4px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .jsign-preset {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 2px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .jsign-preset:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .jsign-input {
+    width: 100%;
+    flex: 1;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    background: var(--bg);
+    color: var(--ink);
+    border: none;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    min-height: 0;
+  }
+
+  .jsign-vsep {
+    background: var(--line);
+  }
+
+  .jsign-right {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .jsign-key-wrap {
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jsign-key-input {
+    width: 100%;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--surface-sunken);
+    color: var(--ink);
+    border: none;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    min-height: 80px;
+    max-height: 140px;
+  }
+
+  .jsign-out-wrap {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+
+  .jsign-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--ink-soft);
+  }
+
+  .jsign-ph {
+    color: var(--ink-faint);
+  }
+  .jsign-part-h {
+    color: oklch(65% 0.17 50);
+  }
+  .jsign-part-p {
+    color: var(--accent);
+  }
+  .jsign-part-s {
+    color: var(--good);
+  }
+  .jsign-dot {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .jsign-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1px 1fr;
+    }
+    .jsign-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="jsign" id="jsignTool">
+  <div class="jsign-bar">
+    <div class="jsign-algos">
+      <button class="jsign-algo active" data-alg="HS256" type="button">HS256</button>
+      <button class="jsign-algo" data-alg="RS256" type="button">RS256</button>
+      <button class="jsign-algo" data-alg="ES256" type="button">ES256</button>
+    </div>
+    <span class="jsign-status" id="jsignStatus">&nbsp;</span>
+    <span class="local-badge">// browser · free</span>
+    <button class="jsign-action" id="jsignCopy" style="display:none">
+      <i class="ti ti-copy"></i>{t.copy}
+    </button>
+    <button class="jsign-action" id="jsignClear" style="display:none">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+    <button class="jsign-run" id="jsignRun">{t.sign}</button>
+  </div>
+  <div class="jsign-body">
+    <div class="jsign-left">
+      <div class="jsign-panel-label">
+        <span>{t.payload}</span>
+        <button class="jsign-preset" id="jsignAddExp" type="button" title={t.addExpSub}
+          >{t.expAdd} 1h</button
+        >
+        <button class="jsign-preset" id="jsignAddIat" type="button" title={t.addIat}
+          >{t.iatAdd}</button
+        >
+      </div>
+      <textarea class="jsign-input" id="jsignPayload" spellcheck="false">{defaultPayload}</textarea>
+    </div>
+    <div class="jsign-vsep"></div>
+    <div class="jsign-right">
+      <div class="jsign-key-wrap">
+        <div class="jsign-panel-label">
+          <span id="jsignKeyLabel">{t.keyLabel} (HS256 secret)</span>
+        </div>
+        <textarea class="jsign-key-input" id="jsignKey" placeholder={t.phSecret} spellcheck="false"
+        ></textarea>
+      </div>
+      <div class="jsign-out-wrap">
+        <pre class="jsign-out" id="jsignOut"><span class="jsign-ph">{t.phOut}</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var payloadEl = document.getElementById('jsignPayload');
+    var keyEl = document.getElementById('jsignKey');
+    var outEl = document.getElementById('jsignOut');
+    var statusEl = document.getElementById('jsignStatus');
+    var runBtn = document.getElementById('jsignRun');
+    var copyBtn = document.getElementById('jsignCopy');
+    var clearBtn = document.getElementById('jsignClear');
+    var keyLabelEl = document.getElementById('jsignKeyLabel');
+    var addExpBtn = document.getElementById('jsignAddExp');
+    var addIatBtn = document.getElementById('jsignAddIat');
+
+    var activeAlg = 'HS256';
+    var lastToken = '';
+
+    var keyLabels = {
+      HS256: isRu ? 'ключ / секрет (HS256 secret)' : 'key / secret (HS256 secret)',
+      RS256: isRu ? 'ключ / секрет (RSA PKCS8 PEM)' : 'key / secret (RSA PKCS8 PEM)',
+      ES256: isRu ? 'ключ / секрет (EC P-256 PKCS8 PEM)' : 'key / secret (EC P-256 PKCS8 PEM)',
+    };
+
+    document.querySelectorAll('.jsign-algo').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.jsign-algo').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        activeAlg = btn.dataset.alg;
+        keyLabelEl.textContent = keyLabels[activeAlg];
+        keyEl.placeholder = activeAlg === 'HS256' ? t.phSecret : 'paste PKCS8 PEM private key…';
+      });
+    });
+
+    function b64url(ab) {
+      var bytes = new Uint8Array(ab);
+      var str = '';
+      for (var i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+      return btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    }
+
+    function b64urlStr(s) {
+      return b64url(new TextEncoder().encode(s));
+    }
+
+    function pemToDer(pem) {
+      var b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return bytes.buffer;
+    }
+
+    async function sign(header, payload, key) {
+      var hdr = b64urlStr(JSON.stringify(header));
+      var pld = b64urlStr(JSON.stringify(payload));
+      var msg = new TextEncoder().encode(hdr + '.' + pld);
+
+      var cryptoKey, sig;
+
+      if (activeAlg === 'HS256') {
+        cryptoKey = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(key),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        sig = await crypto.subtle.sign('HMAC', cryptoKey, msg);
+      } else if (activeAlg === 'RS256') {
+        cryptoKey = await crypto.subtle.importKey(
+          'pkcs8',
+          pemToDer(key),
+          { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, msg);
+      } else {
+        cryptoKey = await crypto.subtle.importKey(
+          'pkcs8',
+          pemToDer(key),
+          { name: 'ECDSA', namedCurve: 'P-256' },
+          false,
+          ['sign']
+        );
+        sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, cryptoKey, msg);
+      }
+
+      return hdr + '.' + pld + '.' + b64url(sig);
+    }
+
+    function renderToken(token) {
+      var parts = token.split('.');
+      if (parts.length !== 3) return '<span class="jsign-ph">' + token + '</span>';
+      return (
+        '<span class="jsign-part-h">' +
+        parts[0] +
+        '</span>' +
+        '<span class="jsign-dot">.</span>' +
+        '<span class="jsign-part-p">' +
+        parts[1] +
+        '</span>' +
+        '<span class="jsign-dot">.</span>' +
+        '<span class="jsign-part-s">' +
+        parts[2] +
+        '</span>'
+      );
+    }
+
+    runBtn.addEventListener('click', async function () {
+      var payloadStr = payloadEl.value.trim();
+      var keyStr = keyEl.value.trim();
+
+      statusEl.className = 'jsign-status';
+      statusEl.textContent = '';
+
+      var payloadObj;
+      try {
+        payloadObj = JSON.parse(payloadStr);
+      } catch (e) {
+        statusEl.textContent = '// ' + t.errPayload;
+        statusEl.className = 'jsign-status err';
+        return;
+      }
+
+      if (!keyStr) {
+        statusEl.textContent = '// ' + t.errKey;
+        statusEl.className = 'jsign-status err';
+        return;
+      }
+
+      var header = { alg: activeAlg, typ: 'JWT' };
+
+      try {
+        var token = await sign(header, payloadObj, keyStr);
+        lastToken = token;
+        outEl.innerHTML = renderToken(token);
+        statusEl.textContent = activeAlg + ' · ' + token.length + ' chars';
+        statusEl.className = 'jsign-status ok';
+        copyBtn.style.display = '';
+        clearBtn.style.display = '';
+      } catch (e) {
+        var msg = e.message || 'signing failed';
+        if (
+          msg.includes('DER') ||
+          msg.includes('import') ||
+          msg.includes('DataError') ||
+          e.name === 'DataError'
+        ) {
+          msg = t.errKeyPem;
+        }
+        statusEl.textContent = '// ' + msg;
+        statusEl.className = 'jsign-status err';
+        outEl.innerHTML = '<span class="jsign-ph">// error: ' + msg + '</span>';
+        lastToken = '';
+        copyBtn.style.display = 'none';
+        clearBtn.style.display = 'none';
+      }
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastToken) return;
+      navigator.clipboard.writeText(lastToken).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      outEl.innerHTML = '<span class="jsign-ph">' + t.phOut + '</span>';
+      lastToken = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jsign-status';
+    });
+
+    addExpBtn.addEventListener('click', function () {
+      var obj;
+      try {
+        obj = JSON.parse(payloadEl.value || '{}');
+      } catch (e) {
+        obj = {};
+      }
+      obj.exp = Math.floor(Date.now() / 1000) + 3600;
+      payloadEl.value = JSON.stringify(obj, null, 2);
+    });
+
+    addIatBtn.addEventListener('click', function () {
+      var obj;
+      try {
+        obj = JSON.parse(payloadEl.value || '{}');
+      } catch (e) {
+        obj = {};
+      }
+      obj.iat = Math.floor(Date.now() / 1000);
+      payloadEl.value = JSON.stringify(obj, null, 2);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!document.querySelector('.jsign')) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 'Enter') {
+        e.preventDefault();
+        runBtn.click();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastToken) copyBtn.click();
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,640 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  dropLabel: isRu ? 'перетащите .class файл сюда' : 'drop .class file here',
+  dropSub: isRu ? 'или нажмите для выбора' : 'or click to browse',
+  run: isRu ? 'просмотреть байткод →' : 'view bytecode →',
+  running: isRu ? 'анализирую…' : 'analysing…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  expand: isRu ? 'развернуть' : 'expand',
+  collapse: isRu ? 'свернуть' : 'collapse',
+  phOut: isRu ? '// байткод появится здесь' : '// bytecode appears here',
+  errProRequired: isRu
+    ? '// требуется Pro — войдите и подключите план'
+    : '// pro plan required — sign in and upgrade',
+  bytes: isRu ? 'б' : 'b',
+  remove: '×',
+};
+---
+
+<style is:global>
+  .jbv {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 300px);
+    min-height: 520px;
+  }
+
+  .jbv-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jbv-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jbv-status.ok {
+    color: var(--good);
+  }
+  .jbv-status.err {
+    color: var(--bad);
+  }
+
+  .jbv-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jbv-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jbv-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jbv-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 2fr;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .jbv-left {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .jbv-drop {
+    flex: 1;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .jbv-drop:hover,
+  .jbv-drop.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .jbv-drop i {
+    font-size: 32px;
+    color: var(--ink-faint);
+    transition: color 0.15s;
+  }
+  .jbv-drop:hover i,
+  .jbv-drop.over i {
+    color: var(--accent);
+  }
+
+  .jbv-drop-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .jbv-drop-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .jbv-file-loaded {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+  .jbv-file-loaded i {
+    color: var(--accent);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .jbv-file-name {
+    flex: 1;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jbv-file-size {
+    color: var(--ink-faint);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .jbv-file-remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.12s;
+    flex-shrink: 0;
+  }
+  .jbv-file-remove:hover {
+    color: var(--bad);
+  }
+
+  .jbv-run {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 9px 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    align-self: stretch;
+  }
+  .jbv-run:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+  .jbv-run:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .jbv-vsep {
+    background: var(--line);
+  }
+
+  .jbv-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .jbv-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre;
+    color: var(--ink-soft);
+    min-width: max-content;
+  }
+
+  .jbv-ph {
+    color: var(--ink-faint);
+  }
+  .jbv-op {
+    color: var(--accent);
+  }
+  .jbv-idx {
+    color: var(--ink-faint);
+  }
+  .jbv-cmt {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .jbv-ref {
+    color: oklch(55% 0.16 300);
+  }
+  .jbv-flag {
+    color: var(--good);
+  }
+  .jbv-hdr {
+    color: var(--ink);
+    font-weight: bold;
+  }
+  .jbv-err {
+    color: var(--bad);
+  }
+
+  .jbv-spin {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: jbv-rotate 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes jbv-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .jbv.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    border-radius: 0;
+    border: none;
+    height: 100vh;
+  }
+
+  @media (max-width: 760px) {
+    .jbv {
+      height: auto;
+      min-height: 0;
+    }
+    .jbv-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1px 340px;
+      overflow: visible;
+    }
+    .jbv-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .jbv-out-wrap {
+      height: 340px;
+    }
+  }
+</style>
+
+<div class="jbv-pro-gate" id="jbvProGate" style="display:none">
+  <i class="ti ti-lock"></i>
+  <span class="jbv-gate-title">{isRu ? 'доступно на Pro' : 'pro plan required'}</span>
+  <span class="jbv-gate-sub">
+    {
+      isRu
+        ? 'просмотрщик байткода работает на наших серверах — это платная функция'
+        : 'bytecode viewer runs on our servers — this is a paid feature'
+    }
+  </span>
+  <a class="jbv-gate-btn" href="/premium/">{isRu ? 'посмотреть планы →' : 'see plans →'}</a>
+</div>
+
+<div class="jbv" id="jbvTool" style="display:none">
+  <div class="jbv-bar">
+    <span class="jbv-status" id="jbvStatus">&nbsp;</span>
+    <span class="local-badge">// server · pro</span>
+    <button class="jbv-action" id="jbvCopy" style="display:none">
+      <i class="ti ti-copy"></i>{t.copy}
+    </button>
+    <button class="jbv-action" id="jbvClear" style="display:none">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+    <button class="jbv-action" id="jbvExpand" title={t.expand}>
+      <i class="ti ti-arrows-maximize"></i>
+    </button>
+  </div>
+  <div class="jbv-body">
+    <div class="jbv-left">
+      <div class="jbv-drop" id="jbvDrop">
+        <i class="ti ti-file-code"></i>
+        <span class="jbv-drop-label">{t.dropLabel}</span>
+        <span class="jbv-drop-sub">{t.dropSub}</span>
+        <input type="file" id="jbvFileInput" accept=".class" style="display:none" />
+      </div>
+      <div class="jbv-file-loaded" id="jbvFileLoaded" style="display:none">
+        <i class="ti ti-file-filled"></i>
+        <span class="jbv-file-name" id="jbvFileName"></span>
+        <span class="jbv-file-size" id="jbvFileSize"></span>
+        <button class="jbv-file-remove" id="jbvRemoveFile" type="button">{t.remove}</button>
+      </div>
+      <button class="jbv-run" id="jbvRun" disabled>{t.run}</button>
+    </div>
+    <div class="jbv-vsep"></div>
+    <div class="jbv-out-wrap">
+      <pre class="jbv-out" id="jbvOut"><span class="jbv-ph">{t.phOut}</span></pre>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .jbv-pro-gate {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .jbv-pro-gate i {
+    font-size: 36px;
+    color: var(--line-strong);
+  }
+  .jbv-gate-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .jbv-gate-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    max-width: 420px;
+  }
+  .jbv-gate-btn {
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: opacity 0.12s;
+  }
+  .jbv-gate-btn:hover {
+    opacity: 0.85;
+  }
+</style>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var gate = document.getElementById('jbvProGate');
+    var tool = document.getElementById('jbvTool');
+
+    function isPro() {
+      var plan = window.whApi && window.whApi.getPlan();
+      return plan === 'pro' || plan === 'api';
+    }
+
+    function applyGate() {
+      if (isPro()) {
+        if (gate) gate.style.display = 'none';
+        if (tool) tool.style.display = '';
+      } else {
+        if (gate) gate.style.display = '';
+        if (tool) tool.style.display = 'none';
+      }
+    }
+    applyGate();
+
+    var drop = document.getElementById('jbvDrop');
+    var fileInput = document.getElementById('jbvFileInput');
+    var fileLoaded = document.getElementById('jbvFileLoaded');
+    var fileName = document.getElementById('jbvFileName');
+    var fileSize = document.getElementById('jbvFileSize');
+    var removeBtn = document.getElementById('jbvRemoveFile');
+    var runBtn = document.getElementById('jbvRun');
+    var outEl = document.getElementById('jbvOut');
+    var statusEl = document.getElementById('jbvStatus');
+    var copyBtn = document.getElementById('jbvCopy');
+    var clearBtn = document.getElementById('jbvClear');
+    var expandBtn = document.getElementById('jbvExpand');
+
+    var selectedFile = null;
+    var lastOutput = '';
+
+    function fmtSize(n) {
+      if (n < 1024) return n + ' ' + t.bytes;
+      return (n / 1024).toFixed(1) + ' KB';
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // JVM opcodes for highlighting
+    var OPCODES =
+      /\b(nop|aconst_null|iconst_[mM]?\d|lconst_\d|fconst_\d|dconst_\d|bipush|sipush|ldc(?:_w|2_w)?|[ilfda]load(?:_\d)?|[ilfda]aload|[ilfda]store(?:_\d)?|[ilfda]astore|pop2?|dup(?:_x[12])?|dup2(?:_x[12])?|swap|[ilfda]add|[ilfda]sub|[ilfda]mul|[ilfda]div|[ilfda]rem|[ilfd]neg|[il]sh[lr]|iushr|[il]and|[il]or|[il]xor|iinc|i2[lfdbc]|l2[ifd]|f2[ild]|d2[ilf]|i2[bs]|[il]cmp|[fd]cmp[gl]|if(?:_[ia]cmp)?(?:eq|ne|lt|ge|gt|le)|goto(?:_w)?|jsr(?:_w)?|ret|tableswitch|lookupswitch|[ilfda]return|return|getstatic|putstatic|getfield|putfield|invokevirtual|invokespecial|invokestatic|invokeinterface|invokedynamic|new|newarray|anewarray|arraylength|athrow|checkcast|instanceof|monitorenter|monitorexit|wide|multianewarray|ifnull|ifnonnull)\b/g;
+
+    function highlightBytecode(code) {
+      return code
+        .split('\n')
+        .map(function (line) {
+          var e = esc(line);
+
+          // Section headers like "Constant pool:", "Code:", "{"
+          if (
+            /^(Classfile|Constant pool:|StackMapTable:|LineNumberTable:|LocalVariableTable:|LocalVariableTypeTable:|\{|\})/.test(
+              e.trimStart()
+            )
+          ) {
+            return '<span class="jbv-hdr">' + e + '</span>';
+          }
+
+          // Inline comment part (// ...)
+          var cmt = '';
+          var cmtIdx = e.indexOf('//');
+          if (cmtIdx !== -1) {
+            cmt = '<span class="jbv-cmt">' + e.slice(cmtIdx) + '</span>';
+            e = e.slice(0, cmtIdx);
+          }
+
+          // ACC_ flags
+          e = e.replace(/\b(ACC_[A-Z_]+)\b/g, '<span class="jbv-flag">$1</span>');
+
+          // #N references
+          e = e.replace(/(#\d+)/g, '<span class="jbv-ref">$1</span>');
+
+          // Instruction index: "   0:" or "  10:"
+          e = e.replace(/^(\s*)(\d+:)/, '$1<span class="jbv-idx">$2</span>');
+
+          // JVM opcodes
+          e = e.replace(OPCODES, '<span class="jbv-op">$1</span>');
+
+          return e + cmt;
+        })
+        .join('\n');
+    }
+
+    function setFile(file) {
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = fmtSize(file.size);
+      drop.style.display = 'none';
+      fileLoaded.style.display = 'flex';
+      runBtn.disabled = false;
+      statusEl.textContent = '';
+      statusEl.className = 'jbv-status';
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      drop.style.display = '';
+      fileLoaded.style.display = 'none';
+      runBtn.disabled = true;
+    }
+
+    drop.addEventListener('click', function () {
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+    drop.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      drop.classList.add('over');
+    });
+    drop.addEventListener('dragleave', function () {
+      drop.classList.remove('over');
+    });
+    drop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      drop.classList.remove('over');
+      var f = e.dataTransfer && e.dataTransfer.files[0];
+      if (!f) return;
+      if (!f.name.endsWith('.class')) {
+        statusEl.textContent =
+          '// ' + (isRu ? 'только .class файлы' : 'only .class files accepted');
+        statusEl.className = 'jbv-status err';
+        return;
+      }
+      setFile(f);
+    });
+
+    removeBtn.addEventListener('click', function () {
+      clearFile();
+      outEl.innerHTML = '<span class="jbv-ph">' + esc(t.phOut) + '</span>';
+      lastOutput = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jbv-status';
+    });
+
+    runBtn.addEventListener('click', function () {
+      if (!selectedFile) return;
+      if (!isPro()) {
+        outEl.innerHTML = '<span class="jbv-err">' + esc(t.errProRequired) + '</span>';
+        statusEl.textContent = '// pro required';
+        statusEl.className = 'jbv-status err';
+        return;
+      }
+
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<span class="jbv-spin"></span>' + t.running;
+      statusEl.textContent = t.running;
+      statusEl.className = 'jbv-status';
+
+      var fd = new FormData();
+      fd.append('file', selectedFile, selectedFile.name);
+
+      window.whApi
+        .fetch('/api/java/bytecode', { method: 'POST', body: fd })
+        .then(function (r) {
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
+        })
+        .then(function (data) {
+          lastOutput = data.output;
+          outEl.innerHTML = highlightBytecode(data.output);
+          var lineCount = (data.output.match(/\n/g) || []).length + 1;
+          statusEl.textContent = selectedFile.name + ' · ' + lineCount + ' lines';
+          statusEl.className = 'jbv-status ok';
+          copyBtn.style.display = '';
+          clearBtn.style.display = '';
+        })
+        .catch(function (e) {
+          var msg = e.message || 'failed';
+          statusEl.textContent = '// error: ' + msg;
+          statusEl.className = 'jbv-status err';
+          outEl.innerHTML = '<span class="jbv-err">// error: ' + esc(msg) + '</span>';
+          lastOutput = '';
+          copyBtn.style.display = 'none';
+          clearBtn.style.display = 'none';
+        })
+        .finally(function () {
+          runBtn.disabled = !selectedFile;
+          runBtn.textContent = t.run;
+        });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      clearFile();
+      outEl.innerHTML = '<span class="jbv-ph">' + esc(t.phOut) + '</span>';
+      lastOutput = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jbv-status';
+    });
+
+    // Fullscreen toggle
+    var jbvEl = document.getElementById('jbvTool');
+    var isFullscreen = false;
+    expandBtn.addEventListener('click', function () {
+      isFullscreen = !isFullscreen;
+      jbvEl.classList.toggle('fullscreen', isFullscreen);
+      document.body.style.overflow = isFullscreen ? 'hidden' : '';
+      expandBtn.querySelector('i').className = isFullscreen
+        ? 'ti ti-arrows-minimize'
+        : 'ti ti-arrows-maximize';
+      expandBtn.title = isFullscreen ? t.collapse : t.expand;
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isFullscreen) {
+        isFullscreen = false;
+        jbvEl.classList.remove('fullscreen');
+        document.body.style.overflow = '';
+        expandBtn.querySelector('i').className = 'ti ti-arrows-maximize';
+        expandBtn.title = t.expand;
+      }
+    });
+  })();
+</script>

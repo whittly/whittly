@@ -36,6 +36,9 @@ export const SEO_TITLE: Record<string, string> = {
   'java-stack-trace': 'Java Stack Trace Beautifier & Analyzer',
   'properties-yaml': 'Spring Boot Properties ↔ YAML Converter',
   'java-format-string': 'Java String.format & MessageFormat Preview',
+  'bytecode-viewer': 'Java Bytecode Viewer — JVM Instruction Inspector',
+  'jwt-sign': 'JWT Signer — HS256, RS256, ES256',
+  'ssl-cert-inspector': 'SSL Certificate Inspector — Parse PEM Online',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -111,6 +114,12 @@ export const SEO_DESC: Record<string, string> = {
     'Free online Java format string tester. Preview String.format and MessageFormat output live. Supports %s, %d, %f, flags, width, precision, and MessageFormat {0,number,currency} syntax.',
   'java-formatter':
     'Online Java code formatter powered by google-java-format. Format Java source code to Google style (2-space) or AOSP style (4-space indent). Pro plan required — runs on our servers.',
+  'bytecode-viewer':
+    'Online Java bytecode viewer. Upload a .class file and inspect JVM bytecode instructions with javap -verbose. See constant pool, method signatures, and opcodes. Pro plan required — runs on our servers.',
+  'jwt-sign':
+    'Free online JWT signer. Sign JWT tokens with HS256, RS256, or ES256. Set any claims, choose algorithm, enter your secret or key. Runs entirely in your browser via WebCrypto.',
+  'ssl-cert-inspector':
+    'Free online SSL certificate inspector. Paste a PEM certificate to view subject, issuer, validity dates, SANs, and SHA-256 fingerprint. No upload — runs in your browser.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -186,4 +195,10 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный тестер Java format string онлайн. Живой предпросмотр String.format и MessageFormat. Поддержка %s, %d, %f, флагов, ширины, точности и синтаксиса {0,number,currency}.',
   'java-formatter':
     'Онлайн форматтер Java-кода на базе google-java-format. Форматируй исходный код по Google-стилю (2 пробела) или AOSP-стилю (4 пробела). Требуется Pro-план.',
+  'bytecode-viewer':
+    'Онлайн просмотрщик байткода Java. Загружай .class файл и изучай инструкции JVM через javap -verbose. Константный пул, сигнатуры методов, опкоды. Требуется Pro-план.',
+  'jwt-sign':
+    'Бесплатная подпись JWT токенов онлайн. Подписывай JWT с алгоритмами HS256, RS256 или ES256. Задавай любые claims, вводи секрет или ключ. Работает в браузере через WebCrypto.',
+  'ssl-cert-inspector':
+    'Бесплатный инспектор SSL-сертификатов онлайн. Вставь PEM-сертификат и смотри subject, issuer, срок действия, SAN и SHA-256 fingerprint. Без загрузки — работает в браузере.',
 };

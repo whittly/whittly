@@ -184,6 +184,20 @@ export const CATALOG: Tool[] = [
     shortcut: 'T',
     popular: true,
   },
+  {
+    cat: 'encode',
+    icon: 'ti-signature',
+    name: 'jwt sign',
+    desc: 'sign jwt tokens with hs256, rs256 or es256 via webcrypto',
+    new: true,
+  },
+  {
+    cat: 'encode',
+    icon: 'ti-certificate',
+    name: 'ssl cert inspector',
+    desc: 'parse pem certificates — subject, issuer, validity, fingerprint',
+    new: true,
+  },
 
   // generate
   {
@@ -380,6 +394,13 @@ export const CATALOG: Tool[] = [
     icon: 'ti-paint',
     name: 'java formatter',
     desc: 'format java code with google-java-format — google or aosp style',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-binary-tree',
+    name: 'bytecode viewer',
+    desc: 'inspect jvm bytecode instructions from .class files with javap',
     new: true,
   },
   {

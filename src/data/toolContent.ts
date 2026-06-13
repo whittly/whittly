@@ -739,6 +739,69 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
       },
     ],
   },
+
+  'bytecode-viewer': {
+    about:
+      'The Java bytecode viewer runs javap -verbose on your uploaded .class file and shows you the raw JVM instructions: constant pool entries, method descriptors, local variable tables, and every opcode with its operands. It is the same output you get running javap locally, available instantly in your browser without a local JDK installation.',
+    useCases: [
+      'Confirm that a compiler optimization (constant folding, inlining) actually happened',
+      'Debug ClassFormatError or VerifyError by inspecting the bytecode directly',
+      'Learn how Java constructs (lambdas, try-with-resources, switch expressions) translate to JVM opcodes',
+      'Reverse-engineer the structure of a class file you cannot decompile cleanly',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between bytecode viewer and the decompiler?',
+        a: 'The decompiler reconstructs high-level Java source code from bytecode — readable but an approximation. The bytecode viewer shows the exact JVM instructions stored in the .class file: opcodes (invokevirtual, aload_0, etc.), the constant pool, and stack frame information. Use the decompiler to understand what code does; use bytecode viewer to understand exactly how the JVM executes it.',
+      },
+      {
+        q: 'Why does this require a Pro plan?',
+        a: 'javap is a command-line JDK tool that cannot run in a browser. The .class file is sent to our server, analysed in memory, and returned. The file is never stored or logged.',
+      },
+    ],
+  },
+
+  'jwt-sign': {
+    about:
+      'The JWT signer lets you create signed tokens using HS256 (HMAC-SHA-256), RS256 (RSA-SHA-256), or ES256 (ECDSA-P256-SHA-256) — all three algorithms from RFC 7518. Set any header and payload fields, enter your secret or private key, and get a ready-to-use signed token. Everything runs in your browser via the WebCrypto API; no keys or tokens leave your tab.',
+    useCases: [
+      'Create test tokens to feed into a protected API endpoint during development',
+      'Generate a signed token with a specific expiry or custom claim to test your JWT validation logic',
+      'Understand how signing works by tweaking the payload and watching the signature change',
+      'Sign tokens with RS256 or ES256 using a locally generated key pair',
+    ],
+    faq: [
+      {
+        q: 'Which algorithms are supported?',
+        a: 'HS256 (HMAC-SHA-256) with a shared secret, RS256 (RSA-PKCS1v1.5-SHA-256) with a PEM private key, and ES256 (ECDSA-P256-SHA-256) with a PEM EC private key. These cover the vast majority of real-world JWT deployments.',
+      },
+      {
+        q: 'Is my key sent to your server?',
+        a: 'No. Signing uses the WebCrypto API built into your browser. Your secret or private key never leaves the tab.',
+      },
+    ],
+  },
+
+  'ssl-cert-inspector': {
+    about:
+      'The SSL certificate inspector parses PEM-encoded X.509 certificates directly in your browser. Paste a certificate (the block between -----BEGIN CERTIFICATE----- and -----END CERTIFICATE-----) and instantly see the subject, issuer, validity period, Subject Alternative Names (SANs), signature algorithm, and SHA-256 fingerprint — no extension or server needed.',
+    useCases: [
+      'Quickly check the expiry date and issuer of a certificate you copied from a server',
+      'Verify the SANs on a multi-domain or wildcard certificate before deploying',
+      'Compare the fingerprint of a certificate from two different sources to confirm they match',
+      'Debug certificate chain issues by inspecting each PEM block in the chain',
+    ],
+    faq: [
+      {
+        q: 'What format does this accept?',
+        a: 'PEM-encoded X.509 certificates — the text block starting with -----BEGIN CERTIFICATE-----. You can export a certificate from most browsers (Developer Tools → Security → View certificate → Export) or extract it with openssl s_client -connect host:443 -showcerts.',
+      },
+      {
+        q: 'Is the certificate sent to your server?',
+        a: 'No. The PEM data is parsed entirely in your browser using the Web Crypto API and custom ASN.1/DER parsing. Nothing is sent over the network.',
+      },
+    ],
+  },
 };
 
 export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
@@ -1459,6 +1522,7 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
   'java-format-string': {
     about:
       'В Java два механизма форматирования строк: String.format (printf-стиль: %s, %d, %f с флагами, шириной и точностью) и MessageFormat ({0}, {1,number,currency} с типом и стилем). Инструмент разбирает строку формата, определяет каждый плейсхолдер, позволяет ввести значение для каждого и показывает результат в реальном времени.',
+
     useCases: [
       'Убедиться, что String.format-вызов даёт ожидаемый результат до деплоя',
       'Разобраться с нужными флагами для zero-padded целых или чисел с группировкой (%,d vs %05d)',
@@ -1473,6 +1537,69 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'Предпросмотр полностью совпадает с выводом Java?',
         a: 'Для большинства распространённых спецификаторов — очень близко. Форматирование с учётом локали (разделители десятичных, символы валют) использует браузерный Intl API, который может отличаться от дефолтной локали JVM. Для production-валидации тестируй в реальном Java-окружении.',
+      },
+    ],
+  },
+
+  'bytecode-viewer': {
+    about:
+      'Просмотрщик байткода запускает javap -verbose на загруженном .class файле и показывает инструкции JVM: записи в пуле констант, дескрипторы методов, таблицы локальных переменных и каждый опкод с операндами. Тот же вывод, что вы получаете при запуске javap локально — доступен мгновенно без установки JDK.',
+    useCases: [
+      'Убедиться, что оптимизация компилятора (constant folding, inlining) действительно произошла',
+      'Отладить ClassFormatError или VerifyError, напрямую изучив байткод',
+      'Понять, как Java-конструкции (лямбды, try-with-resources, switch expressions) транслируются в опкоды JVM',
+      'Исследовать структуру class-файла, который не удаётся красиво декомпилировать',
+    ],
+    faq: [
+      {
+        q: 'Чем просмотрщик байткода отличается от декомпилятора?',
+        a: 'Декомпилятор восстанавливает высокоуровневый Java-код из байткода — читаемый, но приближённый. Просмотрщик байткода показывает точные JVM-инструкции, хранящиеся в .class файле: опкоды (invokevirtual, aload_0 и т.д.), пул констант и информацию о стек-фреймах. Используй декомпилятор, чтобы понять, что делает код; используй просмотрщик байткода, чтобы понять, как именно JVM его выполняет.',
+      },
+      {
+        q: 'Почему нужен Pro-план?',
+        a: 'javap — это инструмент командной строки из JDK, который не может работать в браузере. Файл .class отправляется на наш сервер, анализируется в памяти и возвращается. Файл никогда не сохраняется и не логируется.',
+      },
+    ],
+  },
+
+  'jwt-sign': {
+    about:
+      'Подписыватель JWT позволяет создавать подписанные токены с алгоритмами HS256 (HMAC-SHA-256), RS256 (RSA-SHA-256) или ES256 (ECDSA-P256-SHA-256) — все три алгоритма из RFC 7518. Укажи любые поля заголовка и payload, введи секрет или приватный ключ — и получи готовый подписанный токен. Всё работает в браузере через WebCrypto API; ключи и токены не покидают вкладку.',
+    useCases: [
+      'Создать тестовый токен для защищённого API-эндпоинта в процессе разработки',
+      'Сгенерировать подписанный токен с конкретным сроком действия или кастомным claim для тестирования JWT-валидации',
+      'Понять принцип подписания, меняя payload и наблюдая, как меняется подпись',
+      'Подписать токены с RS256 или ES256 с помощью локально сгенерированной пары ключей',
+    ],
+    faq: [
+      {
+        q: 'Какие алгоритмы поддерживаются?',
+        a: 'HS256 (HMAC-SHA-256) с общим секретом, RS256 (RSA-PKCS1v1.5-SHA-256) с PEM приватным ключом и ES256 (ECDSA-P256-SHA-256) с PEM EC приватным ключом. Это покрывает подавляющее большинство реальных JWT-реализаций.',
+      },
+      {
+        q: 'Мой ключ отправляется на ваш сервер?',
+        a: 'Нет. Подпись использует WebCrypto API, встроенный в браузер. Ваш секрет или приватный ключ никогда не покидает вкладку.',
+      },
+    ],
+  },
+
+  'ssl-cert-inspector': {
+    about:
+      'Инспектор SSL-сертификатов разбирает PEM-кодированные X.509 сертификаты прямо в браузере. Вставь сертификат (блок между -----BEGIN CERTIFICATE----- и -----END CERTIFICATE-----) и мгновенно увидишь: subject, issuer, срок действия, Subject Alternative Names (SAN), алгоритм подписи и SHA-256 fingerprint — без расширений и серверов.',
+    useCases: [
+      'Быстро проверить срок действия и издателя сертификата, скопированного с сервера',
+      'Убедиться в правильности SAN для мульти-доменного или wildcard сертификата перед деплоем',
+      'Сравнить fingerprint сертификата из двух источников и убедиться, что они совпадают',
+      'Отладить проблемы цепочки сертификатов, проверив каждый PEM-блок в цепочке',
+    ],
+    faq: [
+      {
+        q: 'Какой формат принимается?',
+        a: 'PEM-кодированные X.509 сертификаты — текстовый блок, начинающийся с -----BEGIN CERTIFICATE-----. Можно экспортировать сертификат из большинства браузеров (DevTools → Security → View certificate → Export) или извлечь с помощью openssl s_client -connect host:443 -showcerts.',
+      },
+      {
+        q: 'Сертификат отправляется на ваш сервер?',
+        a: 'Нет. PEM-данные разбираются целиком в браузере с помощью Web Crypto API и кастомного ASN.1/DER парсера. Ничего не отправляется по сети.',
       },
     ],
   },

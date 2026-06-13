@@ -42,6 +42,9 @@ import JavaStackTrace from './tools/JavaStackTrace.astro';
 import PropertiesYaml from './tools/PropertiesYaml.astro';
 import JavaFormatString from './tools/JavaFormatString.astro';
 import JavaFormatter from './tools/JavaFormatter.astro';
+import BytecodeViewer from './tools/BytecodeViewer.astro';
+import JwtSign from './tools/JwtSign.astro';
+import SslCertInspector from './tools/SslCertInspector.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -80,6 +83,9 @@ const TOOL_MAP: Record<string, any> = {
   'properties-yaml': PropertiesYaml,
   'java-format-string': JavaFormatString,
   'java-formatter': JavaFormatter,
+  'bytecode-viewer': BytecodeViewer,
+  'jwt-sign': JwtSign,
+  'ssl-cert-inspector': SslCertInspector,
 };
 
 interface Props {

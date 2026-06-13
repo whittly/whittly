@@ -34,6 +34,9 @@ export const toolNameRu: Record<string, string> = {
   'properties ↔ yaml': 'properties ↔ yaml',
   'java format string': 'java format string',
   'java formatter': 'java форматтер',
+  'bytecode viewer': 'просмотрщик байткода',
+  'jwt sign': 'подпись jwt',
+  'ssl cert inspector': 'инспектор ssl-сертификатов',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -73,6 +76,9 @@ export const toolDescRu: Record<string, string> = {
   'properties ↔ yaml': 'конвертация application.properties ↔ application.yml',
   'java format string': 'живой предпросмотр String.format и MessageFormat',
   'java formatter': 'форматирование java-кода через google-java-format — google или aosp стиль',
+  'bytecode viewer': 'инспекция инструкций jvm из .class файлов через javap',
+  'jwt sign': 'подпись jwt токенов с hs256, rs256 или es256 через webcrypto',
+  'ssl cert inspector': 'разбор pem-сертификатов — subject, issuer, срок действия, fingerprint',
 };
 
 export const catLabelRu: Record<string, string> = {
