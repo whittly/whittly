@@ -1,0 +1,421 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  lines: isRu ? 'строк' : 'lines',
+  propsPh:
+    '# application.properties\nserver.port=8080\nspring.datasource.url=jdbc:h2:mem:testdb\nspring.datasource.username=sa\nspring.application.name=my-app',
+  yamlPh:
+    '# application.yaml\nserver:\n  port: 8080\nspring:\n  datasource:\n    url: jdbc:h2:mem:testdb\n    username: sa\n  application:\n    name: my-app',
+};
+---
+
+<style is:global>
+  .py {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .py-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .py-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-faint);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .py-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .py-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .py-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .py-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 380px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .py-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .py-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface);
+  }
+
+  .py-panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .py-copy {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 8px;
+    border: 0.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .py-copy:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .py-copy.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .py-ta {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    background: var(--surface-sunken);
+    padding: 14px 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .py-vsep {
+    background: var(--line);
+  }
+
+  @media (max-width: 760px) {
+    .py-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1px auto;
+      max-height: none;
+    }
+    .py-panel {
+      min-height: 200px;
+    }
+    .py-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="py">
+  <div class="py-bar">
+    <span class="py-status" id="pyStatus">&nbsp;</span>
+    <span class="local-badge">// browser</span>
+    <button class="py-action" id="pyClear">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+  </div>
+  <div class="py-body">
+    <div class="py-panel">
+      <div class="py-panel-head">
+        <span class="py-panel-label">.properties</span>
+        <button class="py-copy" id="pyCopyLeft">
+          <i class="ti ti-copy"></i>{t.copy}
+        </button>
+      </div>
+      <textarea
+        class="py-ta"
+        id="pyLeft"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder={t.propsPh}></textarea>
+    </div>
+    <div class="py-vsep"></div>
+    <div class="py-panel">
+      <div class="py-panel-head">
+        <span class="py-panel-label">.yaml</span>
+        <button class="py-copy" id="pyCopyRight">
+          <i class="ti ti-copy"></i>{t.copy}
+        </button>
+      </div>
+      <textarea
+        class="py-ta"
+        id="pyRight"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder={t.yamlPh}></textarea>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var leftEl = document.getElementById('pyLeft');
+    var rightEl = document.getElementById('pyRight');
+    var statusEl = document.getElementById('pyStatus');
+    var copyL = document.getElementById('pyCopyLeft');
+    var copyR = document.getElementById('pyCopyRight');
+    var clearBtn = document.getElementById('pyClear');
+
+    var busy = false;
+
+    /* ── helpers ── */
+    function yamlQuote(val) {
+      if (val === '') return '""';
+      if (/^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(val)) return val;
+      if (/^(true|false|yes|no|on|off|null|~)$/i.test(val)) return '"' + val + '"';
+      if (/^[:{}\[\]#&*!|>'"%@`?]/.test(val) || /:\s|#/.test(val) || val.endsWith(':')) {
+        return '"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+      }
+      return val;
+    }
+
+    function unquoteYaml(val) {
+      if (
+        (val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))
+      ) {
+        return val.slice(1, -1);
+      }
+      return val;
+    }
+
+    /* ── Properties → YAML ── */
+    function renderYaml(obj, depth) {
+      var pad = '  '.repeat(depth);
+      var keys = Object.keys(obj);
+      var isArr =
+        keys.length > 0 &&
+        keys.every(function (k) {
+          return /^\d+$/.test(k);
+        });
+      var out = [];
+
+      if (isArr) {
+        keys.sort(function (a, b) {
+          return +a - +b;
+        });
+        keys.forEach(function (k) {
+          var v = obj[k];
+          if (v !== null && typeof v === 'object') {
+            out.push(pad + '-');
+            out.push(renderYaml(v, depth + 1));
+          } else {
+            out.push(pad + '- ' + yamlQuote(String(v)));
+          }
+        });
+        return out.filter(Boolean).join('\n');
+      }
+
+      keys.forEach(function (k) {
+        var v = obj[k];
+        if (v !== null && typeof v === 'object') {
+          out.push(pad + k + ':');
+          var nested = renderYaml(v, depth + 1);
+          if (nested) out.push(nested);
+        } else {
+          out.push(pad + k + ': ' + yamlQuote(String(v)));
+        }
+      });
+      return out.filter(Boolean).join('\n');
+    }
+
+    function propsToYaml(text) {
+      var tree = {};
+      text.split('\n').forEach(function (line) {
+        line = line.trim();
+        if (!line || line[0] === '#' || line[0] === '!') return;
+        var eqIdx = line.indexOf('=');
+        var colIdx = line.indexOf(':');
+        var sep = -1;
+        if (eqIdx >= 0 && (colIdx < 0 || eqIdx <= colIdx)) sep = eqIdx;
+        else if (colIdx >= 0) sep = colIdx;
+        if (sep < 0) return;
+        var key = line.slice(0, sep).trim();
+        var val = line.slice(sep + 1).trim();
+        // normalise array notation: key[0] → key.0
+        var parts = key
+          .replace(/\[(\d+)\]/g, '.$1')
+          .split('.')
+          .filter(Boolean);
+        var node = tree;
+        for (var j = 0; j < parts.length - 1; j++) {
+          var p = parts[j];
+          if (!node[p] || typeof node[p] !== 'object') node[p] = {};
+          node = node[p];
+        }
+        node[parts[parts.length - 1]] = val;
+      });
+      return renderYaml(tree, 0);
+    }
+
+    /* ── YAML → Properties ── */
+    function yamlToProps(text) {
+      var lines = text.split('\n');
+      var result = [];
+      var stack = []; // [{indent, key}]
+      var listCounters = {}; // parentKey → count
+
+      lines.forEach(function (raw) {
+        var trimmed = raw.trim();
+        if (!trimmed || trimmed[0] === '#') return;
+
+        var indent = raw.search(/\S/);
+
+        while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
+          stack.pop();
+        }
+
+        var parentKey = stack
+          .map(function (s) {
+            return s.key;
+          })
+          .join('.');
+
+        if (trimmed.startsWith('- ')) {
+          var val = trimmed
+            .slice(2)
+            .trim()
+            .replace(/\s+#.*$/, '');
+          if (!(parentKey in listCounters)) listCounters[parentKey] = 0;
+          var idx = listCounters[parentKey]++;
+          var fullKey = parentKey ? parentKey + '[' + idx + ']' : '[' + idx + ']';
+          if (val) result.push(fullKey + '=' + unquoteYaml(val));
+          return;
+        }
+
+        var ci = trimmed.indexOf(':');
+        if (ci < 0) return;
+        var key = trimmed.slice(0, ci).trim();
+        var val = trimmed
+          .slice(ci + 1)
+          .trim()
+          .replace(/\s+#.*$/, '');
+        var fullKey = parentKey ? parentKey + '.' + key : key;
+
+        if (!val) {
+          stack.push({ indent: indent, key: key });
+          delete listCounters[fullKey];
+        } else {
+          result.push(fullKey + '=' + unquoteYaml(val));
+        }
+      });
+
+      return result.join('\n');
+    }
+
+    /* ── status ── */
+    function setStatus(propsText, yamlText) {
+      if (!propsText.trim() && !yamlText.trim()) {
+        statusEl.textContent = ' ';
+        return;
+      }
+      var pl = propsText.trim() ? propsText.trim().split('\n').length : 0;
+      var yl = yamlText.trim() ? yamlText.trim().split('\n').length : 0;
+      statusEl.textContent = pl + ' ' + t.lines + ' ↔ ' + yl + ' ' + t.lines;
+    }
+
+    /* ── sync ── */
+    leftEl.addEventListener('input', function () {
+      if (busy) return;
+      busy = true;
+      try {
+        rightEl.value = propsToYaml(leftEl.value);
+      } catch (_) {}
+      setStatus(leftEl.value, rightEl.value);
+      busy = false;
+    });
+
+    rightEl.addEventListener('input', function () {
+      if (busy) return;
+      busy = true;
+      try {
+        leftEl.value = yamlToProps(rightEl.value);
+      } catch (_) {}
+      setStatus(leftEl.value, rightEl.value);
+      busy = false;
+    });
+
+    /* ── copy buttons ── */
+    function makeCopy(btn, getVal, label) {
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(getVal()).then(function () {
+          btn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+          btn.classList.add('done');
+          setTimeout(function () {
+            btn.innerHTML = '<i class="ti ti-copy"></i>' + label;
+            btn.classList.remove('done');
+          }, 1600);
+        });
+      });
+    }
+    makeCopy(
+      copyL,
+      function () {
+        return leftEl.value;
+      },
+      t.copy
+    );
+    makeCopy(
+      copyR,
+      function () {
+        return rightEl.value;
+      },
+      t.copy
+    );
+
+    clearBtn.addEventListener('click', function () {
+      leftEl.value = '';
+      rightEl.value = '';
+      statusEl.textContent = ' ';
+    });
+  })();
+</script>

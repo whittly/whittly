@@ -37,6 +37,11 @@ import SqlFormatter from './tools/SqlFormatter.astro';
 import HtmlFormatter from './tools/HtmlFormatter.astro';
 import CssFormatter from './tools/CssFormatter.astro';
 import JsBeautifier from './tools/JsBeautifier.astro';
+import JavaDecompiler from './tools/JavaDecompiler.astro';
+import JavaStackTrace from './tools/JavaStackTrace.astro';
+import PropertiesYaml from './tools/PropertiesYaml.astro';
+import JavaFormatString from './tools/JavaFormatString.astro';
+import JavaFormatter from './tools/JavaFormatter.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -70,6 +75,11 @@ const TOOL_MAP: Record<string, any> = {
   'html-formatter': HtmlFormatter,
   'css-formatter': CssFormatter,
   'js-beautifier': JsBeautifier,
+  'java-decompiler': JavaDecompiler,
+  'java-stack-trace': JavaStackTrace,
+  'properties-yaml': PropertiesYaml,
+  'java-format-string': JavaFormatString,
+  'java-formatter': JavaFormatter,
 };
 
 interface Props {

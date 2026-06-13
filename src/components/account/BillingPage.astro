@@ -44,7 +44,7 @@ const accountHref = '/account/';
         <div class="bill-grid">
           <div class="card">
             <div class="card-head">
-              <span class="panel-title">{isRu ? '// подписка' : '// subscription'}</span>
+              <span class="panel-title">{isRu ? '// тариф' : '// plan'}</span>
             </div>
             <div id="subContent">
               <!-- rendered by JS -->
@@ -65,9 +65,9 @@ const accountHref = '/account/';
           </div>
         </div>
 
-        <!-- next renewal banner -->
+        <!-- access expiry banner -->
         <div class="next-charge" id="nextChargeBanner" style="display:none">
-          <i class="ti ti-receipt"></i>
+          <i class="ti ti-calendar-time"></i>
           <span id="nextChargeText"></span>
           <span class="when" id="nextChargeWhen"></span>
         </div>
@@ -141,7 +141,7 @@ const accountHref = '/account/';
               >
             </div>
             <div class="bill-plan-note" id="proNote">
-              {isRu ? '≈ 242 ₽ / мес, при оплате за год' : '≈ $4.08 / mo, billed annually'}
+              {isRu ? '≈ 242 ₽ / мес · единоразовый платёж' : '≈ $4.08 / mo · one-time payment'}
             </div>
             <ul class="bill-plan-feats">
               <li>
@@ -225,23 +225,16 @@ const accountHref = '/account/';
           <div id="invList"><!-- rendered by JS --></div>
         </div>
 
-        <!-- danger zone -->
+        <!-- plan expiry info -->
         <div class="danger-zone" id="dangerZone" style="display:none">
           <div class="dz-txt">
-            <strong>{isRu ? 'отменить подписку.' : 'cancel subscription.'}</strong>
+            <strong>{isRu ? 'об истечении тарифа.' : 'about plan expiry.'}</strong>
             {
               isRu
-                ? ' вы сохраните pro до истечения срока, затем перейдёте на бесплатный тариф. история сверх 5 записей и пресеты сверх 3 станут read-only.'
-                : " you'll keep pro until it expires, then drop to free. synced history over 5 entries and presets over 3 become read-only."
+                ? ' оплата единоразовая — автопродления нет. после истечения срока вы перейдёте на бесплатный тариф. история сверх 5 записей и пресеты сверх 3 станут read-only.'
+                : ' payment is one-time — there is no auto-renewal. after expiry you drop to free. synced history over 5 entries and presets over 3 become read-only.'
             }
           </div>
-          <button class="card-cta" id="cancelBtn" disabled>
-            <i class="ti ti-x"></i>
-            {isRu ? 'отменить подписку' : 'cancel subscription'}
-            <span style="font-size:9.5px;opacity:0.55;margin-left:2px">
-              {isRu ? '(скоро)' : '(soon)'}
-            </span>
-          </button>
         </div>
       </div>
     </div>
@@ -269,8 +262,8 @@ const accountHref = '/account/';
       var banner = document.getElementById('paymentBanner');
       var bannerText = document.getElementById('paymentBannerText');
       bannerText.textContent = isRu
-        ? 'оплата принята — ваша подписка активна!'
-        : 'payment confirmed — your subscription is now active!';
+        ? 'оплата принята — тариф Pro активен!'
+        : 'payment confirmed — Pro plan is now active!';
       banner.style.display = 'flex';
       history.replaceState(null, '', location.pathname);
       setTimeout(function () {
@@ -358,11 +351,11 @@ const accountHref = '/account/';
       if (proNote)
         proNote.textContent = isAnnual
           ? isRu
-            ? '≈ 242 ₽ / мес, при оплате за год'
-            : '≈ $4.08 / mo, billed annually'
+            ? '≈ 242 ₽ / мес · единоразовый платёж'
+            : '≈ $4.08 / mo · one-time payment'
           : isRu
-            ? 'оплата ежемесячно'
-            : 'billed monthly';
+            ? 'единоразовый платёж'
+            : 'one-time payment';
       if (apiNote)
         apiNote.textContent = isAnnual
           ? isRu
@@ -522,8 +515,8 @@ const accountHref = '/account/';
                 expStr +
                 '</span>'
               : (isRu
-                  ? 'активна · <span class="muted">продление</span> '
-                  : 'active · <span class="muted">auto-renews</span> ') + expStr;
+                  ? 'активен · <span class="muted">до</span> '
+                  : 'active · <span class="muted">expires</span> ') + expStr;
             html =
               '<div class="sub-badge"><i class="ti ti-bolt"></i> ' +
               label +
@@ -545,11 +538,7 @@ const accountHref = '/account/';
           var nw = document.getElementById('nextChargeWhen');
           var planStr = effectivePlan === 'api' ? 'api' : 'pro';
           if (nt)
-            nt.innerHTML =
-              (isRu ? 'следующее продление · ' : 'subscription renews · ') +
-              '<b>' +
-              planStr +
-              '</b>';
+            nt.innerHTML = (isRu ? 'доступ до · ' : 'access expires · ') + '<b>' + planStr + '</b>';
           if (nw) nw.textContent = formatDateShort(me.planExpiresAt);
           if (nb) nb.style.display = 'flex';
         }

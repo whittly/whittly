@@ -29,6 +29,11 @@ export const toolNameRu: Record<string, string> = {
   'html formatter': 'html-форматтер',
   'css formatter': 'css-форматтер',
   'js beautifier': 'js-бьютифайер',
+  'java decompiler': 'java-декомпилятор',
+  'java stack trace': 'java stack trace',
+  'properties ↔ yaml': 'properties ↔ yaml',
+  'java format string': 'java format string',
+  'java formatter': 'java форматтер',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -63,6 +68,11 @@ export const toolDescRu: Record<string, string> = {
   'html formatter': 'форматирование, минификация, отступы',
   'css formatter': 'форматирование, минификация, чистка правил',
   'js beautifier': 'распаковка и форматирование минифицированного js',
+  'java decompiler': 'декомпиляция .class и .jar файлов в исходный код java',
+  'java stack trace': 'раскраска и навигация по java-исключениям и stack trace',
+  'properties ↔ yaml': 'конвертация application.properties ↔ application.yml',
+  'java format string': 'живой предпросмотр String.format и MessageFormat',
+  'java formatter': 'форматирование java-кода через google-java-format — google или aosp стиль',
 };
 
 export const catLabelRu: Record<string, string> = {
@@ -71,6 +81,7 @@ export const catLabelRu: Record<string, string> = {
   encode: 'кодирование',
   generate: 'генерация',
   text: 'текст',
+  java: 'java',
   data: 'данные',
 };
 
@@ -80,5 +91,6 @@ export const catDescRu: Record<string, string> = {
   encode: 'данные на входе, данные на выходе',
   generate: 'создать что-то из ничего',
   text: 'работа со строками',
+  java: 'декомпиляция, конвертация, отладка java',
   data: 'расписания, парсеры, краевые случаи',
 };

@@ -1,0 +1,628 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  dropLabel: isRu ? 'перетащите .class или .jar файл сюда' : 'drop .class or .jar file here',
+  dropSub: isRu ? 'или нажмите для выбора' : 'or click to browse',
+  run: isRu ? 'декомпилировать →' : 'decompile →',
+  running: isRu ? 'декомпилирую…' : 'decompiling…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  phOut: isRu ? '// исходный код появится здесь' : '// decompiled source appears here',
+  errProRequired: isRu
+    ? '// требуется Pro — войдите и подключите план'
+    : '// pro plan required — sign in and upgrade',
+  errNoFile: isRu ? '// файл не выбран' : '// no file selected',
+  lines: isRu ? 'стр.' : 'lines',
+  bytes: isRu ? 'б' : 'b',
+  remove: '×',
+};
+---
+
+<style is:global>
+  .jdc {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jdc-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jdc-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jdc-status.ok {
+    color: var(--good);
+  }
+  .jdc-status.err {
+    color: var(--bad);
+  }
+
+  .jdc-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jdc-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jdc-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jdc-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 380px;
+    max-height: calc(100vh - 340px);
+  }
+
+  /* ── Left panel: drop zone ── */
+  .jdc-left {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+  }
+
+  .jdc-drop {
+    flex: 1;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .jdc-drop:hover,
+  .jdc-drop.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .jdc-drop i {
+    font-size: 32px;
+    color: var(--ink-faint);
+    transition: color 0.15s;
+  }
+  .jdc-drop:hover i,
+  .jdc-drop.over i {
+    color: var(--accent);
+  }
+
+  .jdc-drop-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+
+  .jdc-drop-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .jdc-file-loaded {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+
+  .jdc-file-loaded i {
+    color: var(--accent);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .jdc-file-name {
+    flex: 1;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .jdc-file-size {
+    color: var(--ink-faint);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .jdc-file-remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.12s;
+    flex-shrink: 0;
+  }
+  .jdc-file-remove:hover {
+    color: var(--bad);
+  }
+
+  .jdc-run {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 9px 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    align-self: stretch;
+  }
+  .jdc-run:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+  .jdc-run:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* ── Divider ── */
+  .jdc-vsep {
+    background: var(--line);
+  }
+
+  /* ── Right panel: output ── */
+  .jdc-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .jdc-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink-soft);
+  }
+
+  .jdc-out .jdc-ph {
+    color: var(--ink-faint);
+  }
+  .jdc-out .jdc-kw {
+    color: var(--accent);
+  }
+  .jdc-out .jdc-ann {
+    color: oklch(65% 0.17 50);
+  }
+  .jdc-out .jdc-type {
+    color: oklch(55% 0.16 300);
+  }
+  .jdc-out .jdc-prim {
+    color: var(--good);
+  }
+  .jdc-out .jdc-str {
+    color: oklch(58% 0.16 145);
+  }
+  .jdc-out .jdc-cmt {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .jdc-out .jdc-imp {
+    color: var(--ink-faint);
+  }
+  .jdc-out .jdc-err {
+    color: var(--bad);
+  }
+
+  /* ── Loading spinner ── */
+  .jdc-spin {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: jdc-rotate 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes jdc-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .jdc-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1px 300px;
+      max-height: none;
+    }
+    .jdc-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .jdc-out-wrap {
+      max-height: 300px;
+    }
+  }
+</style>
+
+<div class="jdc-pro-gate" id="jdcProGate" style="display:none">
+  <i class="ti ti-lock"></i>
+  <span class="jdc-gate-title">{isRu ? 'доступно на Pro' : 'pro plan required'}</span>
+  <span class="jdc-gate-sub">
+    {
+      isRu
+        ? 'Java декомпилятор работает на наших серверах — это платная функция'
+        : 'Java decompiler runs on our servers — this is a paid feature'
+    }
+  </span>
+  <a class="jdc-gate-btn" href="/premium/">{isRu ? 'посмотреть планы →' : 'see plans →'}</a>
+</div>
+
+<div class="jdc" id="jdcTool" style="display:none">
+  <div class="jdc-bar">
+    <span class="jdc-status" id="jdcStatus">&nbsp;</span>
+    <span class="local-badge">// server · pro</span>
+    <button class="jdc-action" id="jdcCopy" style="display:none">
+      <i class="ti ti-copy"></i>{t.copy}
+    </button>
+    <button class="jdc-action" id="jdcClear" style="display:none">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+  </div>
+  <div class="jdc-body">
+    <div class="jdc-left">
+      <div class="jdc-drop" id="jdcDrop">
+        <i class="ti ti-file-zip"></i>
+        <span class="jdc-drop-label">{t.dropLabel}</span>
+        <span class="jdc-drop-sub">{t.dropSub}</span>
+        <input type="file" id="jdcFileInput" accept=".class,.jar" style="display:none" />
+      </div>
+      <div class="jdc-file-loaded" id="jdcFileLoaded" style="display:none">
+        <i class="ti ti-file-filled"></i>
+        <span class="jdc-file-name" id="jdcFileName"></span>
+        <span class="jdc-file-size" id="jdcFileSize"></span>
+        <button class="jdc-file-remove" id="jdcRemoveFile" type="button">{t.remove}</button>
+      </div>
+      <button class="jdc-run" id="jdcRun" disabled>{t.run}</button>
+    </div>
+    <div class="jdc-vsep"></div>
+    <div class="jdc-out-wrap">
+      <pre class="jdc-out" id="jdcOut"><span class="jdc-ph">{t.phOut}</span></pre>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .jdc-pro-gate {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .jdc-pro-gate i {
+    font-size: 36px;
+    color: var(--line-strong);
+  }
+
+  .jdc-gate-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .jdc-gate-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    max-width: 420px;
+  }
+
+  .jdc-gate-btn {
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: opacity 0.12s;
+  }
+  .jdc-gate-btn:hover {
+    opacity: 0.85;
+  }
+</style>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var gate = document.getElementById('jdcProGate');
+    var tool = document.getElementById('jdcTool');
+
+    function isPro() {
+      var plan = window.whApi && window.whApi.getPlan();
+      return plan === 'pro' || plan === 'api';
+    }
+
+    function applyGate() {
+      if (isPro()) {
+        if (gate) gate.style.display = 'none';
+        if (tool) tool.style.display = '';
+      } else {
+        if (gate) gate.style.display = '';
+        if (tool) tool.style.display = 'none';
+      }
+    }
+
+    applyGate();
+
+    var drop = document.getElementById('jdcDrop');
+    var fileInput = document.getElementById('jdcFileInput');
+    var fileLoaded = document.getElementById('jdcFileLoaded');
+    var fileName = document.getElementById('jdcFileName');
+    var fileSize = document.getElementById('jdcFileSize');
+    var removeBtn = document.getElementById('jdcRemoveFile');
+    var runBtn = document.getElementById('jdcRun');
+    var outEl = document.getElementById('jdcOut');
+    var statusEl = document.getElementById('jdcStatus');
+    var copyBtn = document.getElementById('jdcCopy');
+    var clearBtn = document.getElementById('jdcClear');
+
+    var selectedFile = null;
+    var lastSource = '';
+
+    function fmtSize(n) {
+      if (n < 1024) return n + ' ' + t.bytes;
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function setFile(file) {
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = fmtSize(file.size);
+      drop.style.display = 'none';
+      fileLoaded.style.display = 'flex';
+      runBtn.disabled = false;
+      statusEl.textContent = '';
+      statusEl.className = 'jdc-status';
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      drop.style.display = '';
+      fileLoaded.style.display = 'none';
+      runBtn.disabled = true;
+    }
+
+    function setOutput(source) {
+      lastSource = source;
+      outEl.innerHTML = highlightJava(source);
+      copyBtn.style.display = '';
+      clearBtn.style.display = '';
+      outEl.closest('.jdc-out-wrap').classList.remove('flash-ok');
+      void outEl.closest('.jdc-out-wrap').offsetWidth;
+      outEl.closest('.jdc-out-wrap').classList.add('flash-ok');
+    }
+
+    /* ── Java syntax highlighting ── */
+    var JAVA_KW =
+      /\b(public|private|protected|class|interface|enum|record|extends|implements|import|package|static|final|abstract|void|new|return|if|else|for|while|do|switch|case|break|continue|throw|throws|try|catch|finally|instanceof|this|super|null|true|false|default|transient|volatile|synchronized|native|strictfp|sealed|permits|var|yield)\b/g;
+    var JAVA_ANN = /(@\w+(?:\([^)]*\))?)/g;
+    var JAVA_PRIM =
+      /\b(int|long|short|byte|double|float|boolean|char|String|Object|Integer|Long|Short|Byte|Double|Float|Boolean|Character|List|Map|Set|Collection|Optional|void)\b/g;
+    var JAVA_STR = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
+    var JAVA_CMT = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g;
+
+    function highlightJava(code) {
+      var lines = code.split('\n');
+      return lines
+        .map(function (line) {
+          var e = esc(line);
+          if (e.trimStart().startsWith('//')) {
+            return '<span class="jdc-cmt">' + e + '</span>';
+          }
+          if (e.startsWith('package ') || e.startsWith('import ')) {
+            return '<span class="jdc-imp">' + e + '</span>';
+          }
+          e = e.replace(JAVA_CMT, '<span class="jdc-cmt">$1</span>');
+          e = e.replace(JAVA_STR, '<span class="jdc-str">$1</span>');
+          e = e.replace(JAVA_ANN, '<span class="jdc-ann">$1</span>');
+          e = e.replace(JAVA_KW, '<span class="jdc-kw">$1</span>');
+          e = e.replace(JAVA_PRIM, '<span class="jdc-prim">$1</span>');
+          e = e.replace(
+            /(?<=:\s*|&lt;\s*|\(\s*|,\s*|\s)([A-Z][a-zA-Z0-9]*)/g,
+            '<span class="jdc-type">$1</span>'
+          );
+          return e;
+        })
+        .join('\n');
+    }
+
+    /* ── Drag & drop ── */
+    drop.addEventListener('click', function () {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    drop.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      drop.classList.add('over');
+    });
+    drop.addEventListener('dragleave', function () {
+      drop.classList.remove('over');
+    });
+    drop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      drop.classList.remove('over');
+      var f = e.dataTransfer && e.dataTransfer.files[0];
+      if (!f) return;
+      var ext = f.name.split('.').pop().toLowerCase();
+      if (ext !== 'class' && ext !== 'jar') {
+        statusEl.textContent =
+          '// ' + (isRu ? 'только .class и .jar файлы' : 'only .class and .jar files');
+        statusEl.className = 'jdc-status err';
+        return;
+      }
+      setFile(f);
+    });
+
+    removeBtn.addEventListener('click', function () {
+      clearFile();
+      outEl.innerHTML = '<span class="jdc-ph">' + esc(t.phOut) + '</span>';
+      lastSource = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jdc-status';
+    });
+
+    /* ── Decompile ── */
+    runBtn.addEventListener('click', function () {
+      if (!selectedFile) return;
+
+      var plan = window.whApi && window.whApi.getPlan();
+      if (plan !== 'pro' && plan !== 'api') {
+        outEl.innerHTML = '<span class="jdc-err">' + esc(t.errProRequired) + '</span>';
+        statusEl.textContent = '// pro required';
+        statusEl.className = 'jdc-status err';
+        return;
+      }
+
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<span class="jdc-spin"></span>' + t.running;
+      statusEl.textContent = t.running;
+      statusEl.className = 'jdc-status';
+
+      var fd = new FormData();
+      fd.append('file', selectedFile, selectedFile.name);
+
+      window.whApi
+        .fetch('/api/java/decompile', { method: 'POST', body: fd })
+        .then(function (r) {
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
+        })
+        .then(function (data) {
+          var lineCount = (data.source.match(/\n/g) || []).length + 1;
+          statusEl.textContent = data.filename + ' · ' + lineCount + ' ' + t.lines;
+          statusEl.className = 'jdc-status ok';
+          setOutput(data.source);
+        })
+        .catch(function (e) {
+          statusEl.textContent = '// error: ' + (e.message || 'failed');
+          statusEl.className = 'jdc-status err';
+          outEl.innerHTML =
+            '<span class="jdc-err">' + esc('// error: ' + (e.message || 'failed')) + '</span>';
+          lastSource = '';
+          copyBtn.style.display = 'none';
+          clearBtn.style.display = 'none';
+        })
+        .finally(function () {
+          runBtn.disabled = false;
+          runBtn.textContent = t.run;
+        });
+    });
+
+    /* ── Copy / clear ── */
+    copyBtn.addEventListener('click', function () {
+      if (!lastSource) return;
+      navigator.clipboard.writeText(lastSource).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      clearFile();
+      outEl.innerHTML = '<span class="jdc-ph">' + esc(t.phOut) + '</span>';
+      lastSource = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jdc-status';
+    });
+
+    /* ── Keyboard shortcuts ── */
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.jdc');
+      if (!toolEl) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastSource) copyBtn.click();
+      }
+    });
+  })();
+</script>

@@ -1082,6 +1082,8 @@
   font-size: 14px;
   color: var(--accent);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tl-sum {
   font-size: 16px;

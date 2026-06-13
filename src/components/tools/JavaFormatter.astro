@@ -1,0 +1,479 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'вставьте java-код сюда…' : 'paste java code here…',
+  phOut: isRu ? '// отформатированный код появится здесь' : '// formatted code appears here',
+  format: isRu ? 'форматировать →' : 'format →',
+  formatting: isRu ? 'форматирую…' : 'formatting…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  styleGoogle: 'google (2 spaces)',
+  styleAosp: 'aosp (4 spaces)',
+  lines: isRu ? 'стр.' : 'lines',
+};
+---
+
+<style is:global>
+  .jfmt {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 320px);
+    min-height: 480px;
+  }
+
+  .jfmt-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .jfmt-styles {
+    display: flex;
+    background: var(--bg);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .jfmt-style {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .jfmt-style.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .jfmt-style:not(.active):hover {
+    color: var(--ink);
+  }
+
+  .jfmt-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .jfmt-status.ok {
+    color: var(--good);
+  }
+  .jfmt-status.err {
+    color: var(--bad);
+  }
+
+  .jfmt-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jfmt-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jfmt-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+  .jfmt-action:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .jfmt-run {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 5px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .jfmt-run:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+  .jfmt-run:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .jfmt-spin {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: jfmt-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes jfmt-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .jfmt-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .jfmt-input {
+    width: 100%;
+    height: 100%;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    background: var(--bg);
+    color: var(--ink);
+    border: none;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .jfmt-vsep {
+    background: var(--line);
+  }
+
+  .jfmt-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .jfmt-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink-soft);
+  }
+
+  .jfmt-ph {
+    color: var(--ink-faint);
+  }
+  .jfmt-kw {
+    color: var(--accent);
+  }
+  .jfmt-ann {
+    color: oklch(65% 0.17 50);
+  }
+  .jfmt-type {
+    color: oklch(55% 0.16 300);
+  }
+  .jfmt-prim {
+    color: var(--good);
+  }
+  .jfmt-str {
+    color: oklch(58% 0.16 145);
+  }
+  .jfmt-cmt {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .jfmt-imp {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .jfmt-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1px 1fr;
+    }
+    .jfmt-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="jfmt-pro-gate" id="jfmtProGate" style="display:none">
+  <i class="ti ti-lock"></i>
+  <span class="jfmt-gate-title">{isRu ? 'доступно на Pro' : 'pro plan required'}</span>
+  <span class="jfmt-gate-sub">
+    {
+      isRu
+        ? 'Java форматтер работает на наших серверах — это платная функция'
+        : 'Java formatter runs on our servers — this is a paid feature'
+    }
+  </span>
+  <a class="jfmt-gate-btn" href="/premium/">{isRu ? 'посмотреть планы →' : 'see plans →'}</a>
+</div>
+
+<div class="jfmt" id="jfmtTool" style="display:none">
+  <div class="jfmt-bar">
+    <div class="jfmt-styles">
+      <button class="jfmt-style active" data-style="google" type="button">{t.styleGoogle}</button>
+      <button class="jfmt-style" data-style="aosp" type="button">{t.styleAosp}</button>
+    </div>
+    <span class="jfmt-status" id="jfmtStatus">&nbsp;</span>
+    <span class="local-badge">// server · pro</span>
+    <button class="jfmt-action" id="jfmtCopy" style="display:none">
+      <i class="ti ti-copy"></i>{t.copy}
+    </button>
+    <button class="jfmt-action" id="jfmtClear" style="display:none">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+    <button class="jfmt-run" id="jfmtRun" disabled>{t.format}</button>
+  </div>
+  <div class="jfmt-body">
+    <textarea class="jfmt-input" id="jfmtInput" placeholder={t.ph} spellcheck="false"></textarea>
+    <div class="jfmt-vsep"></div>
+    <div class="jfmt-out-wrap">
+      <pre class="jfmt-out" id="jfmtOut"><span class="jfmt-ph">{t.phOut}</span></pre>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .jfmt-pro-gate {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .jfmt-pro-gate i {
+    font-size: 36px;
+    color: var(--line-strong);
+  }
+  .jfmt-gate-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .jfmt-gate-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    max-width: 420px;
+  }
+  .jfmt-gate-btn {
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: opacity 0.12s;
+  }
+  .jfmt-gate-btn:hover {
+    opacity: 0.85;
+  }
+</style>
+
+<script is:inline define:vars={{ t, isRu }}>
+  (function () {
+    var gate = document.getElementById('jfmtProGate');
+    var tool = document.getElementById('jfmtTool');
+
+    function isPro() {
+      var plan = window.whApi && window.whApi.getPlan();
+      return plan === 'pro' || plan === 'api';
+    }
+
+    function applyGate() {
+      if (isPro()) {
+        if (gate) gate.style.display = 'none';
+        if (tool) tool.style.display = '';
+      } else {
+        if (gate) gate.style.display = '';
+        if (tool) tool.style.display = 'none';
+      }
+    }
+    applyGate();
+
+    var input = document.getElementById('jfmtInput');
+    var outEl = document.getElementById('jfmtOut');
+    var statusEl = document.getElementById('jfmtStatus');
+    var runBtn = document.getElementById('jfmtRun');
+    var copyBtn = document.getElementById('jfmtCopy');
+    var clearBtn = document.getElementById('jfmtClear');
+    var activeStyle = 'google';
+    var lastFormatted = '';
+
+    document.querySelectorAll('.jfmt-style').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.jfmt-style').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        activeStyle = btn.dataset.style;
+      });
+    });
+
+    input.addEventListener('input', function () {
+      runBtn.disabled = !input.value.trim();
+    });
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    var JAVA_KW =
+      /\b(public|private|protected|class|interface|enum|record|extends|implements|import|package|static|final|abstract|void|new|return|if|else|for|while|do|switch|case|break|continue|throw|throws|try|catch|finally|instanceof|this|super|null|true|false|default|transient|volatile|synchronized|native|strictfp|sealed|permits|var|yield)\b/g;
+    var JAVA_ANN = /(@\w+(?:\([^)]*\))?)/g;
+    var JAVA_PRIM =
+      /\b(int|long|short|byte|double|float|boolean|char|String|Object|Integer|Long|Short|Byte|Double|Float|Boolean|Character|List|Map|Set|Collection|Optional)\b/g;
+    var JAVA_STR = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
+
+    function highlightJava(code) {
+      return code
+        .split('\n')
+        .map(function (line) {
+          var e = esc(line);
+          if (e.trimStart().startsWith('//')) return '<span class="jfmt-cmt">' + e + '</span>';
+          if (e.startsWith('package ') || e.startsWith('import '))
+            return '<span class="jfmt-imp">' + e + '</span>';
+          e = e.replace(JAVA_STR, '<span class="jfmt-str">$1</span>');
+          e = e.replace(JAVA_ANN, '<span class="jfmt-ann">$1</span>');
+          e = e.replace(JAVA_KW, '<span class="jfmt-kw">$1</span>');
+          e = e.replace(JAVA_PRIM, '<span class="jfmt-prim">$1</span>');
+          e = e.replace(
+            /(?<=:\s*|&lt;\s*|\(\s*|,\s*|\s)([A-Z][a-zA-Z0-9]*)/g,
+            '<span class="jfmt-type">$1</span>'
+          );
+          return e;
+        })
+        .join('\n');
+    }
+
+    runBtn.addEventListener('click', function () {
+      var code = input.value.trim();
+      if (!code) return;
+
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<span class="jfmt-spin"></span>' + t.formatting;
+      statusEl.textContent = t.formatting;
+      statusEl.className = 'jfmt-status';
+
+      window.whApi
+        .fetch('/api/java/format', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code, style: activeStyle }),
+        })
+        .then(function (r) {
+          return r.ok
+            ? r.json()
+            : r.json().then(function (e) {
+                throw new Error(e.error || 'server error');
+              });
+        })
+        .then(function (data) {
+          lastFormatted = data.code;
+          var lineCount = (data.code.match(/\n/g) || []).length + 1;
+          statusEl.textContent = lineCount + ' ' + t.lines + ' · ' + activeStyle;
+          statusEl.className = 'jfmt-status ok';
+          outEl.innerHTML = highlightJava(data.code);
+          copyBtn.style.display = '';
+          clearBtn.style.display = '';
+        })
+        .catch(function (e) {
+          statusEl.textContent = '// error: ' + (e.message || 'failed');
+          statusEl.className = 'jfmt-status err';
+          outEl.innerHTML =
+            '<span class="jfmt-ph">// error: ' + esc(e.message || 'failed') + '</span>';
+          lastFormatted = '';
+          copyBtn.style.display = 'none';
+          clearBtn.style.display = 'none';
+        })
+        .finally(function () {
+          runBtn.disabled = !input.value.trim();
+          runBtn.textContent = t.format;
+        });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastFormatted) return;
+      navigator.clipboard.writeText(lastFormatted).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      input.value = '';
+      outEl.innerHTML = '<span class="jfmt-ph">' + esc(t.phOut) + '</span>';
+      lastFormatted = '';
+      copyBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = 'jfmt-status';
+      runBtn.disabled = true;
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!document.querySelector('.jfmt')) return;
+      var pal = document.getElementById('whPalette');
+      if (pal && pal.classList.contains('active')) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 'Enter') {
+        e.preventDefault();
+        if (!runBtn.disabled) runBtn.click();
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastFormatted) copyBtn.click();
+      }
+    });
+  })();
+</script>

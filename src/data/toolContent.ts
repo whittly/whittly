@@ -634,6 +634,111 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
       },
     ],
   },
+
+  'java-decompiler': {
+    about:
+      'The Java decompiler takes a compiled .class or .jar file and reconstructs readable Java source code from it. It uses Vineflower on our servers — the same engine that powers IntelliJ IDEA — with full support for modern Java features: records, sealed classes, switch expressions, lambdas, and pattern matching. The output is syntax-highlighted Java code you can read, copy, or compare against the original.',
+    useCases: [
+      'Inspect a third-party library when source code is unavailable',
+      'Understand what a compiled class actually does at runtime',
+      'Recover source from a jar when the original repo is lost',
+      'Check if a dependency contains unexpected or obfuscated code',
+    ],
+    faq: [
+      {
+        q: 'Does the decompiler run in my browser?',
+        a: 'No — decompiling bytecode requires a JVM, which cannot run in a browser. The file is uploaded to our server, decompiled in memory by Vineflower, and the source is returned. The file is never stored or logged. This feature requires a Pro plan.',
+      },
+      {
+        q: 'What Java versions are supported?',
+        a: 'Vineflower supports Java 8 through Java 21+, including records, sealed classes, switch expressions, text blocks, and pattern matching. Very old class files (Java 1.1–1.4) are also handled.',
+      },
+    ],
+  },
+
+  'java-stack-trace': {
+    about:
+      'Java stack traces are dense walls of text mixing your own code with dozens of library frames from Spring, Hibernate, Netty, and the JDK itself. This tool parses the raw trace and renders it with syntax coloring: exceptions in red, Caused by chains in orange, your own frames highlighted, and library noise dimmed. The status bar shows the exception class and how many of the frames are your code.',
+    useCases: [
+      'Quickly spot which of your classes caused an exception among library noise',
+      'Understand a multi-level Caused by chain in a single glance',
+      'Share a clean, readable trace with a teammate in a PR comment',
+      'Identify the root cause when a NullPointerException is buried under 60 Spring frames',
+    ],
+    faq: [
+      {
+        q: 'How does it decide which frames are "mine"?',
+        a: 'Frames starting with known library prefixes — java.*, javax.*, org.springframework.*, org.hibernate.*, io.netty.*, kotlin.*, and 10+ more — are treated as library code and dimmed. Everything else is treated as your code and highlighted. The list covers the most common Java ecosystems.',
+      },
+      {
+        q: 'Is the trace sent anywhere?',
+        a: 'No. All parsing and coloring happens in your browser with JavaScript. Your stack traces, which often contain class and method names from internal code, never leave the tab.',
+      },
+    ],
+  },
+
+  'properties-yaml': {
+    about:
+      'Spring Boot accepts both application.properties and application.yml. Properties files use flat dotted keys (spring.datasource.url=…), while YAML uses indented nested maps. This converter handles both directions: dotted keys become nested YAML maps, indexed array keys (list[0]=x) become YAML sequences, and values that would confuse a YAML parser are automatically quoted.',
+    useCases: [
+      'Migrate a legacy application.properties to the more readable YAML format',
+      'Convert a YAML snippet from documentation into properties format to merge with an existing file',
+      'Understand how a deeply nested YAML key maps to its properties equivalent',
+      'Quickly check that a properties key and its YAML counterpart are equivalent',
+    ],
+    faq: [
+      {
+        q: 'Are comments preserved?',
+        a: 'Comments in .properties files (lines starting with #) are stripped during conversion because YAML comment placement cannot be reliably inferred from flat key order. Add comments manually after converting.',
+      },
+      {
+        q: 'Does it support multi-document YAML or anchors?',
+        a: 'No — only single-document YAML without anchors, aliases, or complex scalars. This covers 99% of Spring Boot application.yml files. For advanced YAML features, use a full YAML library.',
+      },
+    ],
+  },
+
+  'java-formatter': {
+    about:
+      'Java formatter runs your code through google-java-format on our servers — the same formatter used by Google, the Android Open Source Project, and most major Java projects. Choose Google style (2-space indent, strict column limit) or AOSP style (4-space indent, wider lines). The output is syntax-highlighted so you can review it before copying back.',
+    useCases: [
+      'Format a code snippet before pasting it into a PR comment or design doc',
+      'Normalize indentation and brace style when merging code from different contributors',
+      'Quickly check whether your IDE formatter is misconfigured by comparing its output',
+      'Format generated code (from JSON→Java or protobuf output) before committing',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between Google style and AOSP style?',
+        a: 'Both are defined by google-java-format. Google style uses 2-space indentation and a 100-column line limit. AOSP (Android Open Source Project) style uses 4-space indentation and a 100-column line limit. If you are working on Android code, choose AOSP; otherwise Google style is the default.',
+      },
+      {
+        q: 'Why does this require a Pro plan?',
+        a: 'google-java-format is a JVM tool — it cannot run in a browser. The code is sent to our server, formatted in memory, and returned. The code is never stored or logged.',
+      },
+    ],
+  },
+
+  'java-format-string': {
+    about:
+      'Java has two string formatting systems: String.format (printf-style %s, %d, %f specifiers with flags, width, and precision) and MessageFormat ({0}, {1,number,currency} with type and style). This tool parses your format string, detects each placeholder, lets you supply values for each one, and shows the formatted output live.',
+    useCases: [
+      'Verify that a String.format call produces the expected output before shipping',
+      'Figure out the right flags for zero-padded integers or comma-grouped numbers (%,d vs %05d)',
+      'Test a MessageFormat pattern with different numeric values before using it in an i18n bundle',
+      'Understand what %.2f vs %10.2f produces for a given float',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between String.format and MessageFormat?',
+        a: 'String.format uses C-style % specifiers (%s, %d, %f) and is the most common choice for single-language apps. MessageFormat uses {0}, {1} positional placeholders and adds type-aware formatting ({0,number,currency}, {0,date,short}) — it is designed for internationalized messages where argument order may differ between locales.',
+      },
+      {
+        q: 'Is the preview 100% identical to Java output?',
+        a: "It is very close for the most common specifiers. Locale-specific formatting (decimal separators, currency symbols) uses the browser's Intl API which may differ from the JVM's default locale. For production validation, test in your actual Java environment.",
+      },
+    ],
+  },
 };
 
 export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
@@ -1263,6 +1368,111 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'Что означает ? в Quartz cron?',
         a: '? означает "без конкретного значения" и используется чтобы избежать конфликта между днём месяца и днём недели. Например, 0 0 0 15 * ? срабатывает 15-го числа независимо от дня недели. Нельзя указать и день месяца, и день недели одновременно — используйте ? для того поля, которое не важно.',
+      },
+    ],
+  },
+
+  'java-decompiler': {
+    about:
+      'Java-декомпилятор берёт скомпилированный .class или .jar файл и восстанавливает из него читаемый исходный код Java. Инструмент использует Vineflower на наших серверах — тот же движок, что работает внутри IntelliJ IDEA — с полной поддержкой современных конструкций: records, sealed classes, switch expressions, лямбды и pattern matching. Результат — код Java с подсветкой синтаксиса.',
+    useCases: [
+      'Изучить стороннюю библиотеку, когда исходный код недоступен',
+      'Понять, что скомпилированный класс делает во время выполнения',
+      'Восстановить исходник из jar, когда оригинальный репозиторий утерян',
+      'Проверить, не содержит ли зависимость неожиданного или обфусцированного кода',
+    ],
+    faq: [
+      {
+        q: 'Декомпилятор работает в браузере?',
+        a: 'Нет — декомпиляция байткода требует JVM, которая не может работать в браузере. Файл загружается на наш сервер, декомпилируется в памяти через Vineflower и возвращается исходный код. Файл никогда не сохраняется и не логируется. Функция доступна на Pro-плане.',
+      },
+      {
+        q: 'Какие версии Java поддерживаются?',
+        a: 'Vineflower поддерживает Java 8 — Java 21+, включая records, sealed classes, switch expressions, text blocks и pattern matching. Также поддерживаются очень старые class-файлы (Java 1.1–1.4).',
+      },
+    ],
+  },
+
+  'java-stack-trace': {
+    about:
+      'Java stack trace — это плотная стена текста, где перемешан твой собственный код с десятками фреймов библиотек: Spring, Hibernate, Netty, JDK. Инструмент разбирает сырой trace и отображает его с подсветкой: исключения красным, цепочки Caused by оранжевым, твои фреймы выделены, библиотечный шум приглушён. Статус-бар показывает класс исключения и долю твоих фреймов.',
+    useCases: [
+      'Быстро найти свой класс, который вызвал исключение, среди библиотечного шума',
+      'Понять многоуровневую цепочку Caused by с первого взгляда',
+      'Поделиться чистым читаемым trace с коллегой в PR-комментарии',
+      'Найти root cause, когда NullPointerException скрыт под 60 Spring-фреймами',
+    ],
+    faq: [
+      {
+        q: 'Как инструмент определяет "мои" фреймы?',
+        a: 'Фреймы, начинающиеся с известных библиотечных префиксов — java.*, javax.*, org.springframework.*, org.hibernate.*, io.netty.*, kotlin.* и ещё 10+, — считаются библиотечным кодом и приглушаются. Всё остальное считается твоим кодом и выделяется.',
+      },
+      {
+        q: 'Trace отправляется на сервер?',
+        a: 'Нет. Весь разбор и подсветка происходят в браузере на JavaScript. Твои stack trace-ы, которые часто содержат имена классов и методов из внутреннего кода, никогда не покидают вкладку.',
+      },
+    ],
+  },
+
+  'properties-yaml': {
+    about:
+      'Spring Boot принимает как application.properties, так и application.yml. Properties-файлы используют плоские ключи с точками (spring.datasource.url=…), YAML — отступы и вложенные структуры. Конвертер работает в обе стороны: ключи с точками превращаются в вложенные YAML-структуры, индексированные ключи массивов (list[0]=x) — в YAML-последовательности, а значения, которые могут сбить YAML-парсер, автоматически берутся в кавычки.',
+    useCases: [
+      'Мигрировать устаревший application.properties в более читаемый YAML-формат',
+      'Конвертировать YAML-сниппет из документации в properties для слияния с существующим файлом',
+      'Понять, как глубоко вложенный YAML-ключ соответствует своему properties-эквиваленту',
+      'Быстро проверить эквивалентность properties-ключа и его YAML-варианта',
+    ],
+    faq: [
+      {
+        q: 'Сохраняются ли комментарии?',
+        a: 'Комментарии в .properties (строки начинающиеся с #) удаляются при конвертации, так как нельзя надёжно определить их место в YAML по порядку плоских ключей. Добавь комментарии вручную после конвертации.',
+      },
+      {
+        q: 'Поддерживается multi-document YAML или anchors?',
+        a: 'Нет — только однодокументный YAML без anchors, aliases и сложных скаляров. Это покрывает 99% файлов application.yml в Spring Boot. Для продвинутых возможностей YAML используй полноценную библиотеку.',
+      },
+    ],
+  },
+
+  'java-formatter': {
+    about:
+      'Java форматтер прогоняет ваш код через google-java-format на наших серверах — тот же форматтер, который используют Google, Android Open Source Project и большинство крупных Java-проектов. Выберите Google-стиль (2 пробела, строгий лимит колонок) или AOSP-стиль (4 пробела, более широкие строки). Результат подсвечивается синтаксически — можно сразу проверить перед копированием.',
+    useCases: [
+      'Отформатировать сниппет перед вставкой в PR-комментарий или дизайн-документ',
+      'Нормализовать отступы и стиль скобок при слиянии кода от разных участников',
+      'Быстро проверить, не сбился ли форматтер в IDE, сравнив его вывод с эталонным',
+      'Отформатировать сгенерированный код (из JSON→Java или protobuf) перед коммитом',
+    ],
+    faq: [
+      {
+        q: 'В чём разница между Google-стилем и AOSP-стилем?',
+        a: 'Оба определены в google-java-format. Google-стиль использует отступы в 2 пробела и лимит строки 100 символов. AOSP-стиль (Android Open Source Project) — 4 пробела и тот же лимит. Если работаете над Android-кодом — выбирайте AOSP, в остальных случаях Google-стиль.',
+      },
+      {
+        q: 'Почему нужен Pro-план?',
+        a: 'google-java-format — это JVM-инструмент, который не может работать в браузере. Код отправляется на наш сервер, форматируется в памяти и возвращается. Код никогда не сохраняется и не логируется.',
+      },
+    ],
+  },
+
+  'java-format-string': {
+    about:
+      'В Java два механизма форматирования строк: String.format (printf-стиль: %s, %d, %f с флагами, шириной и точностью) и MessageFormat ({0}, {1,number,currency} с типом и стилем). Инструмент разбирает строку формата, определяет каждый плейсхолдер, позволяет ввести значение для каждого и показывает результат в реальном времени.',
+    useCases: [
+      'Убедиться, что String.format-вызов даёт ожидаемый результат до деплоя',
+      'Разобраться с нужными флагами для zero-padded целых или чисел с группировкой (%,d vs %05d)',
+      'Протестировать MessageFormat-паттерн с разными числовыми значениями перед использованием в i18n-бандле',
+      'Понять, что выведет %.2f в отличие от %10.2f для данного числа с плавающей точкой',
+    ],
+    faq: [
+      {
+        q: 'В чём разница между String.format и MessageFormat?',
+        a: 'String.format использует C-style % спецификаторы (%s, %d, %f) — наиболее распространённый выбор для одноязычных приложений. MessageFormat использует позиционные плейсхолдеры {0}, {1} и добавляет форматирование с учётом типа ({0,number,currency}, {0,date,short}) — он создан для интернационализированных сообщений, где порядок аргументов может отличаться в разных локалях.',
+      },
+      {
+        q: 'Предпросмотр полностью совпадает с выводом Java?',
+        a: 'Для большинства распространённых спецификаторов — очень близко. Форматирование с учётом локали (разделители десятичных, символы валют) использует браузерный Intl API, который может отличаться от дефолтной локали JVM. Для production-валидации тестируй в реальном Java-окружении.',
       },
     ],
   },

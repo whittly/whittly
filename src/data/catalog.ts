@@ -6,7 +6,8 @@ export type Category =
   | 'text'
   | 'network'
   | 'image'
-  | 'data';
+  | 'data'
+  | 'java';
 
 export interface Tool {
   cat: Category;
@@ -60,20 +61,6 @@ export const CATALOG: Tool[] = [
     icon: 'ti-brand-typescript',
     name: 'json → typescript',
     desc: 'generate typescript interfaces from json',
-    new: true,
-  },
-  {
-    cat: 'convert',
-    icon: 'ti-coffee',
-    name: 'json → java',
-    desc: 'generate java pojos or records from json',
-    new: true,
-  },
-  {
-    cat: 'convert',
-    icon: 'ti-arrows-shuffle',
-    name: 'maven ↔ gradle',
-    desc: 'convert dependencies between maven and gradle dsl',
     new: true,
   },
   {
@@ -325,13 +312,6 @@ export const CATALOG: Tool[] = [
   },
   {
     cat: 'data',
-    icon: 'ti-clock-code',
-    name: 'quartz cron',
-    desc: 'parse quartz cron expressions with seconds and L/W/# syntax',
-    new: true,
-  },
-  {
-    cat: 'data',
     icon: 'ti-terminal',
     name: 'curl converter',
     desc: 'convert curl to fetch, axios, python requests',
@@ -351,6 +331,64 @@ export const CATALOG: Tool[] = [
     desc: 'find the right mime type for any file extension',
     new: true,
   },
+
+  // java
+  {
+    cat: 'java',
+    icon: 'ti-coffee',
+    name: 'json → java',
+    desc: 'generate java pojos or records from json',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-zoom-code',
+    name: 'java decompiler',
+    desc: 'decompile .class and .jar files back to java source',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-arrows-shuffle',
+    name: 'maven ↔ gradle',
+    desc: 'convert dependencies between maven and gradle dsl',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-file-code',
+    name: 'properties ↔ yaml',
+    desc: 'convert spring boot application.properties ↔ application.yml',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-bug',
+    name: 'java stack trace',
+    desc: 'colorize and navigate java exceptions and stack traces',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-percentage',
+    name: 'java format string',
+    desc: 'live preview of String.format and MessageFormat output',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-paint',
+    name: 'java formatter',
+    desc: 'format java code with google-java-format — google or aosp style',
+    new: true,
+  },
+  {
+    cat: 'java',
+    icon: 'ti-clock-code',
+    name: 'quartz cron',
+    desc: 'parse quartz cron expressions with seconds and L/W/# syntax',
+    new: true,
+  },
 ];
 
 export const CAT_META: Record<Category, CatMeta> = {
@@ -362,6 +400,7 @@ export const CAT_META: Record<Category, CatMeta> = {
   network: { label: 'network', desc: 'http, dns, addressing' },
   image: { label: 'image', desc: 'pixels, vectors, bytes' },
   data: { label: 'data', desc: 'schedules, parsers, edge cases' },
+  java: { label: 'java', desc: 'decompile, convert, debug java' },
 };
 
 export const CAT_ORDER: Category[] = [
@@ -370,6 +409,7 @@ export const CAT_ORDER: Category[] = [
   'encode',
   'generate',
   'text',
+  'java',
   'network',
   'image',
   'data',

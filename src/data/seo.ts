@@ -32,6 +32,10 @@ export const SEO_TITLE: Record<string, string> = {
   'js-beautifier': 'JavaScript Beautifier — Unminify & Format JS',
   'json-typescript': 'JSON to TypeScript Interface Generator',
   'lorem-ipsum': 'Lorem Ipsum Generator — Paragraphs, Sentences, Words',
+  'java-decompiler': 'Java Decompiler — .class & .jar to Source Code',
+  'java-stack-trace': 'Java Stack Trace Beautifier & Analyzer',
+  'properties-yaml': 'Spring Boot Properties ↔ YAML Converter',
+  'java-format-string': 'Java String.format & MessageFormat Preview',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -97,6 +101,16 @@ export const SEO_DESC: Record<string, string> = {
     'Free online JSON to TypeScript generator. Convert JSON objects to TypeScript interfaces instantly. Handles nested objects, arrays, and optional fields.',
   'lorem-ipsum':
     'Free lorem ipsum generator. Generate placeholder text as paragraphs, sentences, or word lists. Configurable count, classic or random mode.',
+  'java-decompiler':
+    'Online Java decompiler. Upload .class or .jar files and instantly get readable Java source code. Powered by Vineflower — the same engine as IntelliJ IDEA. Pro plan required — runs on our servers.',
+  'java-stack-trace':
+    'Free online Java stack trace beautifier. Colorize exceptions, highlight your own code vs library frames, identify root cause and Caused by chains. Runs in your browser.',
+  'properties-yaml':
+    'Free online Spring Boot converter. Convert application.properties to application.yml and back. Handles nested keys, indexed arrays, and YAML quoting rules. No upload needed.',
+  'java-format-string':
+    'Free online Java format string tester. Preview String.format and MessageFormat output live. Supports %s, %d, %f, flags, width, precision, and MessageFormat {0,number,currency} syntax.',
+  'java-formatter':
+    'Online Java code formatter powered by google-java-format. Format Java source code to Google style (2-space) or AOSP style (4-space indent). Pro plan required — runs on our servers.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -162,4 +176,14 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный генератор TypeScript-интерфейсов из JSON онлайн. Конвертируй JSON-объекты в TypeScript интерфейсы. Поддержка вложенных объектов и массивов.',
   'lorem-ipsum':
     'Бесплатный генератор Lorem Ipsum онлайн. Создавай текст-заглушку в виде абзацев, предложений или слов. Настраиваемое количество, классический и случайный режим.',
+  'java-decompiler':
+    'Онлайн Java декомпилятор. Загружай .class и .jar файлы и мгновенно получай читаемый исходный код Java. Работает на базе Vineflower — того же движка, что в IntelliJ IDEA. Требуется Pro-план.',
+  'java-stack-trace':
+    'Бесплатная раскраска Java stack trace онлайн. Выделяй исключения, отличай свой код от библиотечных фреймов, находи root cause и цепочки Caused by. Работает в браузере.',
+  'properties-yaml':
+    'Бесплатный конвертер Spring Boot онлайн. Конвертируй application.properties в application.yml и обратно. Вложенные ключи, массивы, корректные правила кавычек YAML.',
+  'java-format-string':
+    'Бесплатный тестер Java format string онлайн. Живой предпросмотр String.format и MessageFormat. Поддержка %s, %d, %f, флагов, ширины, точности и синтаксиса {0,number,currency}.',
+  'java-formatter':
+    'Онлайн форматтер Java-кода на базе google-java-format. Форматируй исходный код по Google-стилю (2 пробела) или AOSP-стилю (4 пробела). Требуется Pro-план.',
 };

@@ -1,0 +1,392 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'вставьте stack trace сюда…' : 'paste your stack trace here…',
+  phOut: isRu ? '// результат появится здесь' : '// beautified output appears here',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  total: isRu ? 'фреймов' : 'frames',
+  user: isRu ? 'user' : 'user',
+};
+---
+
+<style is:global>
+  .st {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .st-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .st-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .st-status.ok {
+    color: var(--good);
+  }
+
+  .st-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .st-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .st-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .st-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 380px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .st-in {
+    resize: none;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    background: var(--surface-sunken);
+    padding: 14px 16px;
+    width: 100%;
+    box-sizing: border-box;
+    height: 100%;
+  }
+
+  .st-vsep {
+    background: var(--line);
+  }
+
+  .st-out-wrap {
+    overflow: auto;
+    background: var(--surface-sunken);
+  }
+
+  .st-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--ink-soft);
+  }
+
+  /* token colours */
+  .st-ph {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .st-exc {
+    color: var(--bad);
+    font-weight: 600;
+  }
+  .st-thr {
+    color: var(--ink-faint);
+  }
+  .st-msg {
+    color: var(--ink);
+  }
+  .st-cb {
+    color: oklch(65% 0.17 50);
+    font-weight: 600;
+  }
+  .st-at {
+    color: var(--ink-faint);
+  }
+  .st-user {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .st-lib {
+    color: var(--ink-faint);
+  }
+  .st-more {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  @media (max-width: 760px) {
+    .st-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px auto;
+      max-height: none;
+    }
+    .st-in {
+      min-height: 200px;
+      height: 200px;
+    }
+    .st-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .st-out-wrap {
+      max-height: 340px;
+    }
+  }
+</style>
+
+<div class="st">
+  <div class="st-bar">
+    <span class="st-status" id="stStatus">&nbsp;</span>
+    <span class="local-badge">// browser</span>
+    <button class="st-action" id="stCopy" style="display:none">
+      <i class="ti ti-copy"></i>{t.copy}
+    </button>
+    <button class="st-action" id="stClear">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+  </div>
+  <div class="st-body">
+    <textarea class="st-in" id="stIn" spellcheck="false" autocomplete="off" placeholder={t.ph}
+    ></textarea>
+    <div class="st-vsep"></div>
+    <div class="st-out-wrap">
+      <pre class="st-out" id="stOut"><span class="st-ph">{t.phOut}</span></pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('stIn');
+    var outEl = document.getElementById('stOut');
+    var statusEl = document.getElementById('stStatus');
+    var copyBtn = document.getElementById('stCopy');
+    var clearBtn = document.getElementById('stClear');
+
+    var LIB = [
+      'java.',
+      'javax.',
+      'sun.',
+      'com.sun.',
+      'jdk.',
+      'org.springframework.',
+      'org.apache.',
+      'com.google.',
+      'io.netty.',
+      'io.vertx.',
+      'org.hibernate.',
+      'com.fasterxml.',
+      'org.slf4j.',
+      'ch.qos.',
+      'org.junit.',
+      'org.testng.',
+      'org.mockito.',
+      'org.assertj.',
+      'kotlin.',
+      'kotlinx.',
+      'io.micronaut.',
+      'io.quarkus.',
+      'com.intellij.',
+      'reactor.core.',
+      'io.reactor.',
+    ];
+
+    function isLib(frame) {
+      for (var i = 0; i < LIB.length; i++) {
+        if (frame.startsWith(LIB[i])) return true;
+      }
+      return frame.startsWith('$');
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderExcLine(trimmed, html, firstExc) {
+      // "Exception in thread" prefix
+      var threadMatch = trimmed.match(/^(Exception in thread "([^"]*)")\s+(.+)$/);
+      if (threadMatch) {
+        var rest = threadMatch[3];
+        var ci = rest.indexOf(':');
+        var excClass = ci >= 0 ? rest.slice(0, ci) : rest;
+        var msg = ci >= 0 ? rest.slice(ci) : '';
+        if (!firstExc[0]) firstExc[0] = excClass;
+        html.push(
+          '<span class="st-thr">' +
+            esc(threadMatch[1]) +
+            ' </span>' +
+            '<span class="st-exc">' +
+            esc(excClass) +
+            '</span>' +
+            '<span class="st-msg">' +
+            esc(msg) +
+            '</span>'
+        );
+        return;
+      }
+      // Caused by
+      if (trimmed.startsWith('Caused by:')) {
+        var rest = trimmed.slice('Caused by:'.length);
+        var ci = rest.indexOf(':');
+        if (ci >= 0) {
+          html.push(
+            '<span class="st-cb">Caused by:</span>' +
+              '<span class="st-exc">' +
+              esc(rest.slice(0, ci)) +
+              '</span>' +
+              '<span class="st-msg">' +
+              esc(rest.slice(ci)) +
+              '</span>'
+          );
+        } else {
+          html.push(
+            '<span class="st-cb">Caused by:</span><span class="st-exc">' + esc(rest) + '</span>'
+          );
+        }
+        return;
+      }
+      // Generic exception header
+      var looksLike = /^[\w$.]+(?:Exception|Error|Throwable|Fault)/.test(trimmed);
+      var ci = trimmed.indexOf(':');
+      if (looksLike && ci > 0) {
+        var excClass = trimmed.slice(0, ci);
+        if (!firstExc[0]) firstExc[0] = excClass;
+        html.push(
+          '<span class="st-exc">' +
+            esc(excClass) +
+            '</span><span class="st-msg">' +
+            esc(trimmed.slice(ci)) +
+            '</span>'
+        );
+      } else if (looksLike) {
+        if (!firstExc[0]) firstExc[0] = trimmed;
+        html.push('<span class="st-exc">' + esc(trimmed) + '</span>');
+      } else {
+        html.push(esc(trimmed));
+      }
+    }
+
+    function render(raw) {
+      if (!raw.trim()) {
+        outEl.innerHTML = '<span class="st-ph">' + esc(t.phOut) + '</span>';
+        statusEl.textContent = ' ';
+        statusEl.className = 'st-status';
+        copyBtn.style.display = 'none';
+        return;
+      }
+
+      var lines = raw.split('\n');
+      var html = [];
+      var userCount = 0;
+      var totalFrames = 0;
+      var firstExc = [''];
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+
+        if (!trimmed) {
+          html.push('');
+          continue;
+        }
+
+        if (/^\.\.\. \d+ more$/.test(trimmed)) {
+          html.push('<span class="st-more">' + esc(trimmed) + '</span>');
+          continue;
+        }
+
+        var atMatch = trimmed.match(/^at (.+)$/);
+        if (atMatch) {
+          totalFrames++;
+          var frame = atMatch[1];
+          if (!isLib(frame)) {
+            userCount++;
+            html.push(
+              '<span class="st-at">\tat </span><span class="st-user">' + esc(frame) + '</span>'
+            );
+          } else {
+            html.push(
+              '<span class="st-at">\tat </span><span class="st-lib">' + esc(frame) + '</span>'
+            );
+          }
+          continue;
+        }
+
+        renderExcLine(trimmed, html, firstExc);
+      }
+
+      outEl.innerHTML = html.join('\n');
+      copyBtn.style.display = '';
+
+      var excShort = firstExc[0] ? firstExc[0].split('.').pop() : '';
+      if (totalFrames > 0) {
+        statusEl.textContent =
+          (excShort ? excShort + ' · ' : '') +
+          userCount +
+          ' ' +
+          t.user +
+          ' / ' +
+          totalFrames +
+          ' ' +
+          t.total;
+      } else {
+        statusEl.textContent = excShort || '// ok';
+      }
+      statusEl.className = 'st-status ok';
+    }
+
+    inEl.addEventListener('input', function () {
+      render(inEl.value);
+    });
+
+    copyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(outEl.innerText).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      render('');
+      inEl.focus();
+    });
+  })();
+</script>

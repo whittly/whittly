@@ -52,6 +52,10 @@ export const PRO_HINTS: Record<Lang, Record<string, string[]>> = {
     'number-base-converter': ['bulk conversion', 'history sync'],
     'string-inspector': ['history sync', 'bulk analysis via API'],
     'csv-json': ['bulk file conversion', 'files over 10 MB'],
+    'java-decompiler': ['decompile .jar files', 'API access for CI pipelines'],
+    'java-stack-trace': ['history sync', 'bulk analysis via API'],
+    'properties-yaml': ['bulk file conversion', 'history sync'],
+    'java-format-string': ['history sync', 'bulk generation via API'],
   },
   ru: {
     'json-formatter': ['пакетное форматирование', 'файлы больше 100 МБ'],
@@ -76,5 +80,9 @@ export const PRO_HINTS: Record<Lang, Record<string, string[]>> = {
     'number-base-converter': ['пакетная конвертация', 'синхронизация истории'],
     'string-inspector': ['синхронизация истории', 'пакетный анализ через API'],
     'csv-json': ['пакетная конвертация файлов', 'файлы больше 10 МБ'],
+    'java-decompiler': ['декомпиляция .jar файлов', 'API для CI-пайплайнов'],
+    'java-stack-trace': ['синхронизация истории', 'пакетный анализ через API'],
+    'properties-yaml': ['пакетная конвертация файлов', 'синхронизация истории'],
+    'java-format-string': ['синхронизация истории', 'пакетная генерация через API'],
   },
 };

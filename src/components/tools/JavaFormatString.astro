@@ -1,0 +1,560 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  fmtPh: isRu
+    ? 'введите строку формата, например: Hello %s, age %d, score %.2f%%'
+    : 'enter format string, e.g. Hello %s, age %d, score %.2f%%',
+  argPh: isRu ? 'значение' : 'value',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  previewPh: isRu ? '// предпросмотр появится здесь' : '// preview appears here',
+  noArgs: isRu ? '// нет аргументов' : '// no format args detected',
+  modeStr: 'String.format',
+  modeMsg: 'MessageFormat',
+  argLabel: isRu ? 'арг.' : 'arg',
+};
+---
+
+<style is:global>
+  .jfs {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jfs-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jfs-modes {
+    display: flex;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .jfs-mode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    border: none;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .jfs-mode + .jfs-mode {
+    border-left: 0.5px solid var(--line);
+  }
+  .jfs-mode.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .jfs-spacer {
+    flex: 1;
+  }
+
+  .jfs-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .jfs-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jfs-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .jfs-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jfs-fmt-row {
+    padding: 14px 16px 0;
+  }
+
+  .jfs-fmt-in {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface-sunken);
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    min-height: 60px;
+  }
+  .jfs-fmt-in:focus {
+    border-color: var(--accent);
+  }
+
+  .jfs-args {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 36px;
+  }
+
+  .jfs-arg-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .jfs-arg-idx {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    width: 32px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .jfs-arg-spec {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    min-width: 48px;
+    text-align: center;
+  }
+
+  .jfs-arg-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    width: 80px;
+  }
+
+  .jfs-arg-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    flex: 1;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    min-width: 0;
+  }
+  .jfs-arg-val:focus {
+    border-color: var(--accent);
+  }
+
+  .jfs-sep {
+    height: 0.5px;
+    background: var(--line);
+    margin: 0 16px;
+  }
+
+  .jfs-preview-wrap {
+    padding: 14px 16px;
+    background: var(--surface-sunken);
+    min-height: 56px;
+  }
+
+  .jfs-preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+  }
+
+  .jfs-preview-ph {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .jfs-preview-err {
+    color: var(--bad);
+  }
+
+  .jfs-preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    gap: 8px;
+    border-top: 0.5px solid var(--line);
+  }
+</style>
+
+<div class="jfs">
+  <div class="jfs-bar">
+    <div class="jfs-modes" id="jfsModes">
+      <button class="jfs-mode active" data-mode="str">{t.modeStr}</button>
+      <button class="jfs-mode" data-mode="msg">{t.modeMsg}</button>
+    </div>
+    <span class="jfs-spacer"></span>
+    <span class="local-badge">// browser</span>
+    <button class="jfs-action" id="jfsClear">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+  </div>
+
+  <div class="jfs-body">
+    <div class="jfs-fmt-row">
+      <textarea
+        class="jfs-fmt-in"
+        id="jfsFmt"
+        rows="2"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder={t.fmtPh}></textarea>
+    </div>
+
+    <div class="jfs-args" id="jfsArgs"></div>
+
+    <div class="jfs-sep"></div>
+
+    <div class="jfs-preview-wrap">
+      <pre
+        class="jfs-preview"
+        id="jfsPreview"><span class="jfs-preview-ph">{t.previewPh}</span></pre>
+    </div>
+
+    <div class="jfs-preview-actions">
+      <button class="jfs-action" id="jfsCopy" style="display:none">
+        <i class="ti ti-copy"></i>{t.copy}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var fmtEl = document.getElementById('jfsFmt');
+    var argsEl = document.getElementById('jfsArgs');
+    var previewEl = document.getElementById('jfsPreview');
+    var modesEl = document.getElementById('jfsModes');
+    var copyBtn = document.getElementById('jfsCopy');
+    var clearBtn = document.getElementById('jfsClear');
+
+    var mode = 'str'; // 'str' | 'msg'
+    var argInputs = {}; // idx → input element
+
+    /* ── String.format parser ── */
+    var STR_RE = /%(?:(\d+)\$)?([-+0 ,(]*)(\d+)?(?:\.(\d+))?([sdfcbxXoOeEaAnhH%])/g;
+
+    function parseStrArgs(fmt) {
+      var args = [];
+      var seen = {};
+      var auto = 0;
+      var m;
+      STR_RE.lastIndex = 0;
+      while ((m = STR_RE.exec(fmt)) !== null) {
+        var conv = m[5];
+        if (conv === '%' || conv === 'n') continue;
+        var idx = m[1] ? +m[1] - 1 : auto++;
+        if (!seen[idx]) {
+          seen[idx] = true;
+          args.push({ idx: idx, spec: m[0], conv: conv, flags: m[2], width: m[3], prec: m[4] });
+        }
+      }
+      return args.sort(function (a, b) {
+        return a.idx - b.idx;
+      });
+    }
+
+    function convType(conv) {
+      switch (conv.toLowerCase()) {
+        case 's':
+          return 'String';
+        case 'd':
+          return 'int';
+        case 'f':
+        case 'e':
+        case 'a':
+          return 'double';
+        case 'b':
+          return 'boolean';
+        case 'c':
+          return 'char';
+        case 'x':
+        case 'o':
+          return 'int (hex/oct)';
+        case 'h':
+          return 'hashCode';
+        default:
+          return 'Object';
+      }
+    }
+
+    function javaFormat(fmt, values) {
+      STR_RE.lastIndex = 0;
+      var auto = 0;
+      return fmt.replace(STR_RE, function (match, idxStr, flags, widthStr, precStr, conv) {
+        if (conv === '%') return '%';
+        if (conv === 'n') return '\n';
+        var idx = idxStr ? +idxStr - 1 : auto++;
+        var raw = values[idx] !== undefined ? values[idx] : '';
+        var width = widthStr ? +widthStr : 0;
+        var prec = precStr !== undefined ? +precStr : -1;
+        var lft = flags.indexOf('-') >= 0;
+        var zero = flags.indexOf('0') >= 0;
+        var plus = flags.indexOf('+') >= 0;
+        var comma = flags.indexOf(',') >= 0;
+        var paren = flags.indexOf('(') >= 0;
+        var out = '';
+        var lc = conv.toLowerCase();
+
+        if (lc === 's') {
+          out = raw === '' ? 'null' : String(raw);
+          if (conv === 'S') out = out.toUpperCase();
+          if (prec >= 0) out = out.slice(0, prec);
+        } else if (lc === 'd') {
+          var n = parseInt(raw) || 0;
+          var neg = n < 0;
+          var s = Math.abs(n).toString();
+          if (comma) s = s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          out = paren && neg ? '(' + s + ')' : neg ? '-' + s : plus ? '+' + s : s;
+        } else if (lc === 'f') {
+          var f = parseFloat(raw) || 0;
+          var neg = f < 0;
+          var p = prec >= 0 ? prec : 6;
+          var s = Math.abs(f).toFixed(p);
+          if (comma) {
+            var pts = s.split('.');
+            pts[0] = pts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            s = pts.join('.');
+          }
+          out = paren && neg ? '(' + s + ')' : neg ? '-' + s : plus ? '+' + s : s;
+        } else if (lc === 'e') {
+          var p = prec >= 0 ? prec : 6;
+          out = (parseFloat(raw) || 0).toExponential(p);
+          if (conv === 'E') out = out.toUpperCase();
+        } else if (lc === 'x') {
+          out = Math.abs(parseInt(raw) || 0).toString(16);
+          if (conv === 'X') out = out.toUpperCase();
+        } else if (lc === 'o') {
+          out = (parseInt(raw) || 0).toString(8);
+        } else if (lc === 'b') {
+          out = !raw || raw === 'false' || raw === 'null' ? 'false' : 'true';
+          if (conv === 'B') out = out.toUpperCase();
+        } else if (lc === 'c') {
+          out = raw.length > 0 ? raw[0] : '?';
+          if (conv === 'C') out = out.toUpperCase();
+        } else if (lc === 'h') {
+          out = raw
+            ? (
+                raw.split('').reduce(function (h, c) {
+                  return (h * 31 + c.charCodeAt(0)) | 0;
+                }, 0) >>> 0
+              ).toString(16)
+            : 'null';
+          if (conv === 'H') out = out.toUpperCase();
+        } else {
+          return match;
+        }
+
+        if (width > 0 && out.length < width) {
+          var pad = width - out.length;
+          var ch = zero && !lft ? '0' : ' ';
+          if (lft) out = out + ' '.repeat(pad);
+          else if (zero && (out[0] === '-' || out[0] === '+'))
+            out = out[0] + '0'.repeat(pad) + out.slice(1);
+          else out = ch.repeat(pad) + out;
+        }
+        return out;
+      });
+    }
+
+    /* ── MessageFormat parser ── */
+    var MSG_RE = /\{(\d+)(?:,([^}]*))?\}/g;
+
+    function parseMsgArgs(fmt) {
+      var args = [];
+      var seen = {};
+      var m;
+      MSG_RE.lastIndex = 0;
+      while ((m = MSG_RE.exec(fmt)) !== null) {
+        var idx = +m[1];
+        if (!seen[idx]) {
+          seen[idx] = true;
+          var sub = (m[2] || '').split(',');
+          args.push({ idx: idx, spec: m[0], type: sub[0] || 'string', style: sub[1] || '' });
+        }
+      }
+      return args.sort(function (a, b) {
+        return a.idx - b.idx;
+      });
+    }
+
+    function msgFormat(fmt, values) {
+      MSG_RE.lastIndex = 0;
+      return fmt.replace(MSG_RE, function (match, idxStr, sub) {
+        var idx = +idxStr;
+        var raw = values[idx] !== undefined ? values[idx] : '';
+        var parts = (sub || '').split(',');
+        var type = parts[0] || '';
+        var style = parts[1] || '';
+        if (type === 'number') {
+          var n = parseFloat(raw) || 0;
+          if (style === 'currency')
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+          if (style === 'percent') return (n * 100).toFixed(0) + '%';
+          if (style === 'integer') return Math.round(n).toString();
+          return n.toLocaleString();
+        }
+        if (type === 'date' || type === 'time') {
+          try {
+            var d = raw ? new Date(raw) : new Date();
+            return type === 'date' ? d.toLocaleDateString() : d.toLocaleTimeString();
+          } catch (_) {
+            return raw;
+          }
+        }
+        return String(raw);
+      });
+    }
+
+    /* ── UI ── */
+    function buildArgRows(args) {
+      // Preserve existing values
+      var oldVals = {};
+      Object.keys(argInputs).forEach(function (k) {
+        oldVals[k] = argInputs[k].value;
+      });
+      argInputs = {};
+      argsEl.innerHTML = '';
+
+      if (!args.length) return;
+
+      args.forEach(function (arg) {
+        var row = document.createElement('div');
+        row.className = 'jfs-arg-row';
+
+        var idxSpan = document.createElement('span');
+        idxSpan.className = 'jfs-arg-idx';
+        idxSpan.textContent = arg.idx + 1 + '.';
+
+        var specSpan = document.createElement('span');
+        specSpan.className = 'jfs-arg-spec';
+        specSpan.textContent = arg.spec;
+
+        var typeSpan = document.createElement('span');
+        typeSpan.className = 'jfs-arg-type';
+        typeSpan.textContent = arg.conv ? convType(arg.conv) : arg.type || 'string';
+
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'jfs-arg-val';
+        inp.placeholder = t.argPh + ' ' + (arg.idx + 1);
+        inp.value = oldVals[arg.idx] || '';
+        inp.addEventListener('input', updatePreview);
+
+        argInputs[arg.idx] = inp;
+
+        row.appendChild(idxSpan);
+        row.appendChild(specSpan);
+        row.appendChild(typeSpan);
+        row.appendChild(inp);
+        argsEl.appendChild(row);
+      });
+    }
+
+    function getValues() {
+      var vals = {};
+      Object.keys(argInputs).forEach(function (k) {
+        vals[+k] = argInputs[k].value;
+      });
+      return vals;
+    }
+
+    function updatePreview() {
+      var fmt = fmtEl.value;
+      if (!fmt.trim()) {
+        previewEl.innerHTML = '<span class="jfs-preview-ph">' + t.previewPh + '</span>';
+        copyBtn.style.display = 'none';
+        return;
+      }
+      var vals = getValues();
+      try {
+        var result = mode === 'str' ? javaFormat(fmt, vals) : msgFormat(fmt, vals);
+        previewEl.textContent = result;
+        copyBtn.style.display = '';
+      } catch (e) {
+        previewEl.innerHTML =
+          '<span class="jfs-preview-err">// error: ' + String(e.message) + '</span>';
+        copyBtn.style.display = 'none';
+      }
+    }
+
+    function onFmtChange() {
+      var fmt = fmtEl.value;
+      var args = mode === 'str' ? parseStrArgs(fmt) : parseMsgArgs(fmt);
+      buildArgRows(args);
+      updatePreview();
+    }
+
+    fmtEl.addEventListener('input', onFmtChange);
+
+    /* ── mode toggle ── */
+    modesEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.jfs-mode');
+      if (!btn) return;
+      mode = btn.dataset.mode;
+      modesEl.querySelectorAll('.jfs-mode').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      onFmtChange();
+    });
+
+    /* ── copy / clear ── */
+    copyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(previewEl.textContent).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1600);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      fmtEl.value = '';
+      onFmtChange();
+      fmtEl.focus();
+    });
+  })();
+</script>
