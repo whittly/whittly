@@ -12,6 +12,8 @@ const t = {
   copy: isRu ? 'копировать' : 'copy',
   copied: isRu ? 'скопировано' : 'copied',
   clear: isRu ? 'очистить' : 'clear',
+  expand: isRu ? 'развернуть' : 'expand',
+  collapse: isRu ? 'свернуть' : 'collapse',
   phOut: isRu ? '// исходный код появится здесь' : '// decompiled source appears here',
   errProRequired: isRu
     ? '// требуется Pro — войдите и подключите план'
@@ -84,9 +86,9 @@ const t = {
 
   .jdc-body {
     display: grid;
-    grid-template-columns: 1fr 1px 1fr;
-    min-height: 380px;
-    max-height: calc(100vh - 340px);
+    grid-template-columns: 1fr 1px 2fr;
+    min-height: 480px;
+    max-height: calc(100vh - 260px);
   }
 
   /* ── Left panel: drop zone ── */
@@ -220,12 +222,12 @@ const t = {
   .jdc-out {
     padding: 14px 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.65;
     margin: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: pre;
     color: var(--ink-soft);
+    min-width: max-content;
   }
 
   .jdc-out .jdc-ph {
@@ -275,6 +277,17 @@ const t = {
     }
   }
 
+  .jdc.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    border-radius: 0;
+    border: none;
+  }
+  .jdc.fullscreen .jdc-body {
+    max-height: calc(100vh - 49px);
+  }
+
   @media (max-width: 760px) {
     .jdc-body {
       grid-template-columns: 1fr;
@@ -313,6 +326,9 @@ const t = {
     </button>
     <button class="jdc-action" id="jdcClear" style="display:none">
       <i class="ti ti-x"></i>{t.clear}
+    </button>
+    <button class="jdc-action" id="jdcExpand" title={t.expand}>
+      <i class="ti ti-arrows-maximize"></i>
     </button>
   </div>
   <div class="jdc-body">
@@ -421,6 +437,7 @@ const t = {
     var statusEl = document.getElementById('jdcStatus');
     var copyBtn = document.getElementById('jdcCopy');
     var clearBtn = document.getElementById('jdcClear');
+    var expandBtn = document.getElementById('jdcExpand');
 
     var selectedFile = null;
     var lastSource = '';
@@ -612,6 +629,19 @@ const t = {
       statusEl.className = 'jdc-status';
     });
 
+    /* ── Fullscreen ── */
+    var isFullscreen = false;
+    function toggleFullscreen() {
+      isFullscreen = !isFullscreen;
+      tool.classList.toggle('fullscreen', isFullscreen);
+      document.body.style.overflow = isFullscreen ? 'hidden' : '';
+      expandBtn.title = isFullscreen ? t.collapse : t.expand;
+      expandBtn.querySelector('i').className = isFullscreen
+        ? 'ti ti-arrows-minimize'
+        : 'ti ti-arrows-maximize';
+    }
+    expandBtn.addEventListener('click', toggleFullscreen);
+
     /* ── Keyboard shortcuts ── */
     document.addEventListener('keydown', function (e) {
       var toolEl = document.querySelector('.jdc');
@@ -619,6 +649,10 @@ const t = {
       var pal = document.getElementById('whPalette');
       if (pal && pal.classList.contains('active')) return;
       var mod = e.ctrlKey || e.metaKey;
+      if (e.key === 'Escape' && isFullscreen) {
+        toggleFullscreen();
+        return;
+      }
       if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         if (lastSource) copyBtn.click();
