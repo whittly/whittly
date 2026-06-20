@@ -5,7 +5,7 @@ import '@/styles/premium.css';
 
 <Base
   title="поддержка и pro — whittly"
-  description="Простые и честные цены. Базовые инструменты бесплатны навсегда. Pro — пакетная обработка, история, пресеты, тёмная тема и многое другое."
+  description="Простые и честные цены. Базовые инструменты бесплатны навсегда. Pro — пакетная обработка, история, пресеты, большие файлы и многое другое."
 >
   <header class="premium-hero">
     <div class="badge"><span class="badge-dot"></span><span>pro-планы и цены</span></div>
@@ -68,11 +68,10 @@ import '@/styles/premium.css';
         <li>файлы до 100 МБ</li>
         <li>импорт и экспорт истории в JSON</li>
         <li>импорт HAR в curl converter</li>
-        <li>тёмная тема</li>
       </ul>
       <button class="plan-cta filled" id="proSubscribeBtn">подключить pro →</button>
       <div class="plan-cta-hint" id="proHint"></div>
-      <div class="plan-onetime">единоразовый платёж · без автопродления</div>
+      <div class="plan-onetime">ежемесячная подписка · отменить можно в любой момент</div>
     </div>
 
     <div class="plan-card">
@@ -190,6 +189,11 @@ import '@/styles/premium.css';
       const el = document.getElementById(id)!;
       el.style.display = isAnnual ? 'inline' : 'none';
     });
+    const oneTime = document.querySelector('.plan-onetime') as HTMLElement | null;
+    if (oneTime)
+      oneTime.textContent = isAnnual
+        ? 'ежегодная подписка · отменить можно в любой момент'
+        : 'ежемесячная подписка · отменить можно в любой момент';
   });
 
   // Pro subscribe button

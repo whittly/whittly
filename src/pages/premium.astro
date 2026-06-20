@@ -67,11 +67,10 @@ import '../styles/premium.css';
         <li>import &amp; export history as JSON</li>
         <li>HAR import in curl converter</li>
         <li>Java decompiler (.class &amp; .jar)</li>
-        <li>dark theme</li>
       </ul>
       <button class="plan-cta filled" id="proSubscribeBtn">get pro →</button>
       <div class="plan-cta-hint" id="proHint"></div>
-      <div class="plan-onetime">one-time payment · no auto-renewal</div>
+      <div class="plan-onetime">monthly subscription · cancel anytime</div>
     </div>
 
     <div class="plan-card">
@@ -190,6 +189,11 @@ import '../styles/premium.css';
       const el = document.getElementById(id)!;
       el.style.display = isAnnual ? 'inline' : 'none';
     });
+    const oneTime = document.querySelector('.plan-onetime') as HTMLElement | null;
+    if (oneTime)
+      oneTime.textContent = isAnnual
+        ? 'annual subscription · cancel anytime'
+        : 'monthly subscription · cancel anytime';
   });
 
   // Pro subscribe button
