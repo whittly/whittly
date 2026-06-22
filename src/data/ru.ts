@@ -37,6 +37,7 @@ export const toolNameRu: Record<string, string> = {
   'bytecode viewer': 'просмотрщик байткода',
   'jwt sign': 'подпись jwt',
   'ssl cert inspector': 'инспектор ssl-сертификатов',
+  'thread dump analyzer': 'анализатор thread dump',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -79,6 +80,7 @@ export const toolDescRu: Record<string, string> = {
   'bytecode viewer': 'инспекция инструкций jvm из .class файлов через javap',
   'jwt sign': 'подпись jwt токенов с hs256, rs256 или es256 через webcrypto',
   'ssl cert inspector': 'разбор pem-сертификатов — subject, issuer, срок действия, fingerprint',
+  'thread dump analyzer': 'разбор вывода jstack — состояния тредов, дедлоки, цепочки блокировок',
 };
 
 export const catLabelRu: Record<string, string> = {

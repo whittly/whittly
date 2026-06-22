@@ -45,6 +45,7 @@ import JavaFormatter from './tools/JavaFormatter.astro';
 import BytecodeViewer from './tools/BytecodeViewer.astro';
 import JwtSign from './tools/JwtSign.astro';
 import SslCertInspector from './tools/SslCertInspector.astro';
+import ThreadDumpAnalyzer from './tools/ThreadDumpAnalyzer.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -86,6 +87,7 @@ const TOOL_MAP: Record<string, any> = {
   'bytecode-viewer': BytecodeViewer,
   'jwt-sign': JwtSign,
   'ssl-cert-inspector': SslCertInspector,
+  'thread-dump-analyzer': ThreadDumpAnalyzer,
 };
 
 interface Props {

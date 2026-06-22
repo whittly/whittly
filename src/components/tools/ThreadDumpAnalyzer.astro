@@ -1,0 +1,711 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'вставьте вывод jstack сюда…' : 'paste jstack output here…',
+  phOut: isRu ? 'анализ появится здесь' : 'analysis appears here',
+  clear: isRu ? 'очистить' : 'clear',
+  threads: isRu ? 'тредов' : 'threads',
+  deadlock: isRu ? 'дедлок' : 'deadlock',
+  deadlocks: isRu ? 'дедлоки' : 'deadlocks',
+  blocked: 'BLOCKED',
+  runnable: 'RUNNABLE',
+  waiting: 'WAITING',
+  timedWaiting: isRu ? 'TIMED_WAIT' : 'TIMED_WAIT',
+  frames: isRu ? 'фреймов' : 'frames',
+  waitingFor: isRu ? 'ждёт блокировку' : 'waiting for lock',
+  holds: isRu ? 'держит' : 'holds',
+  labelState: isRu ? 'состояние' : 'state',
+  daemon: 'daemon',
+};
+---
+
+<style is:global>
+  .tda {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .tda-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .tda-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .tda-status.ok {
+    color: var(--good);
+  }
+  .tda-status.warn {
+    color: var(--bad);
+  }
+
+  .tda-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .tda-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .tda-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 1.4fr;
+    min-height: 420px;
+    max-height: calc(100vh - 320px);
+  }
+
+  .tda-in {
+    resize: none;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    background: var(--surface-sunken);
+    padding: 14px 16px;
+    width: 100%;
+    box-sizing: border-box;
+    height: 100%;
+  }
+
+  .tda-vsep {
+    background: var(--line);
+  }
+
+  .tda-out {
+    overflow-y: auto;
+    background: var(--surface-sunken);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tda-ph {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin: auto;
+    text-align: center;
+  }
+
+  /* summary pills */
+  .tda-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tda-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 0.5px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-soft);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .tda-pill:hover {
+    background: var(--bg);
+  }
+  .tda-pill.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .tda-pill.s-blocked {
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+  .tda-pill.s-blocked.active {
+    background: var(--bad);
+    color: #fff;
+    border-color: var(--bad);
+  }
+  .tda-pill.s-runnable {
+    border-color: var(--good);
+    color: var(--good);
+  }
+  .tda-pill.s-runnable.active {
+    background: var(--good);
+    color: #fff;
+  }
+  .tda-pill.s-deadlock {
+    border-color: var(--bad);
+    color: var(--bad);
+    font-weight: 600;
+  }
+  .tda-pill.s-deadlock.active {
+    background: var(--bad);
+    color: #fff;
+  }
+
+  /* deadlock banner */
+  .tda-deadlock-banner {
+    background: color-mix(in srgb, var(--bad) 10%, transparent);
+    border: 0.5px solid var(--bad);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--bad);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* thread cards */
+  .tda-thread {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .tda-thread.hidden {
+    display: none;
+  }
+
+  .tda-thread-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--surface-sunken);
+    border-bottom: 0.5px solid var(--line);
+    cursor: pointer;
+    user-select: none;
+    flex-wrap: wrap;
+  }
+  .tda-thread-head:hover {
+    background: var(--bg);
+  }
+
+  .tda-thread-name {
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tda-badge {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 0.5px solid currentColor;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tda-badge.s-RUNNABLE {
+    color: var(--good);
+  }
+  .tda-badge.s-BLOCKED {
+    color: var(--bad);
+  }
+  .tda-badge.s-WAITING {
+    color: oklch(65% 0.17 50);
+  }
+  .tda-badge.s-TIMED_WAITING {
+    color: oklch(70% 0.14 60);
+  }
+  .tda-badge.s-daemon {
+    color: var(--ink-faint);
+  }
+
+  .tda-thread-body {
+    padding: 8px 10px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tda-thread.open .tda-thread-body {
+    display: flex;
+  }
+
+  .tda-frame {
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+  .tda-frame.user {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .tda-frame.lock-wait {
+    color: var(--bad);
+  }
+  .tda-frame.lock-hold {
+    color: var(--good);
+  }
+  .tda-frame.more {
+    font-style: italic;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .tda-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px auto;
+      max-height: none;
+    }
+    .tda-in {
+      height: 200px;
+    }
+    .tda-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .tda-out {
+      max-height: 400px;
+    }
+  }
+</style>
+
+<div class="tda">
+  <div class="tda-bar">
+    <span class="tda-status" id="tdaStatus">&nbsp;</span>
+    <span class="local-badge">// browser</span>
+    <button class="tda-action" id="tdaClear">
+      <i class="ti ti-x"></i>{t.clear}
+    </button>
+  </div>
+  <div class="tda-body">
+    <textarea class="tda-in" id="tdaIn" spellcheck="false" autocomplete="off" placeholder={t.ph}
+    ></textarea>
+    <div class="tda-vsep"></div>
+    <div class="tda-out" id="tdaOut">
+      <div class="tda-ph" id="tdaPh">{t.phOut}</div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('tdaIn');
+    var outEl = document.getElementById('tdaOut');
+    var phEl = document.getElementById('tdaPh');
+    var statusEl = document.getElementById('tdaStatus');
+    var clearBtn = document.getElementById('tdaClear');
+
+    var LIB_PREFIXES = [
+      'java.',
+      'javax.',
+      'sun.',
+      'com.sun.',
+      'jdk.',
+      'org.springframework.',
+      'org.apache.',
+      'com.google.',
+      'io.netty.',
+      'org.hibernate.',
+      'com.fasterxml.',
+      'org.slf4j.',
+      'ch.qos.',
+      'org.junit.',
+      'org.mockito.',
+      'kotlin.',
+      'kotlinx.',
+      'io.micronaut.',
+      'io.quarkus.',
+      'reactor.core.',
+      'scala.',
+    ];
+
+    function isLib(frame) {
+      for (var i = 0; i < LIB_PREFIXES.length; i++) {
+        if (frame.startsWith(LIB_PREFIXES[i])) return true;
+      }
+      return frame.startsWith('$');
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Parse a thread block into a structured object
+    function parseThread(lines) {
+      var header = lines[0];
+      // Extract thread name (between first pair of quotes)
+      var nameMatch = header.match(/^"((?:[^"\\]|\\.)*)"/);
+      var name = nameMatch ? nameMatch[1] : header.slice(0, 60);
+      var isDaemon = header.indexOf(' daemon ') !== -1;
+      var numMatch = header.match(/#(\d+)/);
+      var num = numMatch ? numMatch[1] : '';
+
+      var state = 'UNKNOWN';
+      var frames = [];
+      var locks = [];
+
+      for (var i = 1; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+        if (!trimmed) continue;
+
+        var stateMatch = trimmed.match(/java\.lang\.Thread\.State:\s*(\S+)/);
+        if (stateMatch) {
+          state = stateMatch[1];
+          continue;
+        }
+
+        var atMatch = trimmed.match(/^at (.+)$/);
+        if (atMatch) {
+          frames.push({ frame: atMatch[1], lib: isLib(atMatch[1]) });
+          continue;
+        }
+
+        var waitMatch = trimmed.match(/^- waiting to lock <([^>]+)> \(a ([^)]+)\)$/);
+        if (waitMatch) {
+          locks.push({ type: 'wait', id: waitMatch[1], cls: waitMatch[2] });
+          continue;
+        }
+
+        var lockMatch = trimmed.match(/^- locked <([^>]+)> \(a ([^)]+)\)$/);
+        if (lockMatch) {
+          locks.push({ type: 'hold', id: lockMatch[1], cls: lockMatch[2] });
+          continue;
+        }
+      }
+
+      return { name: name, num: num, daemon: isDaemon, state: state, frames: frames, locks: locks };
+    }
+
+    // Parse deadlock section
+    function parseDeadlocks(raw) {
+      var deadlocks = [];
+      var idx = raw.indexOf('Found');
+      while (idx !== -1) {
+        var lineEnd = raw.indexOf('\n', idx);
+        var header = raw.slice(idx, lineEnd >= 0 ? lineEnd : undefined);
+        var m = header.match(/Found (\d+)/);
+        if (m) deadlocks.push(parseInt(m[1], 10));
+        idx = raw.indexOf('Found', lineEnd >= 0 ? lineEnd : raw.length);
+      }
+      return deadlocks.reduce(function (a, b) {
+        return a + b;
+      }, 0);
+    }
+
+    function parse(raw) {
+      if (!raw.trim()) return null;
+
+      // Split into thread blocks — each starts with a line beginning with "
+      var threadBlocks = [];
+      var current = null;
+      var deadlockSection = '';
+      var inDeadlock = false;
+      var lines = raw.split('\n');
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (/^Found \d+ Java-level deadlock/.test(line.trim())) {
+          inDeadlock = true;
+        }
+        if (inDeadlock) {
+          deadlockSection += line + '\n';
+          continue;
+        }
+        // Thread header line: starts with a quoted name
+        if (/^"/.test(line) && line.indexOf('java.lang.Thread.State') === -1) {
+          if (current) threadBlocks.push(current);
+          current = [line];
+        } else if (current) {
+          current.push(line);
+        }
+      }
+      if (current) threadBlocks.push(current);
+
+      var threads = threadBlocks
+        .filter(function (b) {
+          return b.length > 0;
+        })
+        .map(parseThread);
+
+      var deadlockCount = parseDeadlocks(deadlockSection);
+
+      return { threads: threads, deadlockCount: deadlockCount };
+    }
+
+    var activeFilter = 'all';
+
+    function renderThread(th, idx) {
+      var stateShort = th.state.replace('_WAITING', '_WAIT');
+      var badgeClass = 'tda-badge s-' + th.state;
+      var userFrames = th.frames.filter(function (f) {
+        return !f.lib;
+      });
+      var MAX_FRAMES = 6;
+
+      var framesHtml = '';
+      var shown = th.frames.slice(0, MAX_FRAMES);
+      for (var i = 0; i < shown.length; i++) {
+        var f = shown[i];
+        var cls = f.lib ? 'tda-frame' : 'tda-frame user';
+        framesHtml += '<div class="' + cls + '">  at ' + esc(f.frame) + '</div>';
+      }
+      if (th.frames.length > MAX_FRAMES) {
+        framesHtml +=
+          '<div class="tda-frame more">  … ' +
+          (th.frames.length - MAX_FRAMES) +
+          ' more ' +
+          t.frames +
+          '</div>';
+      }
+
+      var locksHtml = '';
+      for (var j = 0; j < th.locks.length; j++) {
+        var l = th.locks[j];
+        if (l.type === 'wait') {
+          locksHtml +=
+            '<div class="tda-frame lock-wait">  ⊘ ' +
+            t.waitingFor +
+            ': ' +
+            esc(l.cls) +
+            ' &lt;' +
+            esc(l.id) +
+            '&gt;</div>';
+        } else {
+          locksHtml +=
+            '<div class="tda-frame lock-hold">  ⊕ ' +
+            t.holds +
+            ': ' +
+            esc(l.cls) +
+            ' &lt;' +
+            esc(l.id) +
+            '&gt;</div>';
+        }
+      }
+
+      var daemonBadge = th.daemon ? '<span class="tda-badge s-daemon">' + t.daemon + '</span>' : '';
+      var threadNum = th.num
+        ? '<span style="color:var(--ink-faint);font-size:11px">#' + esc(th.num) + '</span>'
+        : '';
+
+      return (
+        '<div class="tda-thread" data-state="' +
+        th.state +
+        '" data-idx="' +
+        idx +
+        '">' +
+        '<div class="tda-thread-head" onclick="(function(el){el.closest(\'.tda-thread\').classList.toggle(\'open\')})(this)">' +
+        '<span class="tda-thread-name" title="' +
+        esc(th.name) +
+        '">' +
+        esc(th.name) +
+        '</span>' +
+        threadNum +
+        daemonBadge +
+        '<span class="' +
+        badgeClass +
+        '">' +
+        esc(stateShort) +
+        '</span>' +
+        (userFrames.length
+          ? '<span style="color:var(--ink-faint);font-size:11px">' +
+            userFrames.length +
+            ' user</span>'
+          : '') +
+        '</div>' +
+        '<div class="tda-thread-body">' +
+        locksHtml +
+        framesHtml +
+        '</div>' +
+        '</div>'
+      );
+    }
+
+    function applyFilter(filter) {
+      activeFilter = filter;
+      var threads = outEl.querySelectorAll('.tda-thread');
+      for (var i = 0; i < threads.length; i++) {
+        var el = threads[i];
+        var state = el.getAttribute('data-state');
+        if (filter === 'all' || state === filter) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      }
+      // update pill active state
+      var pills = outEl.querySelectorAll('.tda-pill[data-filter]');
+      for (var j = 0; j < pills.length; j++) {
+        var p = pills[j];
+        if (p.getAttribute('data-filter') === filter) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      }
+    }
+
+    function render(raw) {
+      if (!raw.trim()) {
+        outEl.innerHTML = '';
+        outEl.appendChild(phEl);
+        phEl.style.display = '';
+        statusEl.textContent = ' ';
+        statusEl.className = 'tda-status';
+        return;
+      }
+      phEl.style.display = 'none';
+
+      var result = parse(raw);
+      if (!result || result.threads.length === 0) {
+        outEl.innerHTML =
+          '<div class="tda-ph">// no threads found — paste full jstack output</div>';
+        statusEl.textContent = '// nothing parsed';
+        statusEl.className = 'tda-status';
+        return;
+      }
+
+      var threads = result.threads;
+      var byState = {};
+      for (var i = 0; i < threads.length; i++) {
+        var s = threads[i].state;
+        byState[s] = (byState[s] || 0) + 1;
+      }
+
+      // Build summary pills
+      var pillsHtml =
+        '<div class="tda-summary">' +
+        '<span class="tda-pill active" data-filter="all">' +
+        threads.length +
+        ' ' +
+        t.threads +
+        '</span>';
+
+      var stateOrder = ['BLOCKED', 'RUNNABLE', 'WAITING', 'TIMED_WAITING'];
+      var stateClass = {
+        BLOCKED: 's-blocked',
+        RUNNABLE: 's-runnable',
+        WAITING: '',
+        TIMED_WAITING: '',
+      };
+      for (var si = 0; si < stateOrder.length; si++) {
+        var st = stateOrder[si];
+        if (byState[st]) {
+          pillsHtml +=
+            '<span class="tda-pill ' +
+            (stateClass[st] || '') +
+            '" data-filter="' +
+            st +
+            '">' +
+            byState[st] +
+            ' ' +
+            st.replace('_WAITING', '_WAIT') +
+            '</span>';
+        }
+      }
+      if (result.deadlockCount > 0) {
+        pillsHtml +=
+          '<span class="tda-pill s-deadlock" data-filter="deadlock">⚠ ' +
+          result.deadlockCount +
+          ' ' +
+          (result.deadlockCount === 1 ? t.deadlock : t.deadlocks) +
+          '</span>';
+      }
+      pillsHtml += '</div>';
+
+      // Deadlock banner
+      var bannerHtml = '';
+      if (result.deadlockCount > 0) {
+        bannerHtml =
+          '<div class="tda-deadlock-banner"><i class="ti ti-alert-triangle"></i>' +
+          result.deadlockCount +
+          ' ' +
+          (result.deadlockCount === 1 ? t.deadlock : t.deadlocks) +
+          ' detected</div>';
+      }
+
+      // Thread cards — BLOCKED first, then RUNNABLE, then rest
+      var sorted = threads.slice().sort(function (a, b) {
+        var order = { BLOCKED: 0, RUNNABLE: 1, WAITING: 2, TIMED_WAITING: 3 };
+        return (order[a.state] ?? 4) - (order[b.state] ?? 4);
+      });
+
+      var cardsHtml = '';
+      for (var ti = 0; ti < sorted.length; ti++) {
+        cardsHtml += renderThread(sorted[ti], ti);
+      }
+
+      outEl.innerHTML = pillsHtml + bannerHtml + cardsHtml;
+
+      // Wire up pills
+      var pills = outEl.querySelectorAll('.tda-pill[data-filter]');
+      for (var pi = 0; pi < pills.length; pi++) {
+        (function (pill) {
+          pill.addEventListener('click', function () {
+            applyFilter(pill.getAttribute('data-filter'));
+          });
+        })(pills[pi]);
+      }
+
+      applyFilter('all');
+
+      // Status bar
+      var statusParts = [threads.length + ' ' + t.threads];
+      if (byState['BLOCKED']) statusParts.push(byState['BLOCKED'] + ' BLOCKED');
+      if (result.deadlockCount) statusParts.push('⚠ ' + result.deadlockCount + ' deadlock');
+      statusEl.textContent = statusParts.join(' · ');
+      statusEl.className =
+        'tda-status ' + (result.deadlockCount > 0 || byState['BLOCKED'] ? 'warn' : 'ok');
+    }
+
+    inEl.addEventListener('input', function () {
+      render(inEl.value);
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      render('');
+      inEl.focus();
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input != null) {
+        inEl.value = cfg.input;
+        render(cfg.input);
+      }
+    };
+  })();
+</script>

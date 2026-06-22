@@ -384,6 +384,13 @@ export const CATALOG: Tool[] = [
   },
   {
     cat: 'java',
+    icon: 'ti-activity',
+    name: 'thread dump analyzer',
+    desc: 'parse jstack output — thread states, deadlocks, blocking chains',
+    new: true,
+  },
+  {
+    cat: 'java',
     icon: 'ti-percentage',
     name: 'java format string',
     desc: 'live preview of String.format and MessageFormat output',
