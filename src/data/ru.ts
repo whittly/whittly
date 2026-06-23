@@ -38,6 +38,17 @@ export const toolNameRu: Record<string, string> = {
   'jwt sign': 'подпись jwt',
   'ssl cert inspector': 'инспектор ssl-сертификатов',
   'thread dump analyzer': 'анализатор thread dump',
+  'word counter': 'счётчик слов',
+  'hex encoder': 'hex-кодировщик',
+  'http status': 'http статусы',
+  'unit converter': 'конвертер единиц',
+  'color converter': 'конвертер цветов',
+  'image → webp': 'конвертер в webp',
+  'cidr calculator': 'cidr-калькулятор',
+  'markdown → html': 'markdown → html',
+  'yaml ↔ json': 'yaml ↔ json',
+  'qr code': 'qr-код',
+  'svg optimizer': 'svg-оптимизатор',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -81,6 +92,17 @@ export const toolDescRu: Record<string, string> = {
   'jwt sign': 'подпись jwt токенов с hs256, rs256 или es256 через webcrypto',
   'ssl cert inspector': 'разбор pem-сертификатов — subject, issuer, срок действия, fingerprint',
   'thread dump analyzer': 'разбор вывода jstack — состояния тредов, дедлоки, цепочки блокировок',
+  'word counter': 'символы, слова, строки, время чтения',
+  'hex encoder': 'строка ↔ hex-байты',
+  'http status': 'коды, значения, типичные ошибки',
+  'unit converter': 'длина, масса, температура, данные, скорость',
+  'color converter': 'hex, rgb, hsl, oklch, lab',
+  'image → webp': 'конвертация изображений в webp, управление качеством',
+  'cidr calculator': 'подсети, диапазоны, маски, хосты',
+  'markdown → html': 'рендер с расширениями github-flavor',
+  'yaml ↔ json': 'двусторонний конвертер с поддержкой комментариев',
+  'qr code': 'генерация svg и png qr-кодов в браузере',
+  'svg optimizer': 'удаление комментариев, округление чисел, чистка атрибутов',
 };
 
 export const catLabelRu: Record<string, string> = {
@@ -91,6 +113,8 @@ export const catLabelRu: Record<string, string> = {
   text: 'текст',
   java: 'java',
   data: 'данные',
+  network: 'сеть',
+  image: 'изображения',
 };
 
 export const catDescRu: Record<string, string> = {
@@ -101,4 +125,6 @@ export const catDescRu: Record<string, string> = {
   text: 'работа со строками',
   java: 'декомпиляция, конвертация, отладка java',
   data: 'расписания, парсеры, краевые случаи',
+  network: 'http, dns, адресация',
+  image: 'пиксели, векторы, байты',
 };

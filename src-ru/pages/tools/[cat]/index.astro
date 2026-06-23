@@ -1,0 +1,304 @@
+---
+import Base from '@/layouts/Base.astro';
+import { CATALOG, CAT_META, CAT_ORDER, toolSlug, type Category } from '@/data/catalog';
+import { toolNameRu, toolDescRu, catLabelRu } from '@/data/ru';
+import { CAT_SEO_RU } from '@/data/catSeo';
+import '@/styles/tools-index.css';
+
+export function getStaticPaths() {
+  return Object.keys(CAT_META).map((cat) => ({ params: { cat } }));
+}
+
+const { cat } = Astro.params;
+const category = cat as Category;
+const meta = CAT_META[category];
+const seo = CAT_SEO_RU[category];
+const tools = CATALOG.filter((t) => t.cat === category && !t.soon);
+const allCats = CAT_ORDER.filter(
+  (c) => c !== category && CATALOG.some((t) => t.cat === c && !t.soon)
+);
+
+const SITE = 'https://ru.whittly.dev';
+const pageUrl = `${SITE}/tools/${cat}/`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: seo.seoTitle,
+  description: seo.seoDesc,
+  url: pageUrl,
+  provider: { '@type': 'Organization', name: 'whittly', url: SITE },
+  hasPart: tools.map((t) => ({
+    '@type': 'SoftwareApplication',
+    name: toolNameRu[t.name] ?? t.name,
+    url: `${SITE}/tools/${toolSlug(t)}/`,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Web',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  })),
+};
+
+function toolCount(n: number) {
+  const mod10 = n % 10,
+    mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return `${n} инструментов`;
+  if (mod10 === 1) return `${n} инструмент`;
+  if (mod10 >= 2 && mod10 <= 4) return `${n} инструмента`;
+  return `${n} инструментов`;
+}
+---
+
+<style>
+  .cat-page {
+    padding: 48px 0 80px;
+  }
+
+  .cat-breadcrumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-breadcrumb a {
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.12s;
+  }
+  .cat-breadcrumb a:hover {
+    color: var(--ink);
+  }
+  .cat-breadcrumb .sep {
+    color: var(--line-strong);
+  }
+
+  .cat-hero {
+    margin-bottom: 48px;
+  }
+
+  .cat-hero h1 {
+    margin: 0 0 12px;
+  }
+
+  .cat-hero .subhead {
+    max-width: 640px;
+    margin: 0;
+  }
+
+  .cat-count-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-top: 16px;
+  }
+
+  .cat-info {
+    margin-top: 64px;
+    padding-top: 48px;
+    border-top: 0.5px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px 64px;
+  }
+
+  .cat-info-faq {
+    grid-column: 1 / -1;
+  }
+
+  .cat-info-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    margin-bottom: 16px;
+  }
+
+  .cat-info-about p {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .cat-info-uses ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cat-info-uses li {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .cat-info-uses li::before {
+    content: '→';
+    color: var(--accent);
+    margin-right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+
+  .cat-faq-item {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 0.5px solid var(--line);
+  }
+
+  .cat-faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .cat-faq-q {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .cat-faq-a {
+    font-size: 15.5px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  .cat-related {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 0.5px solid var(--line);
+  }
+
+  .cat-related-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    margin-bottom: 16px;
+  }
+
+  .cat-related-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cat-related-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    transition: all 0.12s;
+  }
+  .cat-related-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .cat-related-pill .pill-count {
+    opacity: 0.5;
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 760px) {
+    .cat-info {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .cat-info-faq {
+      grid-column: 1;
+    }
+  }
+</style>
+
+<Base title={seo.seoTitle} description={seo.seoDesc} jsonLd={jsonLd}>
+  <div class="cat-page">
+    <nav class="cat-breadcrumb">
+      <a href="/tools/">инструменты</a>
+      <span class="sep">/</span>
+      <span>{catLabelRu[category] ?? meta.label}</span>
+    </nav>
+
+    <header class="cat-hero">
+      <h1>{seo.h1}</h1>
+      <p class="subhead">{seo.subhead}</p>
+      <div class="cat-count-line">// {toolCount(tools.length)} в этой категории</div>
+    </header>
+
+    <div class="tool-list">
+      {
+        tools.map((t) => (
+          <a class="tool-row" href={`/tools/${toolSlug(t)}/`}>
+            <i class={`ti ${t.icon} icon`} />
+            <div class="body">
+              <div class="name">
+                {toolNameRu[t.name] ?? t.name}
+                {t.new && <span class="new">new</span>}
+              </div>
+              <div class="desc">{toolDescRu[t.name] ?? t.desc}</div>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="cat-info">
+      <div class="cat-info-about">
+        <div class="cat-info-head">// о категории</div>
+        <p>{seo.about}</p>
+      </div>
+
+      <div class="cat-info-uses">
+        <div class="cat-info-head">// типичные задачи</div>
+        <ul>
+          {seo.useCases.map((uc) => <li>{uc}</li>)}
+        </ul>
+      </div>
+
+      <div class="cat-info-faq">
+        <div class="cat-info-head">// вопросы и ответы</div>
+        {
+          seo.faq.map((item) => (
+            <div class="cat-faq-item">
+              <div class="cat-faq-q">{item.q}</div>
+              <div class="cat-faq-a">{item.a}</div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="cat-related">
+      <div class="cat-related-head">// другие категории</div>
+      <div class="cat-related-grid">
+        {
+          allCats.map((c) => {
+            const count = CATALOG.filter((t) => t.cat === c && !t.soon).length;
+            return (
+              <a class="cat-related-pill" href={`/tools/${c}/`}>
+                {catLabelRu[c] ?? CAT_META[c].label}
+                <span class="pill-count">{count}</span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,510 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  from: isRu ? 'из' : 'from',
+  to: isRu ? 'в' : 'to',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  swap: isRu ? 'поменять' : 'swap',
+  result: isRu ? '// результат появится здесь' : '// result appears here',
+  cats: {
+    length: isRu ? 'длина' : 'length',
+    weight: isRu ? 'масса' : 'weight',
+    temp: isRu ? 'температура' : 'temperature',
+    data: isRu ? 'данные' : 'data',
+    area: isRu ? 'площадь' : 'area',
+    volume: isRu ? 'объём' : 'volume',
+    speed: isRu ? 'скорость' : 'speed',
+    time: isRu ? 'время' : 'time',
+  },
+};
+---
+
+<style is:global>
+  .uc {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .uc-cats {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    scrollbar-width: none;
+  }
+  .uc-cats::-webkit-scrollbar {
+    display: none;
+  }
+
+  .uc-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 9px 14px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition:
+      color 0.12s,
+      border-color 0.12s;
+    user-select: none;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .uc-cat:hover {
+    color: var(--ink-soft);
+  }
+  .uc-cat.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .uc-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .uc-row {
+    display: grid;
+    grid-template-columns: 1fr 36px 1fr;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .uc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .uc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .uc-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .uc-select:focus {
+    border-color: var(--accent);
+  }
+
+  .uc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    padding: 8px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.12s;
+  }
+  .uc-num:focus {
+    border-color: var(--accent);
+  }
+  .uc-num.readonly {
+    background: var(--surface-sunken);
+    color: var(--ink-soft);
+    cursor: default;
+  }
+
+  .uc-swap {
+    background: none;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-size: 16px;
+    transition: all 0.12s;
+    flex-shrink: 0;
+    align-self: end;
+    margin-bottom: 0;
+  }
+  .uc-swap:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .uc-result-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface-sunken);
+    border-radius: 8px;
+    border: 0.5px solid var(--line);
+  }
+
+  .uc-result-val {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--ink);
+    word-break: break-all;
+    min-width: 0;
+  }
+  .uc-result-val.ph {
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+
+  .uc-copy-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .uc-copy-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .uc-copy-btn.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  @media (max-width: 560px) {
+    .uc-row {
+      grid-template-columns: 1fr 30px 1fr;
+      gap: 6px;
+    }
+    .uc-swap {
+      width: 30px;
+      height: 30px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<div class="uc">
+  <div class="uc-cats" id="ucCats"></div>
+  <div class="uc-body">
+    <div class="uc-row">
+      <div class="uc-field">
+        <span class="uc-label">{t.from}</span>
+        <select class="uc-select" id="ucFromUnit"></select>
+        <input class="uc-num" id="ucFromVal" type="number" value="1" step="any" />
+      </div>
+      <button class="uc-swap" id="ucSwap" title={t.swap}
+        ><i class="ti ti-arrows-exchange"></i></button
+      >
+      <div class="uc-field">
+        <span class="uc-label">{t.to}</span>
+        <select class="uc-select" id="ucToUnit"></select>
+        <input class="uc-num readonly" id="ucToVal" type="text" readonly />
+      </div>
+    </div>
+    <div class="uc-result-row">
+      <span class="uc-result-val ph" id="ucResultFull">{t.result}</span>
+      <button class="uc-copy-btn" id="ucCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    // category: [label, units: [key, label, toBase]]
+    // toBase: multiply to get base unit. Temperature uses special functions.
+    var CATS = {
+      length: {
+        label: t.cats.length,
+        base: 'm',
+        units: [
+          ['mm', 'mm', 0.001],
+          ['cm', 'cm', 0.01],
+          ['m', 'm', 1],
+          ['km', 'km', 1000],
+          ['in', 'in', 0.0254],
+          ['ft', 'ft', 0.3048],
+          ['yd', 'yd', 0.9144],
+          ['mi', 'mi', 1609.344],
+          ['nmi', 'nmi', 1852],
+          ['ly', 'ly', 9.461e15],
+        ],
+      },
+      weight: {
+        label: t.cats.weight,
+        base: 'kg',
+        units: [
+          ['mg', 'mg', 1e-6],
+          ['g', 'g', 0.001],
+          ['kg', 'kg', 1],
+          ['t', 't', 1000],
+          ['lb', 'lb', 0.45359237],
+          ['oz', 'oz', 0.02834952],
+          ['st', 'st', 6.35029318],
+        ],
+      },
+      temp: {
+        label: t.cats.temp,
+        base: 'K',
+        units: [
+          ['°C', '°C', null],
+          ['°F', '°F', null],
+          ['K', 'K', null],
+          ['°R', '°R', null],
+        ],
+      },
+      data: {
+        label: t.cats.data,
+        base: 'B',
+        units: [
+          ['b', 'bit', 0.125],
+          ['B', 'byte', 1],
+          ['KB', 'KB', 1000],
+          ['MB', 'MB', 1e6],
+          ['GB', 'GB', 1e9],
+          ['TB', 'TB', 1e12],
+          ['PB', 'PB', 1e15],
+          ['KiB', 'KiB', 1024],
+          ['MiB', 'MiB', 1048576],
+          ['GiB', 'GiB', 1073741824],
+          ['TiB', 'TiB', 1099511627776],
+        ],
+      },
+      area: {
+        label: t.cats.area,
+        base: 'm2',
+        units: [
+          ['mm²', 'mm²', 1e-6],
+          ['cm²', 'cm²', 1e-4],
+          ['m²', 'm²', 1],
+          ['km²', 'km²', 1e6],
+          ['in²', 'in²', 0.00064516],
+          ['ft²', 'ft²', 0.09290304],
+          ['yd²', 'yd²', 0.83612736],
+          ['ac', 'ac', 4046.8564224],
+          ['ha', 'ha', 10000],
+        ],
+      },
+      volume: {
+        label: t.cats.volume,
+        base: 'L',
+        units: [
+          ['ml', 'ml', 0.001],
+          ['cl', 'cl', 0.01],
+          ['dl', 'dl', 0.1],
+          ['L', 'L', 1],
+          ['m³', 'm³', 1000],
+          ['tsp', 'tsp', 0.00492892],
+          ['tbsp', 'tbsp', 0.01478676],
+          ['fl oz', 'fl oz', 0.02957353],
+          ['cup', 'cup', 0.23658824],
+          ['pt', 'pt', 0.47317647],
+          ['qt', 'qt', 0.94635295],
+          ['gal', 'gal', 3.78541178],
+        ],
+      },
+      speed: {
+        label: t.cats.speed,
+        base: 'm/s',
+        units: [
+          ['m/s', 'm/s', 1],
+          ['km/h', 'km/h', 0.27777778],
+          ['mph', 'mph', 0.44704],
+          ['knot', 'knot', 0.51444444],
+          ['ft/s', 'ft/s', 0.3048],
+          ['Mach', 'Mach', 340.29],
+        ],
+      },
+      time: {
+        label: t.cats.time,
+        base: 's',
+        units: [
+          ['ns', 'ns', 1e-9],
+          ['µs', 'µs', 1e-6],
+          ['ms', 'ms', 0.001],
+          ['s', 's', 1],
+          ['min', 'min', 60],
+          ['h', 'h', 3600],
+          ['d', 'd', 86400],
+          ['wk', 'wk', 604800],
+          ['mo', 'mo', 2629746],
+          ['yr', 'yr', 31556952],
+        ],
+      },
+    };
+
+    function toTemp(val, from) {
+      if (from === '°C') return val + 273.15;
+      if (from === '°F') return ((val - 32) * 5) / 9 + 273.15;
+      if (from === '°R') return (val * 5) / 9;
+      return val; // K
+    }
+    function fromTemp(kelvin, to) {
+      if (to === '°C') return kelvin - 273.15;
+      if (to === '°F') return ((kelvin - 273.15) * 9) / 5 + 32;
+      if (to === '°R') return (kelvin * 9) / 5;
+      return kelvin;
+    }
+
+    var catKeys = Object.keys(CATS);
+    var currentCat = catKeys[0];
+    var lastResult = '';
+
+    var catsEl = document.getElementById('ucCats');
+    var fromUnitEl = document.getElementById('ucFromUnit');
+    var toUnitEl = document.getElementById('ucToUnit');
+    var fromValEl = document.getElementById('ucFromVal');
+    var toValEl = document.getElementById('ucToVal');
+    var swapBtn = document.getElementById('ucSwap');
+    var resultEl = document.getElementById('ucResultFull');
+    var copyBtn = document.getElementById('ucCopy');
+
+    catKeys.forEach(function (key) {
+      var btn = document.createElement('button');
+      btn.className = 'uc-cat' + (key === currentCat ? ' active' : '');
+      btn.textContent = CATS[key].label;
+      btn.dataset.cat = key;
+      btn.addEventListener('click', function () {
+        selectCat(key);
+      });
+      catsEl.appendChild(btn);
+    });
+
+    function populateUnits(cat) {
+      var units = CATS[cat].units;
+      [fromUnitEl, toUnitEl].forEach(function (el, i) {
+        el.innerHTML = '';
+        units.forEach(function (u) {
+          var opt = document.createElement('option');
+          opt.value = u[0];
+          opt.textContent = u[1];
+          el.appendChild(opt);
+        });
+        el.value = units[i === 0 ? 0 : units.length > 1 ? 1 : 0][0];
+      });
+    }
+
+    function selectCat(cat) {
+      currentCat = cat;
+      catsEl.querySelectorAll('.uc-cat').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.cat === cat);
+      });
+      populateUnits(cat);
+      convert();
+    }
+
+    function fmt(n) {
+      if (!isFinite(n)) return 'error';
+      if (Math.abs(n) === 0) return '0';
+      if (Math.abs(n) >= 1e-4 && Math.abs(n) < 1e15) {
+        var s = parseFloat(n.toPrecision(10)).toString();
+        return s;
+      }
+      return n.toExponential(6);
+    }
+
+    function convert() {
+      var rawVal = parseFloat(fromValEl.value);
+      var fromKey = fromUnitEl.value;
+      var toKey = toUnitEl.value;
+      var cat = CATS[currentCat];
+
+      if (isNaN(rawVal)) {
+        toValEl.value = '';
+        resultEl.textContent = t.result;
+        resultEl.className = 'uc-result-val ph';
+        lastResult = '';
+        return;
+      }
+
+      var result;
+      if (currentCat === 'temp') {
+        result = fromTemp(toTemp(rawVal, fromKey), toKey);
+      } else {
+        var fromFactor = cat.units.find(function (u) {
+          return u[0] === fromKey;
+        })[2];
+        var toFactor = cat.units.find(function (u) {
+          return u[0] === toKey;
+        })[2];
+        result = (rawVal * fromFactor) / toFactor;
+      }
+
+      var str = fmt(result);
+      toValEl.value = str;
+      lastResult = str + ' ' + toKey;
+      resultEl.textContent = rawVal + ' ' + fromKey + ' = ' + str + ' ' + toKey;
+      resultEl.className = 'uc-result-val';
+    }
+
+    populateUnits(currentCat);
+    convert();
+
+    fromValEl.addEventListener('input', convert);
+    fromUnitEl.addEventListener('change', convert);
+    toUnitEl.addEventListener('change', convert);
+
+    swapBtn.addEventListener('click', function () {
+      var tmp = fromUnitEl.value;
+      fromUnitEl.value = toUnitEl.value;
+      toUnitEl.value = tmp;
+      var tv = toValEl.value;
+      if (tv) fromValEl.value = tv;
+      convert();
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastResult) return;
+      navigator.clipboard.writeText(lastResult).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    window.toolGetPreset = function () {
+      return { cat: currentCat, from: fromUnitEl.value, to: toUnitEl.value, val: fromValEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.cat && CATS[cfg.cat]) selectCat(cfg.cat);
+      if (cfg.from) fromUnitEl.value = cfg.from;
+      if (cfg.to) toUnitEl.value = cfg.to;
+      if (cfg.val !== undefined) fromValEl.value = cfg.val;
+      convert();
+    };
+  })();
+</script>

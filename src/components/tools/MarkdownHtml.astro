@@ -1,0 +1,626 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  mdPh: isRu ? 'введите Markdown…' : 'enter Markdown here…',
+  copy: isRu ? 'копировать HTML' : 'copy HTML',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  preview: isRu ? 'предпросмотр' : 'preview',
+  source: isRu ? 'HTML код' : 'HTML source',
+  empty: isRu ? '— введите Markdown слева' : '— enter Markdown on the left',
+  gfm: 'GitHub Flavored',
+};
+---
+
+<style is:global>
+  .mh {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .mh-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .mh-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .mh-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .mh-tab:not(.active):hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .mh-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mh-status.ok {
+    color: var(--good);
+  }
+
+  .mh-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mh-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .mh-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .mh-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 400px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .mh-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .mh-vsep {
+    background: var(--line);
+  }
+
+  .mh-out-wrap {
+    overflow: auto;
+    min-height: 0;
+    background: var(--surface-sunken);
+  }
+
+  .mh-preview {
+    padding: 16px 20px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .mh-preview h1,
+  .mh-preview h2,
+  .mh-preview h3,
+  .mh-preview h4,
+  .mh-preview h5,
+  .mh-preview h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    margin: 1.2em 0 0.4em;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .mh-preview h1 {
+    font-size: 1.7em;
+  }
+  .mh-preview h2 {
+    font-size: 1.4em;
+    border-bottom: 0.5px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .mh-preview h3 {
+    font-size: 1.15em;
+  }
+  .mh-preview p {
+    margin: 0.8em 0;
+  }
+  .mh-preview a {
+    color: var(--accent);
+  }
+  .mh-preview code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .mh-preview pre {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+  .mh-preview pre code {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .mh-preview blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 1em 0;
+    padding: 2px 16px;
+    color: var(--ink-soft);
+  }
+  .mh-preview ul,
+  .mh-preview ol {
+    padding-left: 1.5em;
+    margin: 0.8em 0;
+  }
+  .mh-preview li {
+    margin: 0.3em 0;
+  }
+  .mh-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 14px;
+  }
+  .mh-preview th,
+  .mh-preview td {
+    border: 0.5px solid var(--line);
+    padding: 6px 12px;
+    text-align: left;
+  }
+  .mh-preview th {
+    background: var(--surface);
+    font-weight: 500;
+  }
+  .mh-preview img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+  .mh-preview hr {
+    border: none;
+    border-top: 0.5px solid var(--line);
+    margin: 1.5em 0;
+  }
+  .mh-preview del {
+    opacity: 0.6;
+  }
+  .mh-preview .task-item {
+    list-style: none;
+    margin-left: -1.5em;
+    padding-left: 0;
+  }
+  .mh-preview .task-item input {
+    margin-right: 6px;
+  }
+  .mh-preview .ph {
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 16px;
+  }
+
+  .mh-source {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+  .mh-source.ph {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 720px) {
+    .mh-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 240px 1px 240px;
+      max-height: none;
+    }
+    .mh-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="mh">
+  <div class="mh-bar">
+    <button class="mh-tab active" id="mhTabPreview">{t.preview}</button>
+    <button class="mh-tab" id="mhTabSource">{t.source}</button>
+    <span class="local-badge">// client-only</span>
+    <span class="mh-status" id="mhStatus">{t.empty}</span>
+    <button class="mh-action" id="mhCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="mh-action" id="mhClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="mh-panels">
+    <textarea class="mh-in" id="mhIn" data-hist-main-input spellcheck="false" placeholder={t.mdPh}
+    ></textarea>
+    <div class="mh-vsep"></div>
+    <div class="mh-out-wrap" id="mhOutWrap">
+      <div class="mh-preview" id="mhPreview"><p class="ph">{t.empty}</p></div>
+      <pre class="mh-source ph" id="mhSource" style="display:none">{t.empty}</pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('mhIn');
+    var previewEl = document.getElementById('mhPreview');
+    var sourceEl = document.getElementById('mhSource');
+    var statusEl = document.getElementById('mhStatus');
+    var copyBtn = document.getElementById('mhCopy');
+    var clearBtn = document.getElementById('mhClear');
+    var tabPreview = document.getElementById('mhTabPreview');
+    var tabSource = document.getElementById('mhTabSource');
+    var mode = 'preview';
+    var lastHtml = '';
+
+    function esc(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ── Minimal GFM-compatible Markdown parser ──────────────────
+    function md2html(md) {
+      var lines = md.split('\n');
+      var out = [];
+      var i = 0;
+
+      function peek() {
+        return i < lines.length ? lines[i] : null;
+      }
+      function consume() {
+        return lines[i++];
+      }
+
+      function inlineProcess(s) {
+        // images before links
+        s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function (_, alt, src) {
+          return '<img src="' + esc(src) + '" alt="' + esc(alt) + '">';
+        });
+        // links
+        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, text, href) {
+          return '<a href="' + esc(href) + '">' + text + '</a>';
+        });
+        // autolinks
+        s = s.replace(/`([^`]+)`/g, function (_, c) {
+          return '<code>' + esc(c) + '</code>';
+        });
+        // bold+italic
+        s = s.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+        s = s.replace(/___([^_]+)___/g, '<strong><em>$1</em></strong>');
+        // bold
+        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        // italic
+        s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        // strikethrough
+        s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        // line break
+        s = s.replace(/  $/, '<br>');
+        return s;
+      }
+
+      function parseFence() {
+        var firstLine = consume();
+        var lang = firstLine.match(/^```(\w*)/)?.[1] || '';
+        var codeLines = [];
+        while (i < lines.length && !lines[i].startsWith('```')) {
+          codeLines.push(esc(consume()));
+        }
+        if (i < lines.length) consume(); // closing ```
+        return (
+          '<pre><code' +
+          (lang ? ' class="language-' + esc(lang) + '"' : '') +
+          '>' +
+          codeLines.join('\n') +
+          '</code></pre>'
+        );
+      }
+
+      function parseBlockquote() {
+        var bqLines = [];
+        while (i < lines.length && /^>/.test(lines[i])) {
+          bqLines.push(consume().replace(/^>\s?/, ''));
+        }
+        return '<blockquote>' + md2html(bqLines.join('\n')) + '</blockquote>';
+      }
+
+      function parseList(ordered) {
+        var tag = ordered ? 'ol' : 'ul';
+        var itemRe = ordered ? /^(\d+)\.\s+/ : /^[-*+]\s+/;
+        var items = [];
+        while (i < lines.length && itemRe.test(lines[i])) {
+          var line = consume().replace(itemRe, '');
+          // task list
+          var task = line.match(/^\[([ xX])\]\s*(.*)/);
+          if (task) {
+            var checked = task[1].toLowerCase() === 'x';
+            items.push(
+              '<li class="task-item"><input type="checkbox"' +
+                (checked ? ' checked' : '') +
+                ' disabled> ' +
+                inlineProcess(task[2]) +
+                '</li>'
+            );
+          } else {
+            items.push('<li>' + inlineProcess(line) + '</li>');
+          }
+        }
+        return '<' + tag + '>' + items.join('') + '</' + tag + '>';
+      }
+
+      function parseTable() {
+        var headerLine = consume();
+        var headers = headerLine
+          .split('|')
+          .filter(function (c, i, a) {
+            return (i > 0 && i < a.length - 1) || !c.match(/^\s*$/);
+          })
+          .map(function (c) {
+            return c.trim();
+          });
+        if (!headers.length && headerLine.includes('|')) {
+          headers = headerLine
+            .replace(/^\||\|$/g, '')
+            .split('|')
+            .map(function (c) {
+              return c.trim();
+            });
+        }
+        consume(); // separator
+        var rows = [];
+        while (i < lines.length && lines[i].includes('|') && !/^#+/.test(lines[i])) {
+          var cells = consume()
+            .replace(/^\||\|$/g, '')
+            .split('|')
+            .map(function (c) {
+              return c.trim();
+            });
+          rows.push(cells);
+        }
+        var html =
+          '<table><thead><tr>' +
+          headers
+            .map(function (h) {
+              return '<th>' + inlineProcess(esc(h)) + '</th>';
+            })
+            .join('') +
+          '</tr></thead>';
+        if (rows.length) {
+          html +=
+            '<tbody>' +
+            rows
+              .map(function (r) {
+                return (
+                  '<tr>' +
+                  r
+                    .map(function (c) {
+                      return '<td>' + inlineProcess(c) + '</td>';
+                    })
+                    .join('') +
+                  '</tr>'
+                );
+              })
+              .join('') +
+            '</tbody>';
+        }
+        html += '</table>';
+        return html;
+      }
+
+      function parseHr(line) {
+        return /^(\*{3,}|-{3,}|_{3,})\s*$/.test(line);
+      }
+
+      var paraLines = [];
+      function flushPara() {
+        if (!paraLines.length) return;
+        out.push('<p>' + inlineProcess(paraLines.join(' ')) + '</p>');
+        paraLines = [];
+      }
+
+      while (i < lines.length) {
+        var line = peek();
+        if (line === null) break;
+
+        // fenced code
+        if (/^```/.test(line)) {
+          flushPara();
+          out.push(parseFence());
+          continue;
+        }
+        // headings
+        var hm = line.match(/^(#{1,6})\s+(.*)/);
+        if (hm) {
+          flushPara();
+          consume();
+          var level = hm[1].length;
+          out.push('<h' + level + '>' + inlineProcess(esc(hm[2])) + '</h' + level + '>');
+          continue;
+        }
+        // hr
+        if (parseHr(line)) {
+          flushPara();
+          consume();
+          out.push('<hr>');
+          continue;
+        }
+        // blockquote
+        if (/^>/.test(line)) {
+          flushPara();
+          out.push(parseBlockquote());
+          continue;
+        }
+        // ordered list
+        if (/^\d+\.\s/.test(line)) {
+          flushPara();
+          out.push(parseList(true));
+          continue;
+        }
+        // unordered list
+        if (/^[-*+]\s/.test(line)) {
+          flushPara();
+          out.push(parseList(false));
+          continue;
+        }
+        // table (header | ... followed by |---|)
+        if (/\|/.test(line) && i + 1 < lines.length && /^\|?\s*[-:]+/.test(lines[i + 1])) {
+          flushPara();
+          out.push(parseTable());
+          continue;
+        }
+        // blank line = paragraph break
+        if (/^\s*$/.test(line)) {
+          flushPara();
+          consume();
+          continue;
+        }
+        // regular text
+        paraLines.push(consume());
+      }
+      flushPara();
+      return out.join('\n');
+    }
+
+    var lastRaw = '';
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        previewEl.innerHTML = '<p class="ph">' + t.empty + '</p>';
+        sourceEl.textContent = t.empty;
+        sourceEl.className = 'mh-source ph';
+        statusEl.textContent = t.empty;
+        statusEl.className = 'mh-status';
+        lastHtml = '';
+        lastRaw = '';
+        return;
+      }
+      if (raw === lastRaw) return;
+      lastRaw = raw;
+      var html;
+      try {
+        html = md2html(raw);
+      } catch (e) {
+        html = '<p>error: ' + esc(e.message) + '</p>';
+      }
+      lastHtml = html;
+      previewEl.innerHTML = html;
+      sourceEl.textContent = html;
+      sourceEl.className = 'mh-source';
+      var words = raw.trim().split(/\s+/).length;
+      statusEl.textContent = words + ' words → ' + html.length + ' chars HTML';
+      statusEl.className = 'mh-status ok';
+    }
+
+    inEl.addEventListener('input', process);
+
+    function setMode(m) {
+      mode = m;
+      previewEl.style.display = m === 'preview' ? '' : 'none';
+      sourceEl.style.display = m === 'source' ? '' : 'none';
+      tabPreview.classList.toggle('active', m === 'preview');
+      tabSource.classList.toggle('active', m === 'source');
+    }
+    tabPreview.addEventListener('click', function () {
+      setMode('preview');
+    });
+    tabSource.addEventListener('click', function () {
+      setMode('source');
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastHtml) return;
+      navigator.clipboard.writeText(lastHtml).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      lastRaw = '';
+      process();
+      inEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.mh');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastHtml) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inEl.value = cfg.input ?? '';
+      lastRaw = '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

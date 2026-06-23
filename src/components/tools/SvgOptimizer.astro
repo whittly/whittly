@@ -1,0 +1,547 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  inPh: isRu ? 'вставьте SVG код…' : 'paste SVG here…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  download: isRu ? 'скачать' : 'download',
+  clear: isRu ? 'очистить' : 'clear',
+  empty: isRu ? '— вставьте SVG для оптимизации' : '— paste SVG to optimize',
+  errSvg: isRu ? 'не удалось разобрать SVG' : 'could not parse SVG',
+  saved: isRu ? 'сэкономлено' : 'saved',
+  opts: {
+    removeComments: isRu ? 'комментарии' : 'comments',
+    removeDoctype: isRu ? 'DOCTYPE / XML декл.' : 'DOCTYPE / XML decl.',
+    removeMeta: isRu ? 'title / desc / metadata' : 'title / desc / metadata',
+    cleanAttrs: isRu ? 'пустые атрибуты' : 'empty attributes',
+    roundDecimals: isRu ? 'округлить числа' : 'round decimals',
+    collapseWhitespace: isRu ? 'пробелы' : 'collapse whitespace',
+    removeDefaultAttrs: isRu ? 'атрибуты по умолч.' : 'default attributes',
+    convertColors: isRu ? 'цвета → hex' : 'colors → hex',
+  },
+  preview: isRu ? 'предпросмотр' : 'preview',
+  source: isRu ? 'код' : 'code',
+};
+---
+
+<style is:global>
+  .svgo {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .svgo-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .svgo-opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .svgo-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    padding: 3px 8px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    transition: all 0.1s;
+  }
+  .svgo-check:has(input:checked) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .svgo-check input {
+    accent-color: var(--accent);
+  }
+
+  .svgo-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .svgo-status.ok {
+    color: var(--good);
+  }
+  .svgo-status.err {
+    color: var(--bad);
+  }
+
+  .svgo-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .svgo-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .svgo-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+  .svgo-action[disabled],
+  .svgo-action.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .svgo-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .svgo-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .svgo-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 360px;
+    max-height: calc(100vh - 380px);
+  }
+
+  .svgo-in,
+  .svgo-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+    background: transparent;
+  }
+
+  .svgo-out {
+    background: var(--surface-sunken);
+    min-height: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .svgo-out .ph {
+    color: var(--ink-faint);
+  }
+  .svgo-out.err {
+    color: var(--bad);
+  }
+
+  .svgo-vsep {
+    background: var(--line);
+  }
+
+  .svgo-preview-wrap {
+    overflow: auto;
+    min-height: 0;
+    background: var(--surface-sunken);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .svgo-preview-wrap svg {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+  }
+
+  @media (max-width: 680px) {
+    .svgo-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 240px 1px 240px;
+      max-height: none;
+    }
+    .svgo-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="svgo">
+  <div class="svgo-bar">
+    <button class="svgo-tab active" id="svgoTabCode">{t.source}</button>
+    <button class="svgo-tab" id="svgoTabPreview">{t.preview}</button>
+    <span class="local-badge">// client-only</span>
+    <span class="svgo-status" id="svgoStatus">{t.empty}</span>
+    <button class="svgo-action disabled" id="svgoCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <a class="svgo-action disabled" id="svgoDownload" download="optimized.svg"
+      ><i class="ti ti-download"></i>{t.download}</a
+    >
+    <button class="svgo-action" id="svgoClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="svgo-opts">
+    {
+      Object.entries(t.opts).map(([key, label]) => (
+        <label class="svgo-check">
+          <input type="checkbox" class="svgo-opt-cb" data-opt={key} checked /> {label}
+        </label>
+      ))
+    }
+  </div>
+  <div class="svgo-panels">
+    <textarea
+      class="svgo-in"
+      id="svgoIn"
+      data-hist-main-input
+      spellcheck="false"
+      placeholder={t.inPh}></textarea>
+    <div class="svgo-vsep"></div>
+    <pre class="svgo-out" id="svgoOut"><span class="ph">{t.empty}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('svgoIn');
+    var outEl = document.getElementById('svgoOut');
+    var statusEl = document.getElementById('svgoStatus');
+    var copyBtn = document.getElementById('svgoCopy');
+    var downloadEl = document.getElementById('svgoDownload');
+    var clearBtn = document.getElementById('svgoClear');
+    var tabCode = document.getElementById('svgoTabCode');
+    var tabPreview = document.getElementById('svgoTabPreview');
+    var mode = 'code';
+    var lastOutput = '';
+
+    var colorNames = {
+      black: '#000',
+      white: '#fff',
+      red: '#f00',
+      green: '#008000',
+      blue: '#00f',
+      yellow: '#ff0',
+      cyan: '#0ff',
+      magenta: '#f0f',
+      orange: '#ffa500',
+      purple: '#800080',
+      gray: '#808080',
+      grey: '#808080',
+      pink: '#ffc0cb',
+      lime: '#0f0',
+      navy: '#000080',
+      teal: '#008080',
+      silver: '#c0c0c0',
+      aqua: '#0ff',
+      fuchsia: '#f0f',
+      maroon: '#800000',
+      olive: '#808000',
+    };
+
+    var defaultAttrs = {
+      'fill-opacity': '1',
+      'stroke-opacity': '1',
+      'stroke-width': '1',
+      'stroke-linecap': 'butt',
+      'stroke-linejoin': 'miter',
+      'stroke-miterlimit': '4',
+      'clip-rule': 'nonzero',
+      'fill-rule': 'nonzero',
+      opacity: '1',
+      visibility: 'visible',
+      display: 'inline',
+      overflow: 'visible',
+    };
+
+    function roundNum(m) {
+      var n = parseFloat(m);
+      if (isNaN(n)) return m;
+      return parseFloat(n.toPrecision(4)).toString();
+    }
+
+    function colorToHex(col) {
+      col = col.trim().toLowerCase();
+      if (colorNames[col]) return colorNames[col];
+      // rgb(r,g,b)
+      var rm = col.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+      if (rm) {
+        return (
+          '#' +
+          [rm[1], rm[2], rm[3]]
+            .map(function (v) {
+              return parseInt(v).toString(16).padStart(2, '0');
+            })
+            .join('')
+        );
+      }
+      return col;
+    }
+
+    function shortenHex(h) {
+      if (/^#([0-9a-f])\1([0-9a-f])\2([0-9a-f])\3$/i.test(h)) {
+        return '#' + h[1] + h[3] + h[5];
+      }
+      return h;
+    }
+
+    function optimize(svg, opts) {
+      // Remove XML declaration
+      if (opts.removeDoctype) {
+        svg = svg.replace(/<\?xml[^>]*\?>\s*/gi, '');
+        svg = svg.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
+      }
+      // Remove comments
+      if (opts.removeComments) {
+        svg = svg.replace(/<!--[\s\S]*?-->/g, '');
+      }
+      // Remove title, desc, metadata
+      if (opts.removeMeta) {
+        svg = svg.replace(/<title[\s\S]*?<\/title>/gi, '');
+        svg = svg.replace(/<desc[\s\S]*?<\/desc>/gi, '');
+        svg = svg.replace(/<metadata[\s\S]*?<\/metadata>/gi, '');
+      }
+      // Round decimal numbers in path data and coordinates
+      if (opts.roundDecimals) {
+        svg = svg.replace(/(-?\d+\.\d{3,})/g, function (m) {
+          return roundNum(m);
+        });
+      }
+      // Convert color names to hex
+      if (opts.convertColors) {
+        svg = svg.replace(
+          /(fill|stroke|color|stop-color|flood-color|lighting-color)="([^"]+)"/gi,
+          function (m, attr, val) {
+            var hex = colorToHex(val);
+            hex = shortenHex(hex);
+            return attr + '="' + hex + '"';
+          }
+        );
+        // Also in style attributes
+        svg = svg.replace(/(fill|stroke|color)\s*:\s*([^;}"]+)/g, function (m, prop, val) {
+          var hex = colorToHex(val.trim());
+          hex = shortenHex(hex);
+          return prop + ':' + hex;
+        });
+      }
+      // Remove default attribute values
+      if (opts.removeDefaultAttrs) {
+        Object.keys(defaultAttrs).forEach(function (attr) {
+          var val = defaultAttrs[attr];
+          var re = new RegExp(
+            '\\s+' + attr + '="' + val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"',
+            'g'
+          );
+          svg = svg.replace(re, '');
+        });
+      }
+      // Remove empty attributes (e.g. class="" id="" style="")
+      if (opts.cleanAttrs) {
+        svg = svg.replace(/\s+(?:class|id|style|data-[\w-]+)=""/g, '');
+      }
+      // Collapse whitespace between tags
+      if (opts.collapseWhitespace) {
+        svg = svg.replace(/>\s+</g, '><');
+        svg = svg.replace(/\s{2,}/g, ' ');
+        svg = svg.trim();
+      }
+      return svg;
+    }
+
+    function getOpts() {
+      var opts = {};
+      document.querySelectorAll('.svgo-opt-cb').forEach(function (cb) {
+        opts[cb.dataset.opt] = cb.checked;
+      });
+      return opts;
+    }
+
+    function process() {
+      var raw = inEl.value.trim();
+      if (!raw) {
+        outEl.innerHTML = '<span class="ph">' + t.empty + '</span>';
+        outEl.classList.remove('err');
+        statusEl.textContent = t.empty;
+        statusEl.className = 'svgo-status';
+        copyBtn.classList.add('disabled');
+        downloadEl.classList.add('disabled');
+        lastOutput = '';
+        return;
+      }
+      if (!raw.includes('<svg')) {
+        outEl.textContent = t.errSvg;
+        outEl.classList.add('err');
+        statusEl.textContent = '// not SVG';
+        statusEl.className = 'svgo-status err';
+        lastOutput = '';
+        return;
+      }
+
+      var opts = getOpts();
+      var result = optimize(raw, opts);
+      lastOutput = result;
+
+      if (mode === 'code') {
+        outEl.textContent = result;
+        outEl.style.display = '';
+      } else {
+        showPreview(result);
+      }
+      outEl.classList.remove('err');
+
+      var before = new TextEncoder().encode(raw).length;
+      var after = new TextEncoder().encode(result).length;
+      var saved = before - after;
+      var pct = Math.round((saved / before) * 100);
+      statusEl.textContent =
+        fmtBytes(before) + ' → ' + fmtBytes(after) + (pct > 0 ? ' (−' + pct + '%)' : '');
+      statusEl.className = 'svgo-status' + (pct > 0 ? ' ok' : '');
+
+      var blob = new Blob([result], { type: 'image/svg+xml' });
+      downloadEl.href = URL.createObjectURL(blob);
+      copyBtn.classList.remove('disabled');
+      downloadEl.classList.remove('disabled');
+    }
+
+    function fmtBytes(b) {
+      return b < 1024 ? b + ' B' : (b / 1024).toFixed(1) + ' KB';
+    }
+
+    function showPreview(svg) {
+      // Replace code pre with preview div dynamically
+      outEl.style.display = 'none';
+      var wrap = outEl.parentElement;
+      var prev = wrap.querySelector('.svgo-preview-wrap');
+      if (!prev) {
+        prev = document.createElement('div');
+        prev.className = 'svgo-preview-wrap';
+        wrap.appendChild(prev);
+      }
+      prev.style.display = 'flex';
+      prev.innerHTML = svg;
+    }
+
+    function hidePreview() {
+      outEl.style.display = '';
+      var prev = outEl.parentElement && outEl.parentElement.querySelector('.svgo-preview-wrap');
+      if (prev) prev.style.display = 'none';
+    }
+
+    function setMode(m) {
+      mode = m;
+      tabCode.classList.toggle('active', m === 'code');
+      tabPreview.classList.toggle('active', m === 'preview');
+      if (m === 'code') {
+        hidePreview();
+        if (lastOutput) outEl.textContent = lastOutput;
+      } else if (lastOutput) showPreview(lastOutput);
+    }
+
+    tabCode.addEventListener('click', function () {
+      setMode('code');
+    });
+    tabPreview.addEventListener('click', function () {
+      setMode('preview');
+    });
+
+    var debounce;
+    inEl.addEventListener('input', function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(process, 150);
+    });
+    document.querySelectorAll('.svgo-opt-cb').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(process, 50);
+      });
+    });
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      lastOutput = '';
+      process();
+      inEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.svgo');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod) clearBtn.click();
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

@@ -252,7 +252,7 @@ const version = pkg.version;
         return `
         <section class="cat-section">
           <div class="cat-head">
-            <span class="cat-name">${getCatLabel(c)}</span>
+            <a class="cat-name" href="/tools/${c}/">${getCatLabel(c)}</a>
             <span class="cat-count">${countLabel}</span>
             <span class="cat-desc">${getCatDesc(c)}</span>
           </div>

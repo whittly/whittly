@@ -211,7 +211,7 @@ const version = pkg.version;
         return `
         <section class="cat-section">
           <div class="cat-head">
-            <span class="cat-name">${meta.label}</span>
+            <a class="cat-name" href="/tools/${c}/">${meta.label}</a>
             <span class="cat-count">${tools.length} ${tools.length === 1 ? 'tool' : 'tools'}</span>
             <span class="cat-desc">${meta.desc}</span>
           </div>

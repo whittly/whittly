@@ -802,6 +802,237 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
       },
     ],
   },
+
+  'word-counter': {
+    about:
+      'The word counter analyses the text you type and tracks seven statistics in real time: total characters, characters excluding spaces, word count, line count, sentence count, paragraph count, and estimated reading time at an average 200 words per minute. All processing happens in your browser without any network requests.',
+    useCases: [
+      'Check that a blog post or article meets a target word count before publishing',
+      'Verify that a meta description or tweet stays within the character limit',
+      'Estimate how long a script or presentation will take to read aloud',
+      'Count lines in a log snippet or config file without opening a terminal',
+    ],
+    faq: [
+      {
+        q: 'How is "word" defined?',
+        a: 'A word is any sequence of non-whitespace characters separated by whitespace. Hyphenated compounds (e.g. "well-known") count as one word.',
+      },
+      {
+        q: 'How is reading time calculated?',
+        a: 'The estimate uses 200 words per minute, which is a typical silent reading speed for adults. Actual speed varies by reader and content complexity.',
+      },
+    ],
+  },
+
+  'hex-encoder': {
+    about:
+      'The hex encoder converts text to its hexadecimal byte representation using the TextEncoder API, defaulting to UTF-8. Each byte becomes a two-character hex pair. The decoder reverses the process, reading pairs of hex digits and converting them back to the original string. Options let you control the byte separator and letter case.',
+    useCases: [
+      'Inspect the raw UTF-8 byte sequence of a string containing Unicode or emoji',
+      'Prepare hex-encoded data for low-level protocols or binary file headers',
+      'Decode a hex dump from a network trace or memory inspector',
+      'Verify how many bytes a specific Unicode character occupies in UTF-8',
+    ],
+    faq: [
+      {
+        q: 'What encoding does this use?',
+        a: 'UTF-8 by default, which encodes ASCII characters as one byte and most other Unicode characters as two to four bytes. The byte count shown will differ from the character count for non-ASCII input.',
+      },
+      {
+        q: 'What separator should I use?',
+        a: 'Space-separated ("48 65 6c 6c 6f") is the most readable format and matches most hex dump tools. No separator is useful when you need a compact hex string for embedding in code.',
+      },
+    ],
+  },
+
+  'http-status': {
+    about:
+      'HTTP status codes are three-digit integers returned by a server to indicate the result of a client request. They are grouped into five classes: 1xx (informational), 2xx (success), 3xx (redirection), 4xx (client error), and 5xx (server error). This reference covers all codes defined in RFC 7231 and later RFCs, with plain-English explanations and common causes.',
+    useCases: [
+      'Look up what a specific status code means while debugging an API response',
+      'Understand the difference between 301 and 302, or 401 and 403',
+      'Identify which error class a code belongs to at a glance',
+      'Check the meaning of less common codes like 409, 422, or 429',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between 401 and 403?',
+        a: '401 Unauthorized means the request lacks valid authentication credentials — the client should log in. 403 Forbidden means the server understood the request and knows who you are, but refuses to authorize the action.',
+      },
+      {
+        q: 'What is the difference between 301 and 302?',
+        a: '301 Moved Permanently signals that the resource has been moved forever — browsers and search engines update their records. 302 Found is a temporary redirect; the original URL remains canonical.',
+      },
+    ],
+  },
+
+  'unit-converter': {
+    about:
+      'The unit converter supports eight measurement categories: length, weight, temperature, digital data, area, volume, speed, and time. All conversions go through a single base unit per category, so adding a new unit never requires updating existing pairs. Temperature conversions use Kelvin as the intermediate to correctly handle the non-linear Celsius ↔ Fahrenheit relationship.',
+    useCases: [
+      'Convert kilometres to miles when reading international documentation',
+      'Check the equivalent of a storage size in bytes, megabytes, and gibibytes',
+      'Convert Celsius to Fahrenheit for a weather API that uses imperial units',
+      'Convert knots to km/h when reading maritime or aviation data',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between MB and MiB?',
+        a: 'MB (megabyte) is 1,000,000 bytes in SI units used by storage manufacturers. MiB (mebibyte) is 1,048,576 bytes (2²⁰) used by operating systems. This is why a "500 GB" hard drive shows as ~465 GiB in Windows.',
+      },
+      {
+        q: 'Why does temperature conversion look different?',
+        a: 'Unlike other units, Celsius and Fahrenheit scales do not start at the same zero point. All temperature conversions go through Kelvin (absolute zero) as an intermediate to handle the offset correctly.',
+      },
+    ],
+  },
+
+  'color-converter': {
+    about:
+      'The color converter accepts any common color format — hex triplets, rgb() and rgba() CSS functions, hsl() and hsla(), oklch(), and named CSS colors — and instantly shows the equivalent representation in all five formats: HEX, RGB, HSL, OKLCH, and CIELab. The OKLCH and Lab values are computed through a full sRGB → linear → XYZ → OKLab pipeline.',
+    useCases: [
+      'Convert a design token from HEX to HSL for use in a CSS custom property',
+      'Inspect the OKLCH lightness and chroma of a brand color for accessibility work',
+      'Convert a named CSS color like "cornflowerblue" to its hex value',
+      'Get the Lab coordinates of a color for perceptual uniformity checks',
+    ],
+    faq: [
+      {
+        q: 'What is OKLCH and why should I use it?',
+        a: 'OKLCH is a perceptually uniform color space where equal numeric steps produce equally perceived changes in lightness, chroma, and hue. It is supported natively in CSS (color: oklch(60% 0.15 240)) and is useful for creating consistent color scales and accessible palettes.',
+      },
+      {
+        q: 'What formats are accepted as input?',
+        a: 'HEX (#rgb, #rrggbb, #rrggbbaa), CSS rgb()/rgba(), CSS hsl()/hsla(), CSS oklch(), and any named CSS color (red, cornflowerblue, etc.). The tool auto-detects the format — just type or paste and it will parse on every keystroke.',
+      },
+    ],
+  },
+
+  'image-webp': {
+    about:
+      'WebP is a modern image format developed by Google that achieves significantly smaller file sizes than JPEG and PNG at comparable visual quality. This tool converts images to WebP entirely in your browser using the Canvas API — no files are sent to any server. A quality slider controls the lossy compression level, and a side-by-side canvas shows the original versus the converted result.',
+    useCases: [
+      'Optimise hero images and product photos before uploading to a website',
+      'Compare WebP quality levels to find the best size-to-quality tradeoff',
+      'Convert screenshots to WebP for use in documentation or blog posts',
+      'Batch-check how much file size WebP would save for a set of images',
+    ],
+    faq: [
+      {
+        q: 'Does the original file leave my device?',
+        a: 'No. The conversion is done entirely in your browser using the HTML Canvas API. The image is read locally, drawn to a canvas, and exported as a WebP blob — no network request is made at any point.',
+      },
+      {
+        q: 'Which source formats are supported?',
+        a: "Any format your browser can decode: JPEG, PNG, GIF (first frame), BMP, AVIF, and WebP itself. HEIC/HEIF is not universally supported — it depends on the browser and OS. If the image doesn't load, try converting it to PNG first.",
+      },
+    ],
+  },
+
+  'cidr-calculator': {
+    about:
+      'CIDR (Classless Inter-Domain Routing) notation expresses an IP address and its subnet mask as a single string, e.g. 192.168.1.0/24. Given a CIDR block, this calculator derives the network address, broadcast address, first and last usable host, subnet mask, wildcard mask, prefix length, total and usable host count, IP class, address type (private/loopback/link-local/public), and the full binary representation with network and host bits highlighted.',
+    useCases: [
+      'Verify that two IP addresses fall in the same subnet before setting up routing',
+      'Calculate how many hosts a /27 or /30 subnet can accommodate',
+      'Plan VPC or cloud network address ranges before deployment',
+      'Understand the binary breakdown of a subnet mask for a networking exam',
+    ],
+    faq: [
+      {
+        q: 'What is the difference between network hosts and usable hosts?',
+        a: 'In any subnet, the first address is the network address and the last is the broadcast address. Neither can be assigned to a host. So a /24 has 256 total addresses but only 254 usable host addresses.',
+      },
+      {
+        q: 'What does the wildcard mask represent?',
+        a: 'The wildcard mask is the bitwise inverse of the subnet mask. It is used in access control lists (ACLs) and OSPF configurations to specify which bits of an address are significant. For a /24 subnet mask (255.255.255.0), the wildcard is 0.0.0.255.',
+      },
+    ],
+  },
+
+  'markdown-html': {
+    about:
+      'The Markdown to HTML converter implements GitHub Flavored Markdown (GFM) in a custom parser written in pure JavaScript. It supports headings (ATX and Setext), bold, italic, strikethrough, inline and fenced code blocks, ordered and unordered lists, task lists, blockquotes, tables, horizontal rules, images, and links. The preview tab renders the HTML and the source tab shows the raw output.',
+    useCases: [
+      'Preview how a README.md will look before pushing it to GitHub',
+      'Convert documentation written in Markdown to HTML for embedding in a CMS',
+      'Test GFM table syntax to get the column alignment right',
+      'Inspect the generated HTML to understand how a Markdown element is rendered',
+    ],
+    faq: [
+      {
+        q: "Is this exactly the same as GitHub's renderer?",
+        a: 'Very close for common elements. GFM has some edge cases in list nesting and tight vs. loose list handling that differ slightly between implementations. For pixel-perfect parity with GitHub, use their Markdown REST API.',
+      },
+      {
+        q: 'Is the HTML sanitised?',
+        a: 'The converter does not sanitise the output. If you paste Markdown that contains raw HTML, that HTML will appear in the output. Do not inject this output directly into a page without sanitising it first if the Markdown source is untrusted.',
+      },
+    ],
+  },
+
+  'yaml-json': {
+    about:
+      'The YAML ↔ JSON converter automatically detects whether the input is YAML or JSON and converts it to the other format. The YAML parser is implemented from scratch and handles block and flow mappings, block and flow sequences, all scalar types (string, integer, float, boolean, null), multi-line block scalars (| and >), quoted strings, and comments. Converting from JSON produces clean, indented YAML.',
+    useCases: [
+      'Convert a docker-compose.yml or Kubernetes manifest to JSON for programmatic processing',
+      'Convert a JSON API response to YAML for more readable diffing or documentation',
+      'Validate YAML syntax when a config file fails to parse in CI',
+      'Strip YAML comments by converting to JSON and back',
+    ],
+    faq: [
+      {
+        q: 'Are YAML comments preserved?',
+        a: 'Comments are stripped during parsing because JSON has no concept of comments. If you need to keep comments, consider editing the YAML source directly.',
+      },
+      {
+        q: 'What YAML features are supported?',
+        a: 'Block and flow mappings and sequences, all scalar types including multi-line literals (| and >), quoted strings, anchors and aliases, and comments. YAML merge keys (<<: *anchor) are not supported.',
+      },
+    ],
+  },
+
+  'qr-code': {
+    about:
+      'This QR code generator implements the full QR Code Model 2 specification in pure JavaScript — no external libraries or CDN dependencies. It supports versions 1 through 10 (up to 174 characters) in byte mode, all four error correction levels (L 7%, M 15%, Q 25%, H 30%), Reed-Solomon encoding over GF(256), all 8 mask patterns with the official penalty scoring system, and format information encoding. Output is available as SVG (vector, any size) or PNG (copied to clipboard).',
+    useCases: [
+      'Generate a QR code for a URL to include in a presentation or printed material',
+      'Create a QR code for a Wi-Fi SSID and password to share with guests',
+      'Test how different error correction levels affect QR code density',
+      'Generate a QR code that links to a vCard or calendar event',
+    ],
+    faq: [
+      {
+        q: 'What is the maximum text length?',
+        a: 'This tool generates versions 1–10. At version 10 with L (low) error correction, the limit is 174 bytes. Higher versions support more data but produce denser codes that are harder for older scanners to read. For URLs, keep them short.',
+      },
+      {
+        q: 'Which error correction level should I choose?',
+        a: 'L (7%) produces the smallest code and is fine for clean digital displays. M (15%) is a good general-purpose default. Q (25%) or H (30%) are useful when the QR code will be printed on a surface that may get partially damaged or obscured.',
+      },
+    ],
+  },
+
+  'svg-optimizer': {
+    about:
+      'SVG files exported from design tools like Figma, Illustrator, or Inkscape often contain significant bloat: XML declarations, DOCTYPE, editor metadata, empty attributes, redundant default values, long decimal coordinates, and excess whitespace. This tool applies up to eight configurable optimisation passes entirely in your browser and shows the exact byte reduction.',
+    useCases: [
+      'Reduce SVG icon file size before bundling them into a web app',
+      'Clean up Figma or Illustrator SVG exports before committing to a repo',
+      'Remove metadata and comments from SVGs used in production CSS',
+      'Inspect the size impact of each individual optimisation pass',
+    ],
+    faq: [
+      {
+        q: 'Is this the same as SVGO?',
+        a: 'No. SVGO is a Node.js tool that applies a much larger set of transformations including path merging, shape conversion, and transform collapsing. This tool performs simpler text-level and attribute-level passes that are safe and reversible. For production pipelines, SVGO or svgomg is recommended.',
+      },
+      {
+        q: 'Will the SVG still render correctly after optimisation?',
+        a: 'Yes for the default passes. Removing comments, DOCTYPE, XML declarations, title/desc/metadata, empty attributes, and collapsing whitespace are all visually lossless. The "round decimals" pass (toPrecision 4) may cause sub-pixel differences on very precise paths.',
+      },
+    ],
+  },
 };
 
 export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
@@ -1600,6 +1831,237 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'Сертификат отправляется на ваш сервер?',
         a: 'Нет. PEM-данные разбираются целиком в браузере с помощью Web Crypto API и кастомного ASN.1/DER парсера. Ничего не отправляется по сети.',
+      },
+    ],
+  },
+
+  'word-counter': {
+    about:
+      'Счётчик слов анализирует введённый текст и отслеживает семь показателей в реальном времени: общее число символов, символы без пробелов, количество слов, строк, предложений, абзацев и расчётное время чтения из расчёта 200 слов в минуту. Всё обрабатывается в браузере без сетевых запросов.',
+    useCases: [
+      'Проверить, что статья или пост в блоге достигает целевого числа слов перед публикацией',
+      'Убедиться, что мета-описание или твит укладывается в лимит символов',
+      'Оценить, сколько времени займёт вслух прочитать сценарий или презентацию',
+      'Посчитать строки в логе или конфиге без открытия терминала',
+    ],
+    faq: [
+      {
+        q: 'Как определяется «слово»?',
+        a: 'Слово — любая последовательность непробельных символов, отделённая пробелами. Дефисные составные слова (например, «хорошо-написанный») считаются как одно слово.',
+      },
+      {
+        q: 'Как рассчитывается время чтения?',
+        a: 'Оценка основана на скорости 200 слов в минуту — типичная скорость тихого чтения для взрослых. Реальная скорость зависит от читателя и сложности текста.',
+      },
+    ],
+  },
+
+  'hex-encoder': {
+    about:
+      'HEX-кодировщик конвертирует текст в шестнадцатеричное представление байтов через TextEncoder API, используя UTF-8 по умолчанию. Каждый байт превращается в пару шестнадцатеричных символов. Декодер выполняет обратную операцию, читая пары hex-цифр и восстанавливая исходную строку. Можно настроить разделитель между байтами и регистр букв.',
+    useCases: [
+      'Проверить байтовую последовательность UTF-8 для строки с Unicode или эмодзи',
+      'Подготовить hex-кодированные данные для низкоуровневых протоколов или заголовков бинарных файлов',
+      'Декодировать hex-дамп из трассировки сети или инспектора памяти',
+      'Проверить, сколько байт занимает конкретный Unicode-символ в UTF-8',
+    ],
+    faq: [
+      {
+        q: 'Какая кодировка используется?',
+        a: 'UTF-8 по умолчанию: ASCII-символы кодируются одним байтом, большинство других Unicode-символов — двумя-четырьмя. Для не-ASCII входных данных число байт будет отличаться от числа символов.',
+      },
+      {
+        q: 'Какой разделитель выбрать?',
+        a: 'Пробел («48 65 6c 6c 6f») — наиболее читаемый формат, совпадает с выводом большинства инструментов hex-дампа. Без разделителя удобно, когда нужна компактная hex-строка для вставки в код.',
+      },
+    ],
+  },
+
+  'http-status': {
+    about:
+      'HTTP-коды состояния — трёхзначные числа, которые сервер возвращает в ответ на запрос клиента. Они делятся на пять классов: 1xx (информационные), 2xx (успех), 3xx (редиректы), 4xx (ошибки клиента), 5xx (ошибки сервера). Справочник охватывает все коды из RFC 7231 и более поздних RFC с пояснениями на понятном языке и типичными причинами.',
+    useCases: [
+      'Узнать значение конкретного кода при отладке ответа API',
+      'Разобраться в разнице между 301 и 302, или 401 и 403',
+      'Быстро определить класс ошибки по коду',
+      'Выяснить смысл редких кодов — 409, 422, 429',
+    ],
+    faq: [
+      {
+        q: 'В чём разница между 401 и 403?',
+        a: '401 Unauthorized означает отсутствие действительных учётных данных — клиенту нужно войти в систему. 403 Forbidden означает, что сервер понял запрос и знает, кто вы, но отказывает в доступе.',
+      },
+      {
+        q: 'В чём разница между 301 и 302?',
+        a: '301 Moved Permanently сигнализирует о постоянном перемещении ресурса — браузеры и поисковики обновляют свои записи. 302 Found — временный редирект, исходный URL остаётся каноническим.',
+      },
+    ],
+  },
+
+  'unit-converter': {
+    about:
+      'Конвертер единиц поддерживает восемь категорий измерений: длина, масса, температура, цифровые данные, площадь, объём, скорость и время. Все конвертации проходят через единую базовую единицу в каждой категории. Конвертация температуры использует Кельвин как промежуточную единицу для корректной обработки нелинейного соотношения Цельсий ↔ Фаренгейт.',
+    useCases: [
+      'Перевести километры в мили при работе с международной документацией',
+      'Проверить эквивалент размера хранилища в байтах, мегабайтах и гибибайтах',
+      'Перевести Цельсий в Фаренгейт для API погоды, использующего имперские единицы',
+      'Перевести узлы в км/ч при чтении морских или авиационных данных',
+    ],
+    faq: [
+      {
+        q: 'Чем отличаются МБ и МиБ?',
+        a: 'МБ (мегабайт) — 1 000 000 байт по СИ, используют производители накопителей. МиБ (мебибайт) — 1 048 576 байт (2²⁰), используют операционные системы. Поэтому жёсткий диск «500 ГБ» отображается как ~465 ГиБ в Windows.',
+      },
+      {
+        q: 'Почему конвертация температуры выглядит иначе?',
+        a: 'В отличие от других единиц, шкалы Цельсия и Фаренгейта начинаются с разных нулевых точек. Все конвертации температуры проходят через Кельвин (абсолютный ноль) как промежуточный шаг для корректного учёта смещения.',
+      },
+    ],
+  },
+
+  'color-converter': {
+    about:
+      'Конвертер цветов принимает любой распространённый формат цвета — hex-триплеты, CSS-функции rgb() и rgba(), hsl() и hsla(), oklch() и именованные CSS-цвета — и мгновенно показывает эквивалент во всех пяти форматах: HEX, RGB, HSL, OKLCH и CIELab. Значения OKLCH и Lab вычисляются через полный конвейер sRGB → линейный → XYZ → OKLab.',
+    useCases: [
+      'Конвертировать дизайн-токен из HEX в HSL для CSS-переменной',
+      'Проверить светлоту и насыщенность фирменного цвета в OKLCH для работы с доступностью',
+      'Конвертировать именованный CSS-цвет (например, «cornflowerblue») в его hex-значение',
+      'Получить Lab-координаты цвета для проверки перцептивной однородности',
+    ],
+    faq: [
+      {
+        q: 'Что такое OKLCH и зачем его использовать?',
+        a: 'OKLCH — перцептивно однородное цветовое пространство, в котором одинаковые числовые шаги дают одинаково воспринимаемые изменения светлоты, насыщенности и тона. Нативно поддерживается в CSS (color: oklch(60% 0.15 240)) и удобен для создания консистентных цветовых шкал и доступных палитр.',
+      },
+      {
+        q: 'Какие форматы принимаются на входе?',
+        a: 'HEX (#rgb, #rrggbb, #rrggbbaa), CSS rgb()/rgba(), CSS hsl()/hsla(), CSS oklch() и любой именованный CSS-цвет (red, cornflowerblue и т.д.). Инструмент автоматически определяет формат — просто вводите или вставляйте значение.',
+      },
+    ],
+  },
+
+  'image-webp': {
+    about:
+      'WebP — современный формат изображений от Google, обеспечивающий значительно меньший размер файла по сравнению с JPEG и PNG при сопоставимом визуальном качестве. Этот инструмент конвертирует изображения в WebP полностью в браузере через Canvas API — файлы не отправляются на серверы. Ползунок качества управляет уровнем сжатия с потерями, а предпросмотр показывает оригинал и результат рядом.',
+    useCases: [
+      'Оптимизировать главные изображения и фотографии товаров перед загрузкой на сайт',
+      'Сравнить уровни качества WebP, чтобы найти оптимальный баланс размера и качества',
+      'Конвертировать скриншоты в WebP для документации или блога',
+      'Проверить, сколько места сэкономит WebP для набора изображений',
+    ],
+    faq: [
+      {
+        q: 'Покидает ли оригинальный файл устройство?',
+        a: 'Нет. Конвертация выполняется полностью в браузере через HTML Canvas API. Изображение читается локально, рисуется на холст и экспортируется как WebP blob — сетевые запросы не выполняются.',
+      },
+      {
+        q: 'Какие исходные форматы поддерживаются?',
+        a: 'Любые форматы, которые браузер умеет декодировать: JPEG, PNG, GIF (первый кадр), BMP, AVIF и сам WebP. HEIC/HEIF не поддерживается повсеместно — зависит от браузера и ОС. Если изображение не загружается, сначала конвертируйте его в PNG.',
+      },
+    ],
+  },
+
+  'cidr-calculator': {
+    about:
+      'CIDR (Classless Inter-Domain Routing) — запись IP-адреса вместе с маской подсети в одной строке, например 192.168.1.0/24. По заданному CIDR-блоку калькулятор вычисляет адрес сети, широковещательный адрес, первый и последний используемый хост, маску подсети, wildcard-маску, префиксную длину, общее число и число используемых хостов, класс IP и тип адреса (частный/loopback/link-local/публичный), а также полное двоичное представление с выделением сетевых и хостовых битов.',
+    useCases: [
+      'Проверить, что два IP-адреса находятся в одной подсети перед настройкой маршрутизации',
+      'Рассчитать, сколько хостов вместит подсеть /27 или /30',
+      'Спланировать диапазоны адресов VPC или облачной сети до развёртывания',
+      'Разобрать двоичное представление маски подсети для экзамена по сетям',
+    ],
+    faq: [
+      {
+        q: 'Чем отличаются «всего хостов» и «используемых хостов»?',
+        a: 'В любой подсети первый адрес — адрес сети, последний — широковещательный. Ни тот, ни другой нельзя назначить хосту. Поэтому /24 имеет 256 адресов всего, но только 254 используемых.',
+      },
+      {
+        q: 'Что такое wildcard-маска?',
+        a: 'Wildcard-маска — побитовая инверсия маски подсети. Используется в списках контроля доступа (ACL) и конфигурациях OSPF для указания значимых битов адреса. Для маски /24 (255.255.255.0) wildcard равен 0.0.0.255.',
+      },
+    ],
+  },
+
+  'markdown-html': {
+    about:
+      'Конвертер Markdown в HTML реализует GitHub Flavored Markdown (GFM) на собственном парсере, написанном на чистом JavaScript. Поддерживаются заголовки (ATX и Setext), жирный текст, курсив, зачёркивание, строчный и блочный код, нумерованные и ненумерованные списки, task-списки, цитаты, таблицы, горизонтальные линии, изображения и ссылки. Вкладка «Предпросмотр» рендерит HTML, вкладка «Источник» показывает сырой вывод.',
+    useCases: [
+      'Предпросмотр README.md перед пушем на GitHub',
+      'Конвертировать документацию в Markdown в HTML для вставки в CMS',
+      'Проверить синтаксис таблиц GFM, чтобы правильно выровнять столбцы',
+      'Изучить сгенерированный HTML для понимания рендеринга элемента Markdown',
+    ],
+    faq: [
+      {
+        q: 'Это точно такой же рендеринг, как на GitHub?',
+        a: 'Очень близко для распространённых элементов. В GFM есть крайние случаи во вложенных списках и обработке плотных vs. свободных списков, которые немного отличаются между реализациями. Для точного соответствия GitHub используйте их Markdown REST API.',
+      },
+      {
+        q: 'Санируется ли HTML на выходе?',
+        a: 'Конвертер не санирует вывод. Если в Markdown содержится сырой HTML, он появится в выводе. Не вставляйте этот HTML напрямую на страницу без санирования, если источник Markdown ненадёжен.',
+      },
+    ],
+  },
+
+  'yaml-json': {
+    about:
+      'Конвертер YAML ↔ JSON автоматически определяет, является ли входные данные YAML или JSON, и конвертирует в противоположный формат. YAML-парсер написан с нуля и поддерживает блочные и потоковые маппинги, блочные и потоковые последовательности, все скалярные типы (строка, целое, вещественное, булево, null), многострочные блочные скаляры (| и >), строки в кавычках и комментарии. При конвертации из JSON создаётся чистый YAML с отступами.',
+    useCases: [
+      'Конвертировать docker-compose.yml или манифест Kubernetes в JSON для программной обработки',
+      'Конвертировать JSON-ответ API в YAML для более удобного сравнения или документации',
+      'Проверить синтаксис YAML, когда конфиг-файл не парсится в CI',
+      'Убрать YAML-комментарии, конвертировав в JSON и обратно',
+    ],
+    faq: [
+      {
+        q: 'Сохраняются ли YAML-комментарии?',
+        a: 'Комментарии удаляются при парсинге, поскольку JSON не поддерживает комментарии. Если нужно сохранить комментарии, редактируйте YAML-источник напрямую.',
+      },
+      {
+        q: 'Какие возможности YAML поддерживаются?',
+        a: 'Блочные и потоковые маппинги и последовательности, все скалярные типы включая многострочные литералы (| и >), строки в кавычках, якоря и псевдонимы, комментарии. Ключи объединения YAML (<<: *anchor) не поддерживаются.',
+      },
+    ],
+  },
+
+  'qr-code': {
+    about:
+      'Этот генератор QR-кодов реализует полную спецификацию QR Code Model 2 на чистом JavaScript — без внешних библиотек. Поддерживаются версии с 1 по 10 (до 174 символов) в байтовом режиме, все четыре уровня коррекции ошибок (L 7%, M 15%, Q 25%, H 30%), кодирование Рида-Соломона в GF(256), все 8 масок с официальной системой штрафных очков и кодирование информации формата. Вывод доступен в SVG (векторный, любой размер) или PNG (копируется в буфер обмена).',
+    useCases: [
+      'Сгенерировать QR-код для URL для использования в презентации или печатных материалах',
+      'Создать QR-код с именем и паролем Wi-Fi для гостей',
+      'Протестировать, как разные уровни коррекции ошибок влияют на плотность кода',
+      'Создать QR-код, ведущий на vCard или событие в календаре',
+    ],
+    faq: [
+      {
+        q: 'Какова максимальная длина текста?',
+        a: 'Инструмент генерирует версии 1–10. При версии 10 с уровнем L (низкий) лимит — 174 байта. Более высокие версии поддерживают больше данных, но создают более плотные коды, которые труднее считывают старые сканеры. Для URL используйте короткие ссылки.',
+      },
+      {
+        q: 'Какой уровень коррекции ошибок выбрать?',
+        a: 'L (7%) создаёт наименьший код и подходит для чистых цифровых экранов. M (15%) — хороший выбор по умолчанию. Q (25%) или H (30%) полезны, когда QR-код будет напечатан на поверхности, которая может быть частично повреждена или закрыта.',
+      },
+    ],
+  },
+
+  'svg-optimizer': {
+    about:
+      'SVG-файлы, экспортированные из Figma, Illustrator или Inkscape, часто содержат много лишнего: XML-декларации, DOCTYPE, метаданные редактора, пустые атрибуты, избыточные значения по умолчанию, длинные десятичные координаты и лишние пробелы. Инструмент применяет до восьми настраиваемых оптимизационных проходов полностью в браузере и показывает точное сокращение в байтах.',
+    useCases: [
+      'Уменьшить размер SVG-иконок перед включением в бандл веб-приложения',
+      'Очистить SVG-экспорты из Figma или Illustrator перед коммитом в репозиторий',
+      'Удалить метаданные и комментарии из SVG, используемых в продакшен-CSS',
+      'Оценить влияние каждого отдельного прохода оптимизации на размер',
+    ],
+    faq: [
+      {
+        q: 'Это то же самое, что SVGO?',
+        a: 'Нет. SVGO — Node.js-инструмент с гораздо большим набором трансформаций: объединение путей, конвертация фигур, свёртка трансформаций. Этот инструмент выполняет более простые текстовые и атрибутные проходы, которые безопасны и обратимы. Для продакшен-пайплайнов рекомендуется SVGO или svgomg.',
+      },
+      {
+        q: 'SVG будет корректно отображаться после оптимизации?',
+        a: 'Да для стандартных проходов. Удаление комментариев, DOCTYPE, XML-деклараций, title/desc/metadata, пустых атрибутов и сжатие пробелов — всё визуально безопасно. Проход «округление чисел» (toPrecision 4) может вызвать субпиксельные различия на очень точных путях.',
       },
     ],
   },

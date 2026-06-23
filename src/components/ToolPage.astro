@@ -46,6 +46,17 @@ import BytecodeViewer from './tools/BytecodeViewer.astro';
 import JwtSign from './tools/JwtSign.astro';
 import SslCertInspector from './tools/SslCertInspector.astro';
 import ThreadDumpAnalyzer from './tools/ThreadDumpAnalyzer.astro';
+import WordCounter from './tools/WordCounter.astro';
+import HexEncoder from './tools/HexEncoder.astro';
+import HttpStatus from './tools/HttpStatus.astro';
+import UnitConverter from './tools/UnitConverter.astro';
+import ColorConverter from './tools/ColorConverter.astro';
+import ImageWebp from './tools/ImageWebp.astro';
+import CidrCalculator from './tools/CidrCalculator.astro';
+import MarkdownHtml from './tools/MarkdownHtml.astro';
+import YamlJson from './tools/YamlJson.astro';
+import QrCode from './tools/QrCode.astro';
+import SvgOptimizer from './tools/SvgOptimizer.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -88,6 +99,17 @@ const TOOL_MAP: Record<string, any> = {
   'jwt-sign': JwtSign,
   'ssl-cert-inspector': SslCertInspector,
   'thread-dump-analyzer': ThreadDumpAnalyzer,
+  'word-counter': WordCounter,
+  'hex-encoder': HexEncoder,
+  'http-status': HttpStatus,
+  'unit-converter': UnitConverter,
+  'color-converter': ColorConverter,
+  'image-webp': ImageWebp,
+  'cidr-calculator': CidrCalculator,
+  'markdown-html': MarkdownHtml,
+  'yaml-json': YamlJson,
+  'qr-code': QrCode,
+  'svg-optimizer': SvgOptimizer,
 };
 
 interface Props {
@@ -641,7 +663,7 @@ const jsonLd = {
     <div class="tool-breadcrumb">
       <a href={toolsPath}>{ui.breadcrumbTools}</a>
       <span class="sep">/</span>
-      <a href={`${toolsPath}?cat=${tool.cat}`}>{catLabel}</a>
+      <a href={`/tools/${tool.cat}/`}>{catLabel}</a>
       <span class="sep">/</span>
       <span>{name}</span>
     </div>

@@ -1,0 +1,319 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'вставьте или введите текст…' : 'paste or type text here…',
+  chars: isRu ? 'символов' : 'characters',
+  charsNoSp: isRu ? 'без пробелов' : 'no spaces',
+  words: isRu ? 'слов' : 'words',
+  lines: isRu ? 'строк' : 'lines',
+  sentences: isRu ? 'предложений' : 'sentences',
+  paragraphs: isRu ? 'абзацев' : 'paragraphs',
+  readTime: isRu ? 'мин. чтения' : 'min read',
+  clear: isRu ? 'очистить' : 'clear',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  empty: isRu ? '— вставьте текст' : '— paste text to start',
+};
+---
+
+<style is:global>
+  .wc {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wc-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+  }
+
+  .wc-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wc-status.has-text {
+    color: var(--good);
+  }
+
+  .wc-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .wc-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .wc-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .wc-body {
+    display: grid;
+    grid-template-columns: 1fr 1px 280px;
+    min-height: 320px;
+  }
+
+  .wc-in {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    box-sizing: border-box;
+  }
+
+  .wc-vsep {
+    background: var(--line);
+  }
+
+  .wc-stats {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--surface-sunken);
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .wc-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .wc-stat:last-child {
+    border-bottom: none;
+  }
+
+  .wc-stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .wc-stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .wc-stat-val.zero {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 640px) {
+    .wc-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px auto;
+    }
+    .wc-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .wc-in {
+      min-height: 200px;
+    }
+    .wc-stats {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .wc-stat {
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 8px;
+      border-bottom: none;
+      border-right: 0.5px solid var(--line);
+    }
+    .wc-stat:last-child {
+      border-right: none;
+    }
+    .wc-stat-val {
+      font-size: 22px;
+    }
+  }
+</style>
+
+<div class="wc">
+  <div class="wc-bar">
+    <span class="local-badge">// client-only</span>
+    <span class="wc-status" id="wcStatus">{t.empty}</span>
+    <button class="wc-action" id="wcCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    <button class="wc-action" id="wcClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="wc-body">
+    <textarea class="wc-in" id="wcIn" spellcheck="false" placeholder={t.ph}></textarea>
+    <div class="wc-vsep"></div>
+    <div class="wc-stats">
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcChars">0</span>
+        <span class="wc-stat-label">{t.chars}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcCharsNoSp">0</span>
+        <span class="wc-stat-label">{t.charsNoSp}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcWords">0</span>
+        <span class="wc-stat-label">{t.words}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcLines">0</span>
+        <span class="wc-stat-label">{t.lines}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcSentences">0</span>
+        <span class="wc-stat-label">{t.sentences}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcParas">0</span>
+        <span class="wc-stat-label">{t.paragraphs}</span>
+      </div>
+      <div class="wc-stat">
+        <span class="wc-stat-val zero" id="wcReadTime">0</span>
+        <span class="wc-stat-label">{t.readTime}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('wcIn');
+    var statusEl = document.getElementById('wcStatus');
+    var copyBtn = document.getElementById('wcCopy');
+    var clearBtn = document.getElementById('wcClear');
+    var elChars = document.getElementById('wcChars');
+    var elCharsNoSp = document.getElementById('wcCharsNoSp');
+    var elWords = document.getElementById('wcWords');
+    var elLines = document.getElementById('wcLines');
+    var elSentences = document.getElementById('wcSentences');
+    var elParas = document.getElementById('wcParas');
+    var elReadTime = document.getElementById('wcReadTime');
+
+    function set(el, val) {
+      el.textContent = val;
+      el.classList.toggle('zero', val === 0);
+    }
+
+    function process() {
+      var text = inEl.value;
+      if (!text) {
+        statusEl.textContent = t.empty;
+        statusEl.className = 'wc-status';
+        set(elChars, 0);
+        set(elCharsNoSp, 0);
+        set(elWords, 0);
+        set(elLines, 0);
+        set(elSentences, 0);
+        set(elParas, 0);
+        set(elReadTime, 0);
+        return;
+      }
+      var chars = text.length;
+      var charsNoSp = text.replace(/\s/g, '').length;
+      var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      var lines = text.split('\n').length;
+      var sentences = (text.match(/[^.!?]*[.!?]+/g) || []).length;
+      var paras = text.split(/\n\s*\n/).filter(function (p) {
+        return p.trim();
+      }).length;
+      var readTime = Math.max(1, Math.round(words / 200));
+
+      set(elChars, chars);
+      set(elCharsNoSp, charsNoSp);
+      set(elWords, words);
+      set(elLines, lines);
+      set(elSentences, sentences);
+      set(elParas, paras);
+      set(elReadTime, readTime);
+
+      statusEl.textContent = words + ' ' + t.words + ' · ' + chars + ' ' + t.chars;
+      statusEl.className = 'wc-status has-text';
+    }
+
+    inEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!inEl.value) return;
+      navigator.clipboard.writeText(inEl.value).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.wc');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey) {
+        inEl.value = '';
+        process();
+        inEl.focus();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inEl.value = cfg.input ?? '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

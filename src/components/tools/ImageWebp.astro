@@ -1,0 +1,361 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  drop: isRu ? 'перетащите изображение или нажмите для выбора' : 'drop an image or click to choose',
+  dropSub: isRu
+    ? 'поддерживаются PNG, JPEG, GIF, BMP, TIFF, WebP'
+    : 'PNG, JPEG, GIF, BMP, TIFF, WebP supported',
+  quality: isRu ? 'качество' : 'quality',
+  download: isRu ? 'скачать WebP' : 'download WebP',
+  clear: isRu ? 'очистить' : 'clear',
+  converting: isRu ? 'конвертируем…' : 'converting…',
+  before: isRu ? 'до' : 'before',
+  after: isRu ? 'после' : 'after',
+  saved: isRu ? 'сэкономлено' : 'saved',
+  notSupported: isRu
+    ? 'ваш браузер не поддерживает WebP экспорт'
+    : 'your browser does not support WebP export',
+};
+---
+
+<style is:global>
+  .iw {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .iw-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .iw-quality {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .iw-quality input[type='range'] {
+    accent-color: var(--accent);
+    width: 100px;
+  }
+
+  .iw-quality-val {
+    min-width: 30px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .iw-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .iw-status.ok {
+    color: var(--good);
+  }
+
+  .iw-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .iw-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .iw-action.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .iw-action.primary:hover {
+    opacity: 0.9;
+  }
+  .iw-action[disabled],
+  .iw-action.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .iw-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .iw-drop {
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 10px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition:
+      border-color 0.12s,
+      background 0.12s;
+    background: var(--surface-sunken);
+    padding: 24px;
+    text-align: center;
+  }
+  .iw-drop:hover,
+  .iw-drop.drag {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .iw-drop i {
+    font-size: 32px;
+    color: var(--ink-faint);
+  }
+  .iw-drop-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .iw-drop-sub {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .iw-drop input {
+    display: none;
+  }
+
+  .iw-preview {
+    display: none;
+    gap: 16px;
+  }
+  .iw-preview.visible {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .iw-img-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .iw-img-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+  .iw-img-label span {
+    color: var(--ink-soft);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .iw-img-box {
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--surface-sunken);
+    max-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .iw-img-box img,
+  .iw-img-box canvas {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    display: block;
+  }
+
+  @media (max-width: 560px) {
+    .iw-preview.visible {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="iw">
+  <div class="iw-bar">
+    <div class="iw-quality">
+      <span>{t.quality}</span>
+      <input type="range" id="iwQuality" min="1" max="100" value="85" />
+      <span class="iw-quality-val" id="iwQualityVal">85%</span>
+    </div>
+    <span class="local-badge">// client-only</span>
+    <span class="iw-status" id="iwStatus"></span>
+    <a class="iw-action primary disabled" id="iwDownload" download="image.webp">
+      <i class="ti ti-download"></i>{t.download}
+    </a>
+    <button class="iw-action" id="iwClear"><i class="ti ti-x"></i>{t.clear}</button>
+  </div>
+  <div class="iw-body">
+    <div class="iw-drop" id="iwDrop">
+      <i class="ti ti-photo"></i>
+      <span class="iw-drop-label">{t.drop}</span>
+      <span class="iw-drop-sub">{t.dropSub}</span>
+      <input type="file" id="iwFile" accept="image/*" />
+    </div>
+    <div class="iw-preview" id="iwPreview">
+      <div class="iw-img-wrap">
+        <div class="iw-img-label">{t.before}<span id="iwSizeBefore"></span></div>
+        <div class="iw-img-box"><img id="iwOrigImg" alt="original" /></div>
+      </div>
+      <div class="iw-img-wrap">
+        <div class="iw-img-label">{t.after}<span id="iwSizeAfter"></span></div>
+        <div class="iw-img-box"><canvas id="iwCanvas"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var dropEl = document.getElementById('iwDrop');
+    var fileEl = document.getElementById('iwFile');
+    var qualityEl = document.getElementById('iwQuality');
+    var qualityValEl = document.getElementById('iwQualityVal');
+    var statusEl = document.getElementById('iwStatus');
+    var downloadEl = document.getElementById('iwDownload');
+    var clearBtn = document.getElementById('iwClear');
+    var previewEl = document.getElementById('iwPreview');
+    var origImg = document.getElementById('iwOrigImg');
+    var canvas = document.getElementById('iwCanvas');
+    var ctx = canvas.getContext('2d');
+    var sizeBefore = document.getElementById('iwSizeBefore');
+    var sizeAfter = document.getElementById('iwSizeAfter');
+
+    var currentFile = null;
+    var currentImage = null;
+
+    function fmt(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(2) + ' MB';
+    }
+
+    function convert() {
+      if (!currentImage) return;
+      var q = parseInt(qualityEl.value) / 100;
+      canvas.width = currentImage.naturalWidth;
+      canvas.height = currentImage.naturalHeight;
+      ctx.drawImage(currentImage, 0, 0);
+      canvas.toBlob(
+        function (blob) {
+          if (!blob) {
+            statusEl.textContent = t.notSupported;
+            return;
+          }
+          var url = URL.createObjectURL(blob);
+          downloadEl.href = url;
+          downloadEl.classList.remove('disabled');
+          var origSize = currentFile ? currentFile.size : 0;
+          var newSize = blob.size;
+          sizeAfter.textContent = fmt(newSize);
+          var pct = origSize ? Math.round((1 - newSize / origSize) * 100) : 0;
+          statusEl.textContent =
+            fmt(origSize) + ' → ' + fmt(newSize) + (pct > 0 ? ' (−' + pct + '%)' : '');
+          statusEl.className = 'iw-status' + (pct > 0 ? ' ok' : '');
+        },
+        'image/webp',
+        q
+      );
+    }
+
+    function loadFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      currentFile = file;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          currentImage = img;
+          origImg.src = e.target.result;
+          sizeBefore.textContent = fmt(file.size);
+          downloadEl.download = file.name.replace(/\.[^.]+$/, '') + '.webp';
+          previewEl.classList.add('visible');
+          dropEl.style.display = 'none';
+          convert();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    dropEl.addEventListener('click', function () {
+      fileEl.click();
+    });
+    fileEl.addEventListener('change', function () {
+      if (fileEl.files[0]) loadFile(fileEl.files[0]);
+    });
+
+    dropEl.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropEl.classList.add('drag');
+    });
+    dropEl.addEventListener('dragleave', function () {
+      dropEl.classList.remove('drag');
+    });
+    dropEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropEl.classList.remove('drag');
+      if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+    });
+
+    qualityEl.addEventListener('input', function () {
+      qualityValEl.textContent = qualityEl.value + '%';
+      convert();
+    });
+
+    clearBtn.addEventListener('click', function () {
+      currentFile = null;
+      currentImage = null;
+      origImg.src = '';
+      canvas.width = 1;
+      canvas.height = 1;
+      ctx.clearRect(0, 0, 1, 1);
+      downloadEl.classList.add('disabled');
+      downloadEl.href = '';
+      statusEl.textContent = '';
+      statusEl.className = 'iw-status';
+      previewEl.classList.remove('visible');
+      dropEl.style.display = '';
+      sizeBefore.textContent = '';
+      sizeAfter.textContent = '';
+      fileEl.value = '';
+    });
+
+    window.toolGetPreset = function () {
+      return {};
+    };
+    window.toolSetPreset = function () {};
+  })();
+</script>

@@ -1,0 +1,745 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'введите текст или URL…' : 'enter text or URL…',
+  copy: isRu ? 'копировать PNG' : 'copy PNG',
+  copied: isRu ? 'скопировано' : 'copied',
+  download: isRu ? 'скачать SVG' : 'download SVG',
+  clear: isRu ? 'очистить' : 'clear',
+  size: isRu ? 'размер' : 'size',
+  ecLevel: isRu ? 'коррекция' : 'error correction',
+  empty: isRu ? '— введите текст для генерации QR' : '— enter text to generate QR code',
+  tooLong: isRu ? 'текст слишком длинный для QR кода' : 'text too long for QR code',
+};
+---
+
+<style is:global>
+  .qr {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .qr-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .qr-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .qr-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .qr-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .qr-status.ok {
+    color: var(--good);
+  }
+  .qr-status.err {
+    color: var(--bad);
+  }
+
+  .qr-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .qr-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .qr-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+  .qr-action[disabled],
+  .qr-action.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .qr-body {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .qr-input-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .qr-in {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    line-height: 1.55;
+    padding: 10px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.12s;
+  }
+  .qr-in:focus {
+    border-color: var(--accent);
+  }
+
+  .qr-canvas-wrap {
+    background: white;
+    border-radius: 10px;
+    border: 0.5px solid var(--line);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .qr-canvas-wrap canvas {
+    display: block;
+  }
+
+  .qr-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 560px) {
+    .qr-body {
+      grid-template-columns: 1fr;
+    }
+    .qr-canvas-wrap {
+      justify-self: center;
+    }
+  }
+</style>
+
+<div class="qr">
+  <div class="qr-bar">
+    <div class="qr-opt">
+      <label for="qrSize">{t.size}</label>
+      <select class="qr-select" id="qrSize">
+        <option value="200">200px</option>
+        <option value="300" selected>300px</option>
+        <option value="400">400px</option>
+        <option value="600">600px</option>
+      </select>
+    </div>
+    <div class="qr-opt">
+      <label for="qrEc">{t.ecLevel}</label>
+      <select class="qr-select" id="qrEc">
+        <option value="L">L (7%)</option>
+        <option value="M" selected>M (15%)</option>
+        <option value="Q">Q (25%)</option>
+        <option value="H">H (30%)</option>
+      </select>
+    </div>
+    <span class="local-badge">// client-only</span>
+    <span class="qr-status" id="qrStatus">{t.empty}</span>
+    <button class="qr-action disabled" id="qrCopyPng"><i class="ti ti-copy"></i>{t.copy}</button>
+    <a class="qr-action disabled" id="qrDownload" download="qrcode.svg"
+      ><i class="ti ti-download"></i>{t.download}</a
+    >
+    <button class="qr-action" id="qrClear"><i class="ti ti-x"></i>{t.clear}</button>
+  </div>
+  <div class="qr-body">
+    <div class="qr-input-col">
+      <textarea class="qr-in" id="qrIn" data-hist-main-input spellcheck="false" placeholder={t.ph}
+      ></textarea>
+      <div class="qr-info" id="qrInfo"></div>
+    </div>
+    <div class="qr-canvas-wrap" id="qrWrap" style="display:none">
+      <canvas id="qrCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    // ── Reed-Solomon & QR encoder (byte mode, versions 1-10) ──────────────
+
+    var EC_CODEWORDS = {
+      1: { L: [7, 1, 19], M: [10, 1, 16], Q: [13, 1, 13], H: [17, 1, 9] },
+      2: { L: [10, 1, 34], M: [16, 1, 28], Q: [22, 1, 22], H: [28, 1, 16] },
+      3: { L: [15, 1, 55], M: [26, 1, 44], Q: [18, 2, 17], H: [22, 2, 13] },
+      4: { L: [20, 1, 80], M: [18, 2, 32], Q: [26, 2, 24], H: [16, 4, 9] },
+      5: { L: [26, 1, 108], M: [24, 2, 43], Q: [18, 2, 15], H: [22, 2, 11] },
+      6: { L: [18, 2, 68], M: [16, 4, 27], Q: [24, 4, 19], H: [28, 4, 15] },
+      7: { L: [20, 2, 78], M: [18, 4, 31], Q: [18, 2, 14], H: [26, 4, 13] },
+      8: { L: [24, 2, 97], M: [22, 2, 38], Q: [22, 4, 18], H: [26, 4, 14] },
+      9: { L: [30, 2, 116], M: [22, 3, 36], Q: [20, 4, 16], H: [24, 4, 12] },
+      10: { L: [18, 2, 68], M: [26, 4, 43], Q: [24, 6, 19], H: [28, 6, 15] },
+    };
+    // capacity in bytes (data codewords * blocks)
+    var CAP = {};
+    Object.keys(EC_CODEWORDS).forEach(function (v) {
+      var vn = parseInt(v);
+      CAP[vn] = {};
+      ['L', 'M', 'Q', 'H'].forEach(function (ec) {
+        var info = EC_CODEWORDS[vn][ec];
+        CAP[vn][ec] = info[1] * info[2];
+      });
+    });
+
+    var GF_EXP = new Uint8Array(512),
+      GF_LOG = new Uint8Array(256);
+    (function () {
+      var x = 1;
+      for (var i = 0; i < 255; i++) {
+        GF_EXP[i] = x;
+        GF_LOG[x] = i;
+        x = x < 128 ? x << 1 : (x << 1) ^ 285;
+      }
+      for (var j = 255; j < 512; j++) GF_EXP[j] = GF_EXP[j - 255];
+    })();
+
+    function gfMul(a, b) {
+      return a && b ? GF_EXP[(GF_LOG[a] + GF_LOG[b]) % 255] : 0;
+    }
+    function gfDiv(a, b) {
+      if (!b) throw new Error('div0');
+      return a ? GF_EXP[(GF_LOG[a] + 255 - GF_LOG[b]) % 255] : 0;
+    }
+    function gfPow(x, p) {
+      return GF_EXP[(GF_LOG[x] * p) % 255];
+    }
+
+    function rsGenerator(n) {
+      var g = [1];
+      for (var i = 0; i < n; i++) {
+        var t = [1, gfPow(2, i)];
+        var r = [0];
+        for (var a = 0; a < g.length + t.length - 1; a++) r[a] = 0;
+        for (var b = 0; b < g.length; b++)
+          for (var c = 0; c < t.length; c++) r[b + c] ^= gfMul(g[b], t[c]);
+        g = r;
+      }
+      return g;
+    }
+
+    function rsEncode(data, ecCount) {
+      var gen = rsGenerator(ecCount);
+      var msg = data.slice();
+      for (var i = 0; i < ecCount; i++) msg.push(0);
+      for (var j = 0; j < data.length; j++) {
+        var coef = msg[j];
+        if (coef !== 0) for (var k = 0; k < gen.length; k++) msg[j + k] ^= gfMul(gen[k], coef);
+      }
+      return msg.slice(data.length);
+    }
+
+    var FORMAT_INFO = {
+      L: {
+        0: '111011111000100',
+        1: '111001011110011',
+        2: '111110110101010',
+        3: '111100010011101',
+        4: '110011000101111',
+        5: '110001100011000',
+        6: '110110001000001',
+        7: '110100101110110',
+      },
+      M: {
+        0: '101010000010010',
+        1: '101000100100101',
+        2: '101111001111100',
+        3: '101101101001011',
+        4: '100010111111001',
+        5: '100000011001110',
+        6: '100111110010111',
+        7: '100101010100000',
+      },
+      Q: {
+        0: '011010101011111',
+        1: '011000001101000',
+        2: '011111100110001',
+        3: '011101000000110',
+        4: '010010010110100',
+        5: '010000110000011',
+        6: '010111011011010',
+        7: '010101111101101',
+      },
+      H: {
+        0: '001011010001001',
+        1: '001001110111110',
+        2: '001110011100111',
+        3: '001100111010000',
+        4: '000011101100010',
+        5: '000001001010101',
+        6: '000110100001100',
+        7: '000100000111011',
+      },
+    };
+
+    function getVersion(len, ec) {
+      for (var v = 1; v <= 10; v++) if (CAP[v] && CAP[v][ec] >= len) return v;
+      return -1;
+    }
+
+    function generateQR(text, ec) {
+      var bytes = new TextEncoder().encode(text);
+      var ver = getVersion(bytes.length, ec);
+      if (ver < 0) throw new Error('too long');
+
+      var size = ver * 4 + 17;
+      var modules = [];
+      var isFunc = [];
+      for (var y = 0; y < size; y++) {
+        modules.push(new Uint8Array(size));
+        isFunc.push(new Uint8Array(size));
+      }
+
+      function setModule(x, y, dark) {
+        if (x >= 0 && x < size && y >= 0 && y < size) {
+          modules[y][x] = dark ? 1 : 0;
+          isFunc[y][x] = 1;
+        }
+      }
+      function isDark(x, y) {
+        return modules[y] && modules[y][x];
+      }
+
+      // Finder patterns
+      function addFinder(cx, cy) {
+        for (var dy = -1; dy <= 7; dy++)
+          for (var dx = -1; dx <= 7; dx++) {
+            if (cx + dx < 0 || cx + dx >= size || cy + dy < 0 || cy + dy >= size) continue;
+            var dark =
+              dx === 0 || dx === 6 || dy === 0 || dy === 6
+                ? 1
+                : dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4
+                  ? 1
+                  : 0;
+            setModule(cx + dx, cy + dy, dark);
+          }
+      }
+      addFinder(0, 0);
+      addFinder(size - 7, 0);
+      addFinder(0, size - 7);
+
+      // Separators (already covered by finder -1 offset)
+      // Timing
+      for (var ti = 8; ti < size - 8; ti++) {
+        setModule(ti, 6, ti % 2 === 0);
+        setModule(6, ti, ti % 2 === 0);
+      }
+      // Dark module
+      setModule(8, size - 8, 1);
+
+      // Alignment patterns (ver >= 2)
+      var ALIGN = {
+        2: [6, 18],
+        3: [6, 22],
+        4: [6, 26],
+        5: [6, 30],
+        6: [6, 34],
+        7: [6, 22, 38],
+        8: [6, 24, 42],
+        9: [6, 28, 46],
+        10: [6, 28, 50],
+      };
+      if (ver >= 2) {
+        var coords = ALIGN[ver];
+        for (var ai = 0; ai < coords.length; ai++)
+          for (var aj = 0; aj < coords.length; aj++) {
+            var ax = coords[aj],
+              ay = coords[ai];
+            if (isFunc[ay][ax]) continue;
+            for (var ady = -2; ady <= 2; ady++)
+              for (var adx = -2; adx <= 2; adx++) {
+                setModule(
+                  ax + adx,
+                  ay + ady,
+                  Math.abs(adx) === 2 || Math.abs(ady) === 2 || (adx === 0 && ady === 0) ? 1 : 0
+                );
+              }
+          }
+      }
+
+      // Format info placeholders
+      for (var fi = 0; fi <= 5; fi++) {
+        isFunc[8][fi] = 1;
+        isFunc[fi][8] = 1;
+      }
+      isFunc[8][7] = 1;
+      isFunc[7][8] = 1;
+      isFunc[8][8] = 1;
+      for (var fi2 = 0; fi2 <= 7; fi2++) {
+        isFunc[8][size - 1 - fi2] = 1;
+        isFunc[size - 1 - fi2][8] = 1;
+      }
+
+      // Version info (ver >= 7) — skip for now (max ver 10 needs it but let's handle)
+      if (ver >= 7) {
+        // version info bits (simplified — we'll just mark those areas as func)
+        for (var vi = 0; vi < 6; vi++)
+          for (var vj = 0; vj < 3; vj++) {
+            isFunc[vi][size - 11 + vj] = 1;
+            isFunc[size - 11 + vj][vi] = 1;
+          }
+      }
+
+      // Data encoding
+      var ecInfo = EC_CODEWORDS[ver][ec];
+      var numBlocks = ecInfo[1],
+        blockDc = ecInfo[2],
+        numEc = ecInfo[0];
+      var headerBits = [0, 1, 0, 0]; // byte mode
+      var lenBits = [];
+      var lenBitCount = ver < 10 ? 8 : 16;
+      for (var lb = lenBitCount - 1; lb >= 0; lb--) lenBits.push((bytes.length >> lb) & 1);
+      var dataBits = headerBits.concat(lenBits);
+      for (var bi = 0; bi < bytes.length; bi++)
+        for (var bb = 7; bb >= 0; bb--) dataBits.push((bytes[bi] >> bb) & 1);
+      // padding
+      var totalDc = numBlocks * blockDc;
+      var totalBits = totalDc * 8;
+      // terminator
+      for (var ti2 = 0; ti2 < 4 && dataBits.length < totalBits; ti2++) dataBits.push(0);
+      while (dataBits.length % 8 !== 0) dataBits.push(0);
+      var padBytes = [0xec, 0x11];
+      for (var pi = 0; dataBits.length < totalBits; pi++)
+        for (var pb = 7; pb >= 0; pb--) dataBits.push((padBytes[pi % 2] >> pb) & 1);
+
+      // Build codewords
+      var dcWords = [];
+      for (var bi2 = 0; bi2 < dataBits.length; bi2 += 8) {
+        var b = 0;
+        for (var bb2 = 0; bb2 < 8; bb2++) b = (b << 1) | dataBits[bi2 + bb2];
+        dcWords.push(b);
+      }
+      // Split into blocks
+      var blocks = [];
+      for (var bk = 0; bk < numBlocks; bk++) blocks.push(dcWords.splice(0, blockDc));
+      var ecBlocks = blocks.map(function (blk) {
+        return rsEncode(blk, numEc);
+      });
+
+      // Interleave
+      var codewords = [];
+      for (var ii = 0; ii < blockDc; ii++)
+        for (var jj = 0; jj < numBlocks; jj++) codewords.push(blocks[jj][ii]);
+      for (var ei = 0; ei < numEc; ei++)
+        for (var ej = 0; ej < numBlocks; ej++) codewords.push(ecBlocks[ej][ei]);
+
+      // Place data bits
+      var bits = [];
+      for (var ci = 0; ci < codewords.length; ci++)
+        for (var cb = 7; cb >= 0; cb--) bits.push((codewords[ci] >> cb) & 1);
+      // remainder bits
+      var REMAINDER = [0, 7, 7, 7, 7, 7, 0, 0, 0, 0];
+      for (var ri = 0; ri < (REMAINDER[ver] || 0); ri++) bits.push(0);
+
+      var bitIdx = 0;
+      for (var col = size - 1; col >= 1; col -= 2) {
+        if (col === 6) col = 5;
+        for (var rr = 0; rr < size; rr++) {
+          var row = col % 4 === 0 || col === 5 ? size - 1 - rr : rr; // upward when col & 2 == 0? standard zigzag
+          // Actually standard: zigzag goes up when (col/2)%2==0
+          row = Math.floor((size - 1 - col) / 2) % 2 === 0 ? size - 1 - rr : rr;
+          for (var cd = 0; cd <= 1; cd++) {
+            var cx2 = col - cd;
+            if (isFunc[row][cx2]) continue;
+            if (bitIdx < bits.length) {
+              modules[row][cx2] = bits[bitIdx++];
+            }
+          }
+        }
+      }
+
+      // Apply mask 0 (i+j) % 2 == 0
+      var bestMask = -1,
+        bestPenalty = Infinity;
+      var MASKS = [
+        function (i, j) {
+          return (i + j) % 2 === 0;
+        },
+        function (i, j) {
+          return i % 2 === 0;
+        },
+        function (i, j) {
+          return j % 3 === 0;
+        },
+        function (i, j) {
+          return (i + j) % 3 === 0;
+        },
+        function (i, j) {
+          return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+        },
+        function (i, j) {
+          return ((i * j) % 2) + ((i * j) % 3) === 0;
+        },
+        function (i, j) {
+          return (((i * j) % 2) + ((i * j) % 3)) % 2 === 0;
+        },
+        function (i, j) {
+          return (((i + j) % 2) + ((i * j) % 3)) % 2 === 0;
+        },
+      ];
+
+      for (var mi = 0; mi < 8; mi++) {
+        var mods2 = modules.map(function (r) {
+          return r.slice();
+        });
+        for (var my = 0; my < size; my++)
+          for (var mx = 0; mx < size; mx++) {
+            if (!isFunc[my][mx] && MASKS[mi](my, mx)) mods2[my][mx] ^= 1;
+          }
+        // Penalty score (simplified)
+        var pen = 0;
+        for (var py = 0; py < size; py++) {
+          var run = 1;
+          for (var px = 1; px < size; px++) {
+            if (mods2[py][px] === mods2[py][px - 1]) run++;
+            else {
+              if (run >= 5) pen += run - 2;
+              run = 1;
+            }
+          }
+          if (run >= 5) pen += run - 2;
+        }
+        if (pen < bestPenalty) {
+          bestPenalty = pen;
+          bestMask = mi;
+        }
+      }
+      for (var ay2 = 0; ay2 < size; ay2++)
+        for (var ax2 = 0; ax2 < size; ax2++) {
+          if (!isFunc[ay2][ax2] && MASKS[bestMask](ay2, ax2)) modules[ay2][ax2] ^= 1;
+        }
+
+      // Write format info
+      var fmtStr = FORMAT_INFO[ec][bestMask];
+      var fmtBits = fmtStr.split('').map(Number);
+      // horizontal (around top-left finder)
+      var hPos = [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        size - 7,
+        size - 6,
+        size - 5,
+        size - 4,
+        size - 3,
+        size - 2,
+        size - 1,
+      ];
+      for (var hpi = 0; hpi < 15; hpi++) {
+        modules[8][hPos[hpi]] = fmtBits[hpi];
+        modules[hPos[hpi]][8] = fmtBits[14 - hpi];
+      }
+
+      // Version info (ver >= 7)
+      if (ver >= 7) {
+        // Encode version (18 bits)
+        var VER_INFO = {
+          7: '000010011110100110',
+          8: '000010110011010010',
+          9: '000011010100111011',
+          10: '000011101001101011',
+        };
+        var vBits = (VER_INFO[ver] || '').split('').map(Number);
+        if (vBits.length === 18) {
+          for (var vi2 = 0; vi2 < 6; vi2++)
+            for (var vj2 = 0; vj2 < 3; vj2++) {
+              var b2 = vBits[vi2 * 3 + vj2];
+              modules[vi2][size - 11 + vj2] = b2;
+              modules[size - 11 + vj2][vi2] = b2;
+            }
+        }
+      }
+
+      return { modules: modules, size: size, version: ver };
+    }
+
+    // ── UI ────────────────────────────────────────────────────
+    var inEl = document.getElementById('qrIn');
+    var statusEl = document.getElementById('qrStatus');
+    var wrapEl = document.getElementById('qrWrap');
+    var canvas = document.getElementById('qrCanvas');
+    var infoEl = document.getElementById('qrInfo');
+    var sizeEl = document.getElementById('qrSize');
+    var ecEl = document.getElementById('qrEc');
+    var copyBtn = document.getElementById('qrCopyPng');
+    var downloadEl = document.getElementById('qrDownload');
+    var clearBtn = document.getElementById('qrClear');
+    var lastSvg = '';
+
+    function render() {
+      var text = inEl.value;
+      var px = parseInt(sizeEl.value);
+      var ec = ecEl.value;
+
+      if (!text) {
+        wrapEl.style.display = 'none';
+        statusEl.textContent = t.empty;
+        statusEl.className = 'qr-status';
+        copyBtn.classList.add('disabled');
+        downloadEl.classList.add('disabled');
+        lastSvg = '';
+        infoEl.textContent = '';
+        return;
+      }
+
+      var qr;
+      try {
+        qr = generateQR(text, ec);
+      } catch (e) {
+        statusEl.textContent = t.tooLong;
+        statusEl.className = 'qr-status err';
+        wrapEl.style.display = 'none';
+        lastSvg = '';
+        return;
+      }
+
+      var size = qr.size,
+        mods = qr.modules;
+      var cellSize = px / (size + 8);
+      var off = cellSize * 4;
+      var total = px;
+
+      canvas.width = canvas.height = total;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, total, total);
+      ctx.fillStyle = '#000000';
+      for (var y = 0; y < size; y++)
+        for (var x = 0; x < size; x++) {
+          if (mods[y][x])
+            ctx.fillRect(
+              Math.round(off + x * cellSize),
+              Math.round(off + y * cellSize),
+              Math.ceil(cellSize),
+              Math.ceil(cellSize)
+            );
+        }
+
+      // SVG
+      var svgCells = '';
+      for (var sy = 0; sy < size; sy++)
+        for (var sx = 0; sx < size; sx++) {
+          if (mods[sy][sx])
+            svgCells += '<rect x="' + (sx + 4) + '" y="' + (sy + 4) + '" width="1" height="1"/>';
+        }
+      lastSvg =
+        '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+        (size + 8) +
+        ' ' +
+        (size + 8) +
+        '"><rect width="100%" height="100%" fill="white"/><g fill="black">' +
+        svgCells +
+        '</g></svg>';
+      var blob = new Blob([lastSvg], { type: 'image/svg+xml' });
+      downloadEl.href = URL.createObjectURL(blob);
+      downloadEl.classList.remove('disabled');
+      copyBtn.classList.remove('disabled');
+      wrapEl.style.display = '';
+
+      statusEl.textContent = 'v' + qr.version + ' · ' + ec + ' · ' + text.length + ' chars';
+      statusEl.className = 'qr-status ok';
+      infoEl.textContent = 'version ' + qr.version + ' · ' + size + '×' + size + ' modules';
+    }
+
+    var debounceTimer;
+    inEl.addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(render, 120);
+    });
+    sizeEl.addEventListener('change', render);
+    ecEl.addEventListener('change', render);
+
+    copyBtn.addEventListener('click', function () {
+      canvas.toBlob(function (blob) {
+        navigator.clipboard
+          .write([new ClipboardItem({ 'image/png': blob })])
+          .then(function () {
+            copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+            copyBtn.classList.add('done');
+            setTimeout(function () {
+              copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+              copyBtn.classList.remove('done');
+            }, 1500);
+          })
+          .catch(function () {
+            // fallback: open in new tab
+            var url = canvas.toDataURL();
+            window.open(url, '_blank');
+          });
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      render();
+      inEl.focus();
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, ec: ecEl.value, size: sizeEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.ec) ecEl.value = cfg.ec;
+      if (cfg.size) sizeEl.value = cfg.size;
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

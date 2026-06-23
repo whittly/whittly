@@ -39,6 +39,17 @@ export const SEO_TITLE: Record<string, string> = {
   'bytecode-viewer': 'Java Bytecode Viewer — JVM Instruction Inspector',
   'jwt-sign': 'JWT Signer — HS256, RS256, ES256',
   'ssl-cert-inspector': 'SSL Certificate Inspector — Parse PEM Online',
+  'word-counter': 'Word Counter — Characters, Words, Lines & Reading Time',
+  'hex-encoder': 'Hex Encoder & Decoder — Text to Hex Online',
+  'http-status': 'HTTP Status Codes — Complete Reference',
+  'unit-converter': 'Unit Converter — Length, Weight, Temperature, Data & More',
+  'color-converter': 'Color Converter — HEX, RGB, HSL, OKLCH, LAB',
+  'image-webp': 'Image to WebP Converter — Convert PNG & JPEG Online',
+  'cidr-calculator': 'CIDR Calculator — Subnet Mask & IP Range Tool',
+  'markdown-html': 'Markdown to HTML Converter — GitHub Flavored Markdown',
+  'yaml-json': 'YAML ↔ JSON Converter — Two-Way Online',
+  'qr-code': 'QR Code Generator — Free Online, SVG & PNG',
+  'svg-optimizer': 'SVG Optimizer — Clean and Minify SVG Online',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -120,6 +131,28 @@ export const SEO_DESC: Record<string, string> = {
     'Free online JWT signer. Sign JWT tokens with HS256, RS256, or ES256. Set any claims, choose algorithm, enter your secret or key. Runs entirely in your browser via WebCrypto.',
   'ssl-cert-inspector':
     'Free online SSL certificate inspector. Paste a PEM certificate to view subject, issuer, validity dates, SANs, and SHA-256 fingerprint. No upload — runs in your browser.',
+  'word-counter':
+    'Free online word counter. Count characters, words, lines, sentences, paragraphs, and estimate reading time. Works instantly in your browser — no data uploaded.',
+  'hex-encoder':
+    'Free online hex encoder and decoder. Convert text to hexadecimal bytes and back. Choose separator, uppercase output, and UTF-8 or ASCII encoding. No signup needed.',
+  'http-status':
+    'Complete HTTP status code reference. 1xx informational, 2xx success, 3xx redirects, 4xx client errors, 5xx server errors — with descriptions, causes, and common use cases.',
+  'unit-converter':
+    'Free online unit converter. Convert length, weight, temperature, data, area, volume, speed, and time units instantly. Over 60 units supported, runs in your browser.',
+  'color-converter':
+    'Free online color converter. Convert between HEX, RGB, HSL, OKLCH, and CIELab color formats instantly. Auto-detects input format. No upload — runs in your browser.',
+  'image-webp':
+    'Free online image to WebP converter. Convert PNG, JPEG, GIF, and BMP to WebP in your browser. Adjust quality, preview before and after, download the result instantly.',
+  'cidr-calculator':
+    'Free online CIDR and subnet calculator. Enter any CIDR notation to get network address, broadcast, first/last host, subnet mask, wildcard, and binary breakdown.',
+  'markdown-html':
+    'Free online Markdown to HTML converter. Renders GitHub Flavored Markdown including tables, task lists, fenced code blocks, and strikethrough. Live split-panel preview.',
+  'yaml-json':
+    'Free online YAML ↔ JSON converter. Convert YAML to JSON and JSON to YAML. Auto-detects input format, preserves structure. Custom parser, no libraries needed.',
+  'qr-code':
+    'Free online QR code generator. Create QR codes as SVG or PNG directly in your browser. Choose size and error correction level (L/M/Q/H). Pure JS, no server required.',
+  'svg-optimizer':
+    'Free online SVG optimizer. Remove comments, empty attributes, metadata, and default values. Round decimal numbers, collapse whitespace. Shows exact bytes saved.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -201,4 +234,26 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатная подпись JWT токенов онлайн. Подписывай JWT с алгоритмами HS256, RS256 или ES256. Задавай любые claims, вводи секрет или ключ. Работает в браузере через WebCrypto.',
   'ssl-cert-inspector':
     'Бесплатный инспектор SSL-сертификатов онлайн. Вставь PEM-сертификат и смотри subject, issuer, срок действия, SAN и SHA-256 fingerprint. Без загрузки — работает в браузере.',
+  'word-counter':
+    'Бесплатный счётчик слов онлайн. Подсчёт символов, слов, строк, предложений, абзацев и оценка времени чтения. Работает в браузере, данные не отправляются.',
+  'hex-encoder':
+    'Бесплатный HEX-кодировщик и декодировщик онлайн. Конвертация текста в шестнадцатеричные байты и обратно. Выбор разделителя, верхний регистр, кодировка UTF-8.',
+  'http-status':
+    'Полный справочник HTTP-кодов состояния. 1xx информационные, 2xx успех, 3xx редиректы, 4xx ошибки клиента, 5xx ошибки сервера — с описаниями и практическими примерами.',
+  'unit-converter':
+    'Бесплатный конвертер единиц измерения онлайн. Длина, масса, температура, данные, площадь, объём, скорость, время — более 60 единиц, мгновенный результат в браузере.',
+  'color-converter':
+    'Бесплатный конвертер цветов онлайн. Конвертируй между HEX, RGB, HSL, OKLCH и CIELab форматами. Автоопределение формата, без загрузки — работает прямо в браузере.',
+  'image-webp':
+    'Бесплатный конвертер изображений в WebP онлайн. PNG, JPEG, GIF, BMP → WebP прямо в браузере. Настройка качества, предпросмотр до и после, мгновенное скачивание.',
+  'cidr-calculator':
+    'Бесплатный калькулятор CIDR и подсетей онлайн. Введи нотацию CIDR и получи адрес сети, broadcast, первый/последний хост, маску, wildcard и бинарное представление.',
+  'markdown-html':
+    'Бесплатный конвертер Markdown в HTML онлайн. GitHub Flavored Markdown: таблицы, task lists, fenced code blocks, зачёркивание. Живой предпросмотр, разделённые панели.',
+  'yaml-json':
+    'Бесплатный конвертер YAML ↔ JSON онлайн. Конвертация YAML в JSON и JSON в YAML с автоопределением формата. Собственный парсер, поддержка комментариев.',
+  'qr-code':
+    'Бесплатный генератор QR-кодов онлайн. Создавай QR-коды в SVG и PNG прямо в браузере. Выбор размера и уровня коррекции ошибок (L/M/Q/H). Без сервера, чистый JS.',
+  'svg-optimizer':
+    'Бесплатный оптимизатор SVG онлайн. Удаление комментариев, пустых атрибутов, метаданных, значений по умолчанию. Округление чисел, сжатие пробелов. Показывает экономию в байтах.',
 };

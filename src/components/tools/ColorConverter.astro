@@ -1,0 +1,500 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu
+    ? 'введите цвет: #ff6b35, rgb(255,107,53), hsl(18,100%,60%)…'
+    : 'enter color: #ff6b35, rgb(255,107,53), hsl(18,100%,60%)…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  invalid: isRu ? 'неверный формат цвета' : 'invalid color format',
+  empty: isRu ? '— введите цвет' : '— enter a color value',
+  preview: isRu ? 'предпросмотр' : 'preview',
+};
+---
+
+<style is:global>
+  .col {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .col-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .col-input {
+    flex: 1;
+    min-width: 200px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .col-input:focus {
+    border-color: var(--accent);
+  }
+  .col-input.err {
+    border-color: var(--bad);
+  }
+
+  .col-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .col-status.err {
+    color: var(--bad);
+  }
+
+  .col-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .col-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .col-body {
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .col-swatch {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    border: 0.5px solid var(--line);
+    flex-shrink: 0;
+    background: var(--surface-sunken);
+    transition: background 0.15s;
+  }
+
+  .col-formats {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .col-fmt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    transition: border-color 0.12s;
+  }
+  .col-fmt:hover {
+    border-color: var(--line-strong);
+  }
+
+  .col-fmt-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    width: 52px;
+    flex-shrink: 0;
+  }
+
+  .col-fmt-val {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14.5px;
+    color: var(--ink);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .col-fmt-val.ph {
+    color: var(--ink-faint);
+  }
+
+  .col-fmt-copy {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.1s;
+    flex-shrink: 0;
+  }
+  .col-fmt-copy:hover {
+    color: var(--accent);
+  }
+  .col-fmt-copy.done {
+    color: var(--good);
+  }
+
+  @media (max-width: 520px) {
+    .col-body {
+      flex-direction: column;
+    }
+    .col-swatch {
+      width: 100%;
+      height: 48px;
+    }
+  }
+</style>
+
+<div class="col">
+  <div class="col-bar">
+    <input
+      class="col-input"
+      id="colInput"
+      type="text"
+      placeholder={t.ph}
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <span class="col-status" id="colStatus">{t.empty}</span>
+    <span class="local-badge">// client-only</span>
+    <button class="col-action" id="colClear"><i class="ti ti-x"></i>{t.clear}</button>
+  </div>
+  <div class="col-body">
+    <div class="col-swatch" id="colSwatch"></div>
+    <div class="col-formats" id="colFormats">
+      {
+        ['hex', 'rgb', 'hsl', 'oklch', 'lab'].map((fmt) => (
+          <div class="col-fmt" data-fmt={fmt}>
+            <span class="col-fmt-label">{fmt}</span>
+            <span class="col-fmt-val ph" id={`colVal_${fmt}`}>
+              {t.empty}
+            </span>
+            <button class="col-fmt-copy" data-fmt={fmt} title={t.copy}>
+              <i class="ti ti-copy" />
+            </button>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inputEl = document.getElementById('colInput');
+    var statusEl = document.getElementById('colStatus');
+    var swatchEl = document.getElementById('colSwatch');
+    var clearBtn = document.getElementById('colClear');
+
+    // ── Math ────────────────────────────────────────────
+    function clamp(v, mn, mx) {
+      return Math.max(mn, Math.min(mx, v));
+    }
+
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3)
+        hex = hex
+          .split('')
+          .map(function (c) {
+            return c + c;
+          })
+          .join('');
+      if (hex.length !== 6) return null;
+      var r = parseInt(hex.slice(0, 2), 16),
+        g = parseInt(hex.slice(2, 4), 16),
+        b = parseInt(hex.slice(4, 6), 16);
+      if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+      return [r, g, b];
+    }
+
+    function rgbToHex(r, g, b) {
+      return (
+        '#' +
+        [r, g, b]
+          .map(function (v) {
+            return Math.round(clamp(v, 0, 255))
+              .toString(16)
+              .padStart(2, '0');
+          })
+          .join('')
+      );
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+      var mx = Math.max(r, g, b),
+        mn = Math.min(r, g, b),
+        d = mx - mn,
+        l = (mx + mn) / 2,
+        h = 0,
+        s = 0;
+      if (d) {
+        s = d / (1 - Math.abs(2 * l - 1));
+        if (mx === r) h = ((g - b) / d + 6) % 6;
+        else if (mx === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60;
+      }
+      return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+    }
+
+    function hslToRgb(h, s, l) {
+      s /= 100;
+      l /= 100;
+      var c = (1 - Math.abs(2 * l - 1)) * s,
+        x = c * (1 - Math.abs(((h / 60) % 2) - 1)),
+        m = l - c / 2;
+      var r = 0,
+        g = 0,
+        b = 0;
+      if (h < 60) {
+        r = c;
+        g = x;
+      } else if (h < 120) {
+        r = x;
+        g = c;
+      } else if (h < 180) {
+        g = c;
+        b = x;
+      } else if (h < 240) {
+        g = x;
+        b = c;
+      } else if (h < 300) {
+        r = x;
+        b = c;
+      } else {
+        r = c;
+        b = x;
+      }
+      return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+    }
+
+    function linearize(v) {
+      v /= 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+    function delinearize(v) {
+      return v <= 0.0031308 ? v * 12.92 * 255 : (1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255;
+    }
+
+    function rgbToOklab(r, g, b) {
+      var rl = linearize(r),
+        gl = linearize(g),
+        bl = linearize(b);
+      var l = Math.cbrt(0.4122214708 * rl + 0.5363325363 * gl + 0.0514459929 * bl);
+      var m = Math.cbrt(0.2119034982 * rl + 0.6806995451 * gl + 0.1073969566 * bl);
+      var s = Math.cbrt(0.0883024619 * rl + 0.2817188376 * gl + 0.6299787005 * bl);
+      return [
+        0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+        1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+        0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+      ];
+    }
+
+    function oklabToRgb(L, a, b_) {
+      var l = L + 0.3963377774 * a + 0.2158037573 * b_;
+      var m = L - 0.1055613458 * a - 0.0638541728 * b_;
+      var s = L - 0.0894841775 * a - 1.291485548 * b_;
+      l = l * l * l;
+      m = m * m * m;
+      s = s * s * s;
+      var rl = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+      var gl = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+      var bl = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+      return [
+        clamp(delinearize(rl), 0, 255),
+        clamp(delinearize(gl), 0, 255),
+        clamp(delinearize(bl), 0, 255),
+      ];
+    }
+
+    function rgbToOklch(r, g, b) {
+      var lab = rgbToOklab(r, g, b);
+      var C = Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2]);
+      var H = (Math.atan2(lab[2], lab[1]) * 180) / Math.PI;
+      if (H < 0) H += 360;
+      return [lab[0] * 100, C * 100, H];
+    }
+
+    function rgbToLab(r, g, b) {
+      var rl = linearize(r),
+        gl = linearize(g),
+        bl = linearize(b);
+      var X = (0.4124564 * rl + 0.3575761 * gl + 0.1804375 * bl) / 0.95047;
+      var Y = (0.2126729 * rl + 0.7151522 * gl + 0.072175 * bl) / 1.0;
+      var Z = (0.0193339 * rl + 0.119192 * gl + 0.9503041 * bl) / 1.08883;
+      function f(t) {
+        return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+      }
+      var fx = f(X),
+        fy = f(Y),
+        fz = f(Z);
+      return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+    }
+
+    // ── Parse any CSS color ──────────────────────────────
+    function parse(str) {
+      str = str.trim().toLowerCase();
+      // hex
+      if (/^#?[0-9a-f]{3,8}$/.test(str)) {
+        var hex = str.startsWith('#') ? str : '#' + str;
+        if (hex.length === 4 || hex.length === 7) return hexToRgb(hex);
+      }
+      // rgb/rgba
+      var rgbM = str.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/);
+      if (rgbM) return [parseFloat(rgbM[1]), parseFloat(rgbM[2]), parseFloat(rgbM[3])];
+      // hsl/hsla
+      var hslM = str.match(/^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?/);
+      if (hslM) return hslToRgb(parseFloat(hslM[1]), parseFloat(hslM[2]), parseFloat(hslM[3]));
+      // oklch
+      var oclM = str.match(/^oklch\(\s*([\d.]+)%?\s+([\d.]+)%?\s+([\d.]+)/);
+      if (oclM) {
+        var L = parseFloat(oclM[1]) / 100,
+          C = parseFloat(oclM[2]) / 100,
+          H = parseFloat(oclM[3]);
+        var a = C * Math.cos((H * Math.PI) / 180),
+          b = C * Math.sin((H * Math.PI) / 180);
+        var rgb = oklabToRgb(L, a, b);
+        return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2])];
+      }
+      // use canvas for named colors
+      try {
+        var cv = document.createElement('canvas');
+        cv.width = cv.height = 1;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = str;
+        ctx.fillRect(0, 0, 1, 1);
+        var d = ctx.getImageData(0, 0, 1, 1).data;
+        if (d[3] > 0) return [d[0], d[1], d[2]];
+      } catch (e) {}
+      return null;
+    }
+
+    function n(v, dec) {
+      return parseFloat(v.toFixed(dec));
+    }
+
+    function process() {
+      var raw = inputEl.value.trim();
+      if (!raw) {
+        statusEl.textContent = t.empty;
+        statusEl.className = 'col-status';
+        inputEl.classList.remove('err');
+        swatchEl.style.background = '';
+        setAll(null);
+        return;
+      }
+      var rgb = parse(raw);
+      if (!rgb) {
+        statusEl.textContent = t.invalid;
+        statusEl.className = 'col-status err';
+        inputEl.classList.add('err');
+        setAll(null);
+        return;
+      }
+      inputEl.classList.remove('err');
+      statusEl.className = 'col-status';
+      var r = Math.round(rgb[0]),
+        g = Math.round(rgb[1]),
+        b = Math.round(rgb[2]);
+      var hex = rgbToHex(r, g, b);
+      swatchEl.style.background = hex;
+      var hsl = rgbToHsl(r, g, b);
+      var oklch = rgbToOklch(r, g, b);
+      var lab = rgbToLab(r, g, b);
+      statusEl.textContent = hex;
+      setVal('hex', hex);
+      setVal('rgb', 'rgb(' + r + ', ' + g + ', ' + b + ')');
+      setVal('hsl', 'hsl(' + hsl[0] + ', ' + hsl[1] + '%, ' + hsl[2] + '%)');
+      setVal(
+        'oklch',
+        'oklch(' + n(oklch[0], 1) + '% ' + n(oklch[1], 3) + ' ' + n(oklch[2], 1) + ')'
+      );
+      setVal('lab', 'lab(' + n(lab[0], 1) + ' ' + n(lab[1], 2) + ' ' + n(lab[2], 2) + ')');
+    }
+
+    function setAll(v) {
+      ['hex', 'rgb', 'hsl', 'oklch', 'lab'].forEach(function (f) {
+        setVal(f, v);
+      });
+    }
+
+    function setVal(fmt, v) {
+      var el = document.getElementById('colVal_' + fmt);
+      if (!el) return;
+      if (v) {
+        el.textContent = v;
+        el.className = 'col-fmt-val';
+      } else {
+        el.textContent = t.empty;
+        el.className = 'col-fmt-val ph';
+      }
+    }
+
+    inputEl.addEventListener('input', process);
+
+    document.querySelectorAll('.col-fmt-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var fmt = btn.dataset.fmt;
+        var el = document.getElementById('colVal_' + fmt);
+        if (!el || el.classList.contains('ph')) return;
+        navigator.clipboard.writeText(el.textContent).then(function () {
+          btn.innerHTML = '<i class="ti ti-check"></i>';
+          btn.classList.add('done');
+          setTimeout(function () {
+            btn.innerHTML = '<i class="ti ti-copy"></i>';
+            btn.classList.remove('done');
+          }, 1500);
+        });
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      process();
+      inputEl.focus();
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inputEl.value = cfg.input ?? '';
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

@@ -1,0 +1,300 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  textPh: isRu ? 'вставьте текст…' : 'paste text here…',
+  hexPh: isRu ? '// hex появится здесь' : '// hex appears here',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  sep: isRu ? 'разделитель' : 'separator',
+  upper: isRu ? 'верхний регистр' : 'uppercase',
+  bytes: isRu ? 'байт' : 'bytes',
+  empty: isRu ? '— вставьте текст слева' : '— paste text on the left',
+  errHex: isRu ? 'неверный hex' : 'invalid hex',
+};
+---
+
+<style is:global>
+  .hx {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .hx-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .hx-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .hx-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 3px 7px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .hx-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .hx-check input[type='checkbox'] {
+    accent-color: var(--accent);
+  }
+
+  .hx-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hx-status.ok {
+    color: var(--good);
+  }
+  .hx-status.err {
+    color: var(--bad);
+  }
+
+  .hx-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .hx-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .hx-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  .hx-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 300px;
+    max-height: calc(100vh - 340px);
+  }
+
+  .hx-in,
+  .hx-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+    background: transparent;
+  }
+
+  .hx-out {
+    background: var(--surface-sunken);
+    min-height: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .hx-out .ph {
+    color: var(--ink-faint);
+  }
+  .hx-out.err {
+    color: var(--bad);
+  }
+
+  .hx-vsep {
+    background: var(--line);
+  }
+
+  @media (max-width: 680px) {
+    .hx-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px 200px;
+      max-height: none;
+    }
+    .hx-vsep {
+      width: 100%;
+      height: 1px;
+    }
+    .hx-out {
+      max-height: 200px;
+    }
+  }
+</style>
+
+<div class="hx">
+  <div class="hx-bar">
+    <div class="hx-opt">
+      <label for="hxSep">{t.sep}</label>
+      <select class="hx-select" id="hxSep">
+        <option value=" ">space</option>
+        <option value="">none</option>
+        <option value="\n">newline</option>
+      </select>
+    </div>
+    <label class="hx-check">
+      <input type="checkbox" id="hxUpper" />
+      {t.upper}
+    </label>
+    <span class="local-badge">// client-only</span>
+    <span class="hx-status" id="hxStatus">{t.empty}</span>
+    <button class="hx-action" id="hxCopy"
+      ><i class="ti ti-copy"></i>{t.copy}<span class="kbd-hint">⌘⇧C</span></button
+    >
+    <button class="hx-action" id="hxClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="hx-panels">
+    <textarea class="hx-in" id="hxIn" data-hist-main-input spellcheck="false" placeholder={t.textPh}
+    ></textarea>
+    <div class="hx-vsep"></div>
+    <pre class="hx-out" id="hxOut"><span class="ph">{t.hexPh}</span></pre>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('hxIn');
+    var outEl = document.getElementById('hxOut');
+    var statusEl = document.getElementById('hxStatus');
+    var sepEl = document.getElementById('hxSep');
+    var upperEl = document.getElementById('hxUpper');
+    var copyBtn = document.getElementById('hxCopy');
+    var clearBtn = document.getElementById('hxClear');
+    var lastOutput = '';
+
+    function textToHex(text, sep, upper) {
+      var bytes = new TextEncoder().encode(text);
+      var parts = Array.from(bytes).map(function (b) {
+        var h = b.toString(16).padStart(2, '0');
+        return upper ? h.toUpperCase() : h;
+      });
+      return parts.join(sep === '\\n' ? '\n' : sep);
+    }
+
+    function process() {
+      var text = inEl.value;
+      var sep = sepEl.value;
+      var upper = upperEl.checked;
+
+      if (!text) {
+        outEl.innerHTML = '<span class="ph">' + t.hexPh + '</span>';
+        outEl.classList.remove('err');
+        statusEl.textContent = t.empty;
+        statusEl.className = 'hx-status';
+        lastOutput = '';
+        return;
+      }
+
+      var result = textToHex(text, sep, upper);
+      lastOutput = result;
+      outEl.textContent = result;
+      outEl.classList.remove('err');
+      var bytes = new TextEncoder().encode(text).length;
+      statusEl.textContent = bytes + ' ' + t.bytes;
+      statusEl.className = 'hx-status ok';
+
+      if (window.pushHistory)
+        window.pushHistory('hex encoder', bytes + ' bytes', text.slice(0, 200));
+      outEl.classList.remove('flash-ok');
+      void outEl.offsetWidth;
+      outEl.classList.add('flash-ok');
+    }
+
+    inEl.addEventListener('input', process);
+    sepEl.addEventListener('change', process);
+    upperEl.addEventListener('change', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML =
+            '<i class="ti ti-copy"></i>' + t.copy + '<span class="kbd-hint">⌘⇧C</span>';
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      process();
+      inEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.hx');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      var mod = e.ctrlKey || e.metaKey;
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (lastOutput) copyBtn.click();
+      }
+      if (e.key === 'Escape' && !mod) {
+        clearBtn.click();
+      }
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, sep: sepEl.value, upper: upperEl.checked };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.input !== undefined) inEl.value = cfg.input;
+      if (cfg.sep !== undefined) sepEl.value = cfg.sep;
+      if (cfg.upper !== undefined) upperEl.checked = cfg.upper;
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

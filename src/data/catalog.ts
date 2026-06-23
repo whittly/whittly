@@ -40,7 +40,7 @@ export const CATALOG: Tool[] = [
     icon: 'ti-arrows-shuffle',
     name: 'yaml ↔ json',
     desc: 'two-way converter with comments preserved',
-    soon: true,
+    new: true,
   },
   {
     cat: 'convert',
@@ -68,21 +68,21 @@ export const CATALOG: Tool[] = [
     icon: 'ti-markdown',
     name: 'markdown → html',
     desc: 'render with github-flavor extensions',
-    soon: true,
+    new: true,
   },
   {
     cat: 'convert',
     icon: 'ti-ruler',
     name: 'unit converter',
     desc: 'length, weight, temperature, data',
-    soon: true,
+    new: true,
   },
   {
     cat: 'convert',
     icon: 'ti-palette',
     name: 'color converter',
     desc: 'hex, rgb, hsl, oklch, lab',
-    soon: true,
+    new: true,
   },
   {
     cat: 'convert',
@@ -159,7 +159,7 @@ export const CATALOG: Tool[] = [
     icon: 'ti-hash',
     name: 'hex encoder',
     desc: 'string ↔ hex bytes, choose encoding',
-    soon: true,
+    new: true,
   },
   {
     cat: 'encode',
@@ -228,8 +228,8 @@ export const CATALOG: Tool[] = [
     cat: 'generate',
     icon: 'ti-qrcode',
     name: 'qr code',
-    desc: 'svg, png, custom colors',
-    soon: true,
+    desc: 'generate svg and png qr codes in-browser',
+    new: true,
   },
 
   // text
@@ -274,7 +274,7 @@ export const CATALOG: Tool[] = [
     icon: 'ti-pilcrow',
     name: 'word counter',
     desc: 'characters, words, lines, reading time',
-    soon: true,
+    new: true,
   },
 
   // network
@@ -283,7 +283,7 @@ export const CATALOG: Tool[] = [
     icon: 'ti-network',
     name: 'cidr calculator',
     desc: 'subnet math, range, mask, hosts',
-    soon: true,
+    new: true,
   },
   {
     cat: 'network',
@@ -297,7 +297,7 @@ export const CATALOG: Tool[] = [
     icon: 'ti-server',
     name: 'http status',
     desc: 'codes, meanings, common pitfalls',
-    soon: true,
+    new: true,
   },
 
   // image
@@ -306,14 +306,14 @@ export const CATALOG: Tool[] = [
     icon: 'ti-photo',
     name: 'image → webp',
     desc: 'batch convert, control quality',
-    soon: true,
+    new: true,
   },
   {
     cat: 'image',
     icon: 'ti-vector-bezier-2',
     name: 'svg optimizer',
-    desc: 'svgo in-browser, presets',
-    soon: true,
+    desc: 'remove comments, round decimals, clean attributes',
+    new: true,
   },
 
   // data
