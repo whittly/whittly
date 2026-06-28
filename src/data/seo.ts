@@ -50,6 +50,10 @@ export const SEO_TITLE: Record<string, string> = {
   'yaml-json': 'YAML ↔ JSON Converter — Two-Way Online',
   'qr-code': 'QR Code Generator — Free Online, SVG & PNG',
   'svg-optimizer': 'SVG Optimizer — Clean and Minify SVG Online',
+  'json-diff': 'JSON Diff — Compare Two JSON Objects Online',
+  'chmod-calculator': 'Chmod Calculator — Octal & Symbolic Permissions',
+  'url-parser': 'URL Parser — Break Down Any URL Into Components',
+  'env-json': '.env to JSON Converter — Parse .env Files Online',
 };
 
 export const SEO_DESC: Record<string, string> = {
@@ -153,6 +157,14 @@ export const SEO_DESC: Record<string, string> = {
     'Free online QR code generator. Create QR codes as SVG or PNG directly in your browser. Choose size and error correction level (L/M/Q/H). Pure JS, no server required.',
   'svg-optimizer':
     'Free online SVG optimizer. Remove comments, empty attributes, metadata, and default values. Round decimal numbers, collapse whitespace. Shows exact bytes saved.',
+  'json-diff':
+    'Free online JSON diff tool. Deep-compare two JSON objects and see exactly what was added, removed, or changed. Works in your browser — no server, no upload.',
+  'chmod-calculator':
+    'Free online chmod calculator. Convert between octal (755) and symbolic (rwxr-xr-x) Unix file permissions. Instant preview of chmod command. Browser-only.',
+  'url-parser':
+    'Free online URL parser. Break any URL into scheme, host, port, pathname, query params, and hash. View all search parameters in a table. Pure browser tool.',
+  'env-json':
+    'Free online .env to JSON converter. Parse .env key=value files into JSON objects and convert back. Handles comments, quoted values, and empty lines.',
 };
 
 export const SEO_DESC_RU: Record<string, string> = {
@@ -256,4 +268,12 @@ export const SEO_DESC_RU: Record<string, string> = {
     'Бесплатный генератор QR-кодов онлайн. Создавай QR-коды в SVG и PNG прямо в браузере. Выбор размера и уровня коррекции ошибок (L/M/Q/H). Без сервера, чистый JS.',
   'svg-optimizer':
     'Бесплатный оптимизатор SVG онлайн. Удаление комментариев, пустых атрибутов, метаданных, значений по умолчанию. Округление чисел, сжатие пробелов. Показывает экономию в байтах.',
+  'json-diff':
+    'Бесплатный онлайн-инструмент для сравнения JSON. Глубокое сравнение двух объектов — что добавлено, удалено, изменено. Работает в браузере, без загрузки данных.',
+  'chmod-calculator':
+    'Бесплатный калькулятор chmod онлайн. Конвертация между восьмеричным (755) и символьным (rwxr-xr-x) форматом прав Unix. Мгновенный превью команды chmod.',
+  'url-parser':
+    'Бесплатный парсер URL онлайн. Разбивай любой URL на схему, хост, порт, путь, параметры и хэш. Таблица query-параметров. Полностью в браузере.',
+  'env-json':
+    'Бесплатный конвертер .env в JSON онлайн. Парсинг файлов key=value в объект JSON и обратно. Поддержка комментариев, кавычек и пустых строк.',
 };

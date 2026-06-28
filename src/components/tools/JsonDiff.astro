@@ -1,0 +1,486 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  leftPh: isRu ? 'исходный JSON…' : 'original JSON…',
+  rightPh: isRu ? 'изменённый JSON…' : 'modified JSON…',
+  left: isRu ? 'оригинал' : 'original',
+  right: isRu ? 'изменено' : 'modified',
+  added: isRu ? 'добавлено' : 'added',
+  removed: isRu ? 'удалено' : 'removed',
+  changed: isRu ? 'изменено' : 'changed',
+  identical: isRu ? 'объекты идентичны' : 'objects are identical',
+  empty: isRu ? '← вставьте оба JSON' : '← paste both JSON objects',
+  invalidLeft: isRu ? 'левый JSON невалиден' : 'left JSON is invalid',
+  invalidRight: isRu ? 'правый JSON невалиден' : 'right JSON is invalid',
+  copy: isRu ? 'копировать' : 'copy diff',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+};
+---
+
+<style is:global>
+  .jd {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .jd-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .jd-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1.3fr;
+    min-height: 400px;
+    max-height: calc(100vh - 320px);
+  }
+
+  .jd-col-head {
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    background: var(--surface-sunken);
+    border-bottom: 0.5px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .jd-in-wrap {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .jd-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .jd-vsep {
+    background: var(--line);
+  }
+
+  .jd-out-wrap {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface-sunken);
+  }
+
+  .jd-out {
+    flex: 1;
+    overflow: auto;
+    padding: 10px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .jd-ph {
+    padding: 16px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  .jd-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 1px 16px;
+    gap: 10px;
+  }
+  .jd-row.added {
+    background: color-mix(in srgb, var(--good) 10%, transparent);
+  }
+  .jd-row.removed {
+    background: color-mix(in srgb, #e54d42 10%, transparent);
+  }
+  .jd-row.changed {
+    background: color-mix(in srgb, #d9881a 10%, transparent);
+  }
+
+  .jd-sigil {
+    flex-shrink: 0;
+    width: 14px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .added .jd-sigil {
+    color: var(--good);
+  }
+  .removed .jd-sigil {
+    color: #e54d42;
+  }
+  .changed .jd-sigil {
+    color: #d9881a;
+  }
+
+  .jd-key {
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+  .jd-colon {
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
+
+  .jd-val-old {
+    color: #e54d42;
+    text-decoration: line-through;
+    opacity: 0.7;
+    word-break: break-all;
+  }
+  .jd-val-new {
+    color: var(--good);
+    word-break: break-all;
+  }
+  .jd-val-add {
+    color: var(--good);
+    word-break: break-all;
+  }
+  .jd-val-del {
+    color: #e54d42;
+    word-break: break-all;
+  }
+  .jd-arrow {
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+
+  .jd-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .jd-status.ok {
+    color: var(--good);
+  }
+  .jd-status.err {
+    color: #e54d42;
+  }
+
+  .jd-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .jd-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .jd-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  @media (max-width: 760px) {
+    .jd-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px 200px 1px auto;
+      max-height: none;
+    }
+    .jd-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="jd">
+  <div class="jd-bar">
+    <span class="local-badge">// client-only</span>
+    <span class="jd-status" id="jdStatus">{t.empty}</span>
+    <button class="jd-action" id="jdCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    <button class="jd-action" id="jdClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+  <div class="jd-panels">
+    <div class="jd-in-wrap">
+      <div class="jd-col-head">// {t.left}</div>
+      <textarea class="jd-in" id="jdLeft" spellcheck="false" placeholder={t.leftPh}></textarea>
+    </div>
+    <div class="jd-vsep"></div>
+    <div class="jd-in-wrap">
+      <div class="jd-col-head">// {t.right}</div>
+      <textarea class="jd-in" id="jdRight" spellcheck="false" placeholder={t.rightPh}></textarea>
+    </div>
+    <div class="jd-vsep"></div>
+    <div class="jd-out-wrap">
+      <div class="jd-col-head">// diff</div>
+      <div class="jd-out" id="jdOut">
+        <div class="jd-ph">{t.empty}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var leftEl = document.getElementById('jdLeft');
+    var rightEl = document.getElementById('jdRight');
+    var outEl = document.getElementById('jdOut');
+    var statusEl = document.getElementById('jdStatus');
+    var copyBtn = document.getElementById('jdCopy');
+    var clearBtn = document.getElementById('jdClear');
+    var lastDiffText = '';
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function valStr(v) {
+      if (v === null) return 'null';
+      if (typeof v === 'string') return JSON.stringify(v);
+      if (typeof v === 'object') return typeof v === 'object' && Array.isArray(v) ? '[…]' : '{…}';
+      return String(v);
+    }
+
+    var rows = [];
+
+    function deepDiff(a, b, path) {
+      path = path || '';
+      if (JSON.stringify(a) === JSON.stringify(b)) return;
+
+      var aType = a === null ? 'null' : typeof a;
+      var bType = b === null ? 'null' : typeof b;
+      var aIsObj = a !== null && typeof a === 'object';
+      var bIsObj = b !== null && typeof b === 'object';
+
+      if (!aIsObj || !bIsObj || Array.isArray(a) !== Array.isArray(b)) {
+        rows.push({ type: 'changed', path: path, oldVal: a, newVal: b });
+        return;
+      }
+
+      if (Array.isArray(a)) {
+        var maxLen = Math.max(a.length, b.length);
+        for (var i = 0; i < maxLen; i++) {
+          var p = path ? path + '[' + i + ']' : '[' + i + ']';
+          if (i >= a.length) {
+            rows.push({ type: 'added', path: p, newVal: b[i] });
+          } else if (i >= b.length) {
+            rows.push({ type: 'removed', path: p, oldVal: a[i] });
+          } else {
+            deepDiff(a[i], b[i], p);
+          }
+        }
+        return;
+      }
+
+      var aKeys = Object.keys(a);
+      var bKeys = Object.keys(b);
+      var allKeys = Array.from(new Set(aKeys.concat(bKeys)));
+
+      allKeys.forEach(function (k) {
+        var p = path ? path + '.' + k : k;
+        if (!(k in a)) {
+          rows.push({ type: 'added', path: p, newVal: b[k] });
+        } else if (!(k in b)) {
+          rows.push({ type: 'removed', path: p, oldVal: a[k] });
+        } else {
+          deepDiff(a[k], b[k], p);
+        }
+      });
+    }
+
+    function renderRow(row) {
+      if (row.type === 'added') {
+        return (
+          '<div class="jd-row added">' +
+          '<span class="jd-sigil">+</span>' +
+          '<span class="jd-key">' +
+          esc(row.path) +
+          '</span>' +
+          '<span class="jd-colon">: </span>' +
+          '<span class="jd-val-add">' +
+          esc(valStr(row.newVal)) +
+          '</span>' +
+          '</div>'
+        );
+      }
+      if (row.type === 'removed') {
+        return (
+          '<div class="jd-row removed">' +
+          '<span class="jd-sigil">−</span>' +
+          '<span class="jd-key">' +
+          esc(row.path) +
+          '</span>' +
+          '<span class="jd-colon">: </span>' +
+          '<span class="jd-val-del">' +
+          esc(valStr(row.oldVal)) +
+          '</span>' +
+          '</div>'
+        );
+      }
+      return (
+        '<div class="jd-row changed">' +
+        '<span class="jd-sigil">~</span>' +
+        '<span class="jd-key">' +
+        esc(row.path) +
+        '</span>' +
+        '<span class="jd-colon">: </span>' +
+        '<span class="jd-val-old">' +
+        esc(valStr(row.oldVal)) +
+        '</span>' +
+        '<span class="jd-arrow">→</span>' +
+        '<span class="jd-val-new">' +
+        esc(valStr(row.newVal)) +
+        '</span>' +
+        '</div>'
+      );
+    }
+
+    function process() {
+      var lv = leftEl.value.trim();
+      var rv = rightEl.value.trim();
+
+      if (!lv && !rv) {
+        outEl.innerHTML = '<div class="jd-ph">' + t.empty + '</div>';
+        statusEl.textContent = t.empty;
+        statusEl.className = 'jd-status';
+        lastDiffText = '';
+        return;
+      }
+
+      var a, b;
+      try {
+        a = JSON.parse(lv || '{}');
+      } catch (e) {
+        outEl.innerHTML = '<div class="jd-ph">' + t.invalidLeft + '</div>';
+        statusEl.textContent = t.invalidLeft;
+        statusEl.className = 'jd-status err';
+        lastDiffText = '';
+        return;
+      }
+      try {
+        b = JSON.parse(rv || '{}');
+      } catch (e) {
+        outEl.innerHTML = '<div class="jd-ph">' + t.invalidRight + '</div>';
+        statusEl.textContent = t.invalidRight;
+        statusEl.className = 'jd-status err';
+        lastDiffText = '';
+        return;
+      }
+
+      rows = [];
+      deepDiff(a, b);
+
+      if (!rows.length) {
+        outEl.innerHTML = '<div class="jd-ph">' + t.identical + '</div>';
+        statusEl.textContent = t.identical;
+        statusEl.className = 'jd-status ok';
+        lastDiffText = '';
+        return;
+      }
+
+      var added = rows.filter(function (r) {
+        return r.type === 'added';
+      }).length;
+      var removed = rows.filter(function (r) {
+        return r.type === 'removed';
+      }).length;
+      var changed = rows.filter(function (r) {
+        return r.type === 'changed';
+      }).length;
+
+      outEl.innerHTML = rows.map(renderRow).join('');
+
+      var parts = [];
+      if (added) parts.push('+' + added + ' ' + t.added);
+      if (removed) parts.push('-' + removed + ' ' + t.removed);
+      if (changed) parts.push('~' + changed + ' ' + t.changed);
+      statusEl.textContent = parts.join('  ');
+      statusEl.className = 'jd-status ok';
+
+      lastDiffText = rows
+        .map(function (r) {
+          if (r.type === 'added') return '+ ' + r.path + ': ' + valStr(r.newVal);
+          if (r.type === 'removed') return '- ' + r.path + ': ' + valStr(r.oldVal);
+          return '~ ' + r.path + ': ' + valStr(r.oldVal) + ' → ' + valStr(r.newVal);
+        })
+        .join('\n');
+    }
+
+    leftEl.addEventListener('input', process);
+    rightEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastDiffText) return;
+      navigator.clipboard.writeText(lastDiffText).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      leftEl.value = '';
+      rightEl.value = '';
+      process();
+      leftEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.jd');
+      if (!toolEl) return;
+      var active = document.activeElement;
+      if (!toolEl.contains(active)) return;
+      if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey) clearBtn.click();
+    });
+
+    window.toolGetPreset = function () {
+      return { left: leftEl.value, right: rightEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      leftEl.value = cfg.left ?? '';
+      rightEl.value = cfg.right ?? '';
+      process();
+    };
+  })();
+</script>

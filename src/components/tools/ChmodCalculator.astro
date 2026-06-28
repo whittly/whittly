@@ -1,0 +1,422 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  owner: isRu ? 'владелец' : 'owner',
+  group: isRu ? 'группа' : 'group',
+  others: isRu ? 'остальные' : 'others',
+  read: isRu ? 'чтение' : 'read',
+  write: isRu ? 'запись' : 'write',
+  exec: isRu ? 'выполнение' : 'execute',
+  octal: isRu ? 'восьмеричный' : 'octal',
+  symbolic: isRu ? 'символьный' : 'symbolic',
+  command: isRu ? 'команда' : 'command',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  reset: isRu ? 'сбросить' : 'reset',
+};
+
+const cols = [
+  { key: 'r', label: isRu ? 'чтение (r)' : 'read (r)', short: 'r', val: 4 },
+  { key: 'w', label: isRu ? 'запись (w)' : 'write (w)', short: 'w', val: 2 },
+  { key: 'x', label: isRu ? 'выполнение (x)' : 'execute (x)', short: 'x', val: 1 },
+];
+const rows = [
+  { key: 'u', label: t.owner },
+  { key: 'g', label: t.group },
+  { key: 'o', label: t.others },
+];
+---
+
+<style is:global>
+  .ch {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ch-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .ch-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .ch-grid {
+    display: grid;
+    grid-template-columns: 110px repeat(3, 1fr);
+    gap: 0;
+    border: 0.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .ch-cell {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--line);
+    border-right: 0.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+  }
+  .ch-cell:last-child,
+  .ch-cell:nth-child(4n) {
+    border-right: none;
+  }
+  .ch-cell.header {
+    background: var(--surface-sunken);
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    letter-spacing: 0.05em;
+    justify-content: center;
+  }
+  .ch-cell.row-label {
+    justify-content: flex-start;
+    background: var(--surface-sunken);
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .ch-cell.last-row {
+    border-bottom: none;
+  }
+
+  .ch-cb {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .ch-outputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .ch-out-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ch-out-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+
+  .ch-out-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .ch-out-sym {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  .ch-out-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink-soft);
+    background: var(--surface-sunken);
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+
+  .ch-octal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ch-octal-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .ch-octal-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    width: 90px;
+    padding: 6px 12px;
+    border: 0.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--accent);
+    outline: none;
+    transition: border-color 0.12s;
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+  .ch-octal-input:focus {
+    border-color: var(--accent);
+  }
+  .ch-octal-input.error {
+    border-color: #e54d42;
+    color: #e54d42;
+  }
+
+  .ch-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ch-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ch-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .ch-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  @media (max-width: 640px) {
+    .ch-outputs {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
+
+<div class="ch">
+  <div class="ch-bar">
+    <span class="local-badge">// client-only</span>
+    <span class="ch-status" id="chStatus">rwxr-xr-x = 755</span>
+    <button class="ch-action" id="chCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    <button class="ch-action" id="chReset"><i class="ti ti-refresh"></i>{t.reset}</button>
+  </div>
+
+  <div class="ch-body">
+    <!-- Permission grid -->
+    <div class="ch-grid">
+      <!-- Header row -->
+      <div class="ch-cell header"></div>
+      {cols.map((c) => <div class="ch-cell header">{c.label}</div>)}
+      <!-- Permission rows -->
+      {
+        rows.map((row, ri) => (
+          <>
+            <div class={`ch-cell row-label${ri === rows.length - 1 ? ' last-row' : ''}`}>
+              {row.label}
+            </div>
+            {cols.map((col, ci) => (
+              <div
+                class={`ch-cell${ri === rows.length - 1 ? ' last-row' : ''}${ci === cols.length - 1 ? '' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  class="ch-cb"
+                  id={`ch-${row.key}-${col.key}`}
+                  data-entity={row.key}
+                  data-perm={col.key}
+                  data-val={col.val}
+                  checked={
+                    row.key === 'u' ||
+                    (col.key === 'r' && row.key !== 'o') ||
+                    (col.key === 'x' && row.key !== 'o')
+                  }
+                />
+              </div>
+            ))}
+          </>
+        ))
+      }
+    </div>
+
+    <!-- Octal input -->
+    <div class="ch-octal-input-row">
+      <span class="ch-octal-label">// {t.octal}:</span>
+      <input type="text" class="ch-octal-input" id="chOctalInput" maxlength="4" value="755" />
+    </div>
+
+    <!-- Outputs -->
+    <div class="ch-outputs">
+      <div class="ch-out-block">
+        <div class="ch-out-label">// {t.octal}</div>
+        <div class="ch-out-val" id="chOctalOut">755</div>
+      </div>
+      <div class="ch-out-block">
+        <div class="ch-out-label">// {t.symbolic}</div>
+        <div class="ch-out-sym" id="chSymOut">rwxr-xr-x</div>
+      </div>
+      <div class="ch-out-block">
+        <div class="ch-out-label">// {t.command}</div>
+        <div class="ch-out-cmd" id="chCmdOut">chmod 755 file</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var octalInput = document.getElementById('chOctalInput');
+    var octalOut = document.getElementById('chOctalOut');
+    var symOut = document.getElementById('chSymOut');
+    var cmdOut = document.getElementById('chCmdOut');
+    var statusEl = document.getElementById('chStatus');
+    var copyBtn = document.getElementById('chCopy');
+    var resetBtn = document.getElementById('chReset');
+    var checkboxes = document.querySelectorAll('.ch-cb');
+
+    var entities = ['u', 'g', 'o'];
+    var perms = ['r', 'w', 'x'];
+    var permVals = { r: 4, w: 2, x: 1 };
+    var permChars = { r: 'r', w: 'w', x: 'x' };
+
+    function getState() {
+      var state = {};
+      entities.forEach(function (e) {
+        state[e] = {};
+        perms.forEach(function (p) {
+          var el = document.getElementById('ch-' + e + '-' + p);
+          state[e][p] = el ? el.checked : false;
+        });
+      });
+      return state;
+    }
+
+    function stateToOctal(state) {
+      return entities
+        .map(function (e) {
+          return (state[e].r ? 4 : 0) + (state[e].w ? 2 : 0) + (state[e].x ? 1 : 0);
+        })
+        .join('');
+    }
+
+    function stateToSymbolic(state) {
+      return entities
+        .map(function (e) {
+          return (state[e].r ? 'r' : '-') + (state[e].w ? 'w' : '-') + (state[e].x ? 'x' : '-');
+        })
+        .join('');
+    }
+
+    function octalToState(oct) {
+      var digits = String(oct).split('').map(Number);
+      if (digits.length === 3) digits = [0].concat(digits);
+      if (digits.length === 4) digits = digits.slice(1);
+      var state = {};
+      entities.forEach(function (e, i) {
+        var d = digits[i] || 0;
+        state[e] = { r: !!(d & 4), w: !!(d & 2), x: !!(d & 1) };
+      });
+      return state;
+    }
+
+    function applyStateToCheckboxes(state) {
+      entities.forEach(function (e) {
+        perms.forEach(function (p) {
+          var el = document.getElementById('ch-' + e + '-' + p);
+          if (el) el.checked = state[e][p];
+        });
+      });
+    }
+
+    function updateFromCheckboxes() {
+      var state = getState();
+      var oct = stateToOctal(state);
+      var sym = stateToSymbolic(state);
+      octalOut.textContent = oct;
+      symOut.textContent = sym;
+      cmdOut.textContent = 'chmod ' + oct + ' file';
+      statusEl.textContent = sym + ' = ' + oct;
+      octalInput.value = oct;
+      octalInput.classList.remove('error');
+    }
+
+    checkboxes.forEach(function (cb) {
+      cb.addEventListener('change', updateFromCheckboxes);
+    });
+
+    octalInput.addEventListener('input', function () {
+      var val = octalInput.value.trim();
+      if (/^[0-7]{3,4}$/.test(val)) {
+        octalInput.classList.remove('error');
+        var state = octalToState(val.length === 4 ? val.slice(1) : val);
+        applyStateToCheckboxes(state);
+        var oct = val.length === 4 ? val.slice(1) : val;
+        var sym = stateToSymbolic(state);
+        octalOut.textContent = oct;
+        symOut.textContent = sym;
+        cmdOut.textContent = 'chmod ' + oct + ' file';
+        statusEl.textContent = sym + ' = ' + oct;
+      } else {
+        octalInput.classList.add('error');
+      }
+    });
+
+    copyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(cmdOut.textContent).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    resetBtn.addEventListener('click', function () {
+      var def = octalToState('755');
+      applyStateToCheckboxes(def);
+      updateFromCheckboxes();
+    });
+
+    window.toolGetPreset = function () {
+      return { octal: octalInput.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.octal) {
+        octalInput.value = cfg.octal;
+        octalInput.dispatchEvent(new Event('input'));
+      }
+    };
+  })();
+</script>

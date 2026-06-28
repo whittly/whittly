@@ -49,6 +49,10 @@ export const toolNameRu: Record<string, string> = {
   'yaml ↔ json': 'yaml ↔ json',
   'qr code': 'qr-код',
   'svg optimizer': 'svg-оптимизатор',
+  'json diff': 'json diff',
+  'chmod calculator': 'chmod-калькулятор',
+  'url parser': 'парсер url',
+  '.env ↔ json': '.env ↔ json',
 };
 
 export const toolDescRu: Record<string, string> = {
@@ -103,6 +107,10 @@ export const toolDescRu: Record<string, string> = {
   'yaml ↔ json': 'двусторонний конвертер с поддержкой комментариев',
   'qr code': 'генерация svg и png qr-кодов в браузере',
   'svg optimizer': 'удаление комментариев, округление чисел, чистка атрибутов',
+  'json diff': 'глубокое сравнение json — добавлено, удалено, изменено',
+  'chmod calculator': 'восьмеричные ↔ символьные права unix',
+  'url parser': 'разбор url на компоненты и сборка обратно',
+  '.env ↔ json': 'конвертация .env файлов в json и обратно',
 };
 
 export const catLabelRu: Record<string, string> = {

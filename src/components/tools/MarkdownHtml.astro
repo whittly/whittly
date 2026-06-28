@@ -6,12 +6,16 @@ const { lang = 'en' } = Astro.props;
 const isRu = lang === 'ru';
 const t = {
   mdPh: isRu ? 'введите Markdown…' : 'enter Markdown here…',
-  copy: isRu ? 'копировать HTML' : 'copy HTML',
+  htmlPh: isRu ? 'введите HTML…' : 'enter HTML here…',
+  copy: isRu ? 'копировать' : 'copy',
   copied: isRu ? 'скопировано' : 'copied',
   clear: isRu ? 'очистить' : 'clear',
   preview: isRu ? 'предпросмотр' : 'preview',
   source: isRu ? 'HTML код' : 'HTML source',
-  empty: isRu ? '— введите Markdown слева' : '— enter Markdown on the left',
+  mdOut: isRu ? 'Markdown' : 'Markdown',
+  empty: isRu ? '— введите текст слева' : '— enter text on the left',
+  dirMdHtml: 'MD → HTML',
+  dirHtmlMd: 'HTML → MD',
   gfm: 'GitHub Flavored',
 };
 ---
@@ -33,6 +37,30 @@ const t = {
     background: var(--surface-sunken);
     flex-shrink: 0;
     flex-wrap: wrap;
+  }
+
+  .mh-dir-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--accent);
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .mh-dir-toggle:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .mh-sep-mini {
+    width: 0.5px;
+    height: 16px;
+    background: var(--line);
+    flex-shrink: 0;
   }
 
   .mh-tab {
@@ -268,6 +296,8 @@ const t = {
 
 <div class="mh">
   <div class="mh-bar">
+    <button class="mh-dir-toggle" id="mhDirToggle">{t.dirMdHtml}</button>
+    <div class="mh-sep-mini"></div>
     <button class="mh-tab active" id="mhTabPreview">{t.preview}</button>
     <button class="mh-tab" id="mhTabSource">{t.source}</button>
     <span class="local-badge">// client-only</span>
@@ -300,8 +330,10 @@ const t = {
     var clearBtn = document.getElementById('mhClear');
     var tabPreview = document.getElementById('mhTabPreview');
     var tabSource = document.getElementById('mhTabSource');
-    var mode = 'preview';
+    var dirToggle = document.getElementById('mhDirToggle');
+    var direction = 'md2html'; // md2html | html2md
     var lastHtml = '';
+    var lastMd = '';
 
     function esc(s) {
       return s
@@ -311,7 +343,7 @@ const t = {
         .replace(/"/g, '&quot;');
     }
 
-    // ── Minimal GFM-compatible Markdown parser ──────────────────
+    // ── MD → HTML ────────────────────────────────────────────────
     function md2html(md) {
       var lines = md.split('\n');
       var out = [];
@@ -325,30 +357,22 @@ const t = {
       }
 
       function inlineProcess(s) {
-        // images before links
         s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function (_, alt, src) {
           return '<img src="' + esc(src) + '" alt="' + esc(alt) + '">';
         });
-        // links
         s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, text, href) {
           return '<a href="' + esc(href) + '">' + text + '</a>';
         });
-        // autolinks
         s = s.replace(/`([^`]+)`/g, function (_, c) {
           return '<code>' + esc(c) + '</code>';
         });
-        // bold+italic
         s = s.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
         s = s.replace(/___([^_]+)___/g, '<strong><em>$1</em></strong>');
-        // bold
         s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
         s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-        // italic
         s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
         s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
-        // strikethrough
         s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-        // line break
         s = s.replace(/  $/, '<br>');
         return s;
       }
@@ -360,7 +384,7 @@ const t = {
         while (i < lines.length && !lines[i].startsWith('```')) {
           codeLines.push(esc(consume()));
         }
-        if (i < lines.length) consume(); // closing ```
+        if (i < lines.length) consume();
         return (
           '<pre><code' +
           (lang ? ' class="language-' + esc(lang) + '"' : '') +
@@ -384,7 +408,6 @@ const t = {
         var items = [];
         while (i < lines.length && itemRe.test(lines[i])) {
           var line = consume().replace(itemRe, '');
-          // task list
           var task = line.match(/^\[([ xX])\]\s*(.*)/);
           if (task) {
             var checked = task[1].toLowerCase() === 'x';
@@ -405,22 +428,12 @@ const t = {
       function parseTable() {
         var headerLine = consume();
         var headers = headerLine
+          .replace(/^\||\|$/g, '')
           .split('|')
-          .filter(function (c, i, a) {
-            return (i > 0 && i < a.length - 1) || !c.match(/^\s*$/);
-          })
           .map(function (c) {
             return c.trim();
           });
-        if (!headers.length && headerLine.includes('|')) {
-          headers = headerLine
-            .replace(/^\||\|$/g, '')
-            .split('|')
-            .map(function (c) {
-              return c.trim();
-            });
-        }
-        consume(); // separator
+        consume();
         var rows = [];
         while (i < lines.length && lines[i].includes('|') && !/^#+/.test(lines[i])) {
           var cells = consume()
@@ -461,10 +474,6 @@ const t = {
         return html;
       }
 
-      function parseHr(line) {
-        return /^(\*{3,}|-{3,}|_{3,})\s*$/.test(line);
-      }
-
       var paraLines = [];
       function flushPara() {
         if (!paraLines.length) return;
@@ -475,14 +484,11 @@ const t = {
       while (i < lines.length) {
         var line = peek();
         if (line === null) break;
-
-        // fenced code
         if (/^```/.test(line)) {
           flushPara();
           out.push(parseFence());
           continue;
         }
-        // headings
         var hm = line.match(/^(#{1,6})\s+(.*)/);
         if (hm) {
           flushPara();
@@ -491,50 +497,214 @@ const t = {
           out.push('<h' + level + '>' + inlineProcess(esc(hm[2])) + '</h' + level + '>');
           continue;
         }
-        // hr
-        if (parseHr(line)) {
+        if (/^(\*{3,}|-{3,}|_{3,})\s*$/.test(line)) {
           flushPara();
           consume();
           out.push('<hr>');
           continue;
         }
-        // blockquote
         if (/^>/.test(line)) {
           flushPara();
           out.push(parseBlockquote());
           continue;
         }
-        // ordered list
         if (/^\d+\.\s/.test(line)) {
           flushPara();
           out.push(parseList(true));
           continue;
         }
-        // unordered list
         if (/^[-*+]\s/.test(line)) {
           flushPara();
           out.push(parseList(false));
           continue;
         }
-        // table (header | ... followed by |---|)
         if (/\|/.test(line) && i + 1 < lines.length && /^\|?\s*[-:]+/.test(lines[i + 1])) {
           flushPara();
           out.push(parseTable());
           continue;
         }
-        // blank line = paragraph break
         if (/^\s*$/.test(line)) {
           flushPara();
           consume();
           continue;
         }
-        // regular text
         paraLines.push(consume());
       }
       flushPara();
       return out.join('\n');
     }
 
+    // ── HTML → MD ────────────────────────────────────────────────
+    function html2md(html) {
+      var doc;
+      try {
+        doc = new DOMParser().parseFromString(html, 'text/html');
+      } catch (e) {
+        return '';
+      }
+
+      function nodeToMd(node, ctx) {
+        ctx = ctx || { listDepth: 0, ordered: false, itemIndex: 0 };
+        if (node.nodeType === 3) {
+          // text node
+          var txt = node.textContent || '';
+          if (ctx.inline) return txt;
+          return txt.replace(/\n+/g, ' ');
+        }
+        if (node.nodeType !== 1) return '';
+
+        var tag = node.tagName.toLowerCase();
+        var children = Array.from(node.childNodes);
+
+        function inner(inlineCtx) {
+          return children
+            .map(function (c) {
+              return nodeToMd(c, Object.assign({}, ctx, inlineCtx || {}));
+            })
+            .join('');
+        }
+
+        switch (tag) {
+          case 'h1':
+            return '\n# ' + inner({ inline: true }).trim() + '\n';
+          case 'h2':
+            return '\n## ' + inner({ inline: true }).trim() + '\n';
+          case 'h3':
+            return '\n### ' + inner({ inline: true }).trim() + '\n';
+          case 'h4':
+            return '\n#### ' + inner({ inline: true }).trim() + '\n';
+          case 'h5':
+            return '\n##### ' + inner({ inline: true }).trim() + '\n';
+          case 'h6':
+            return '\n###### ' + inner({ inline: true }).trim() + '\n';
+          case 'p':
+            return '\n' + inner({ inline: true }).trim() + '\n';
+          case 'br':
+            return '  \n';
+          case 'hr':
+            return '\n---\n';
+          case 'strong':
+          case 'b':
+            return '**' + inner({ inline: true }) + '**';
+          case 'em':
+          case 'i':
+            return '*' + inner({ inline: true }) + '*';
+          case 'del':
+          case 's':
+          case 'strike':
+            return '~~' + inner({ inline: true }) + '~~';
+          case 'code':
+            if (node.parentElement && node.parentElement.tagName.toLowerCase() === 'pre') {
+              return node.textContent || '';
+            }
+            return '`' + (node.textContent || '') + '`';
+          case 'pre': {
+            var lang = '';
+            var codeEl = node.querySelector('code');
+            if (codeEl) {
+              var cls = codeEl.className || '';
+              var m = cls.match(/language-(\w+)/);
+              if (m) lang = m[1];
+            }
+            var code = codeEl ? codeEl.textContent || '' : node.textContent || '';
+            return '\n```' + lang + '\n' + code.replace(/\n$/, '') + '\n```\n';
+          }
+          case 'a': {
+            var href = node.getAttribute('href') || '';
+            var text = inner({ inline: true }).trim();
+            return '[' + text + '](' + href + ')';
+          }
+          case 'img': {
+            var src = node.getAttribute('src') || '';
+            var alt = node.getAttribute('alt') || '';
+            return '![' + alt + '](' + src + ')';
+          }
+          case 'blockquote': {
+            var bqContent = inner().trim().replace(/^/gm, '> ');
+            return '\n' + bqContent + '\n';
+          }
+          case 'ul':
+          case 'ol': {
+            var ordered = tag === 'ol';
+            var idx = 0;
+            var items = Array.from(node.children)
+              .filter(function (c) {
+                return c.tagName.toLowerCase() === 'li';
+              })
+              .map(function (li) {
+                idx++;
+                var prefix = ordered ? idx + '. ' : '- ';
+                var content = nodeToMd(
+                  li,
+                  Object.assign({}, ctx, { inline: true, listDepth: (ctx.listDepth || 0) + 1 })
+                );
+                return prefix + content.trim();
+              });
+            return '\n' + items.join('\n') + '\n';
+          }
+          case 'li':
+            return inner({ inline: true });
+          case 'table': {
+            var thead = node.querySelector('thead tr');
+            var tbody = node.querySelector('tbody');
+            if (!thead) return inner();
+            var headers = Array.from(thead.querySelectorAll('th,td')).map(function (th) {
+              return nodeToMd(th, Object.assign({}, ctx, { inline: true })).trim();
+            });
+            var sep = headers.map(function () {
+              return '---';
+            });
+            var rows = tbody
+              ? Array.from(tbody.querySelectorAll('tr')).map(function (tr) {
+                  return Array.from(tr.querySelectorAll('td,th')).map(function (td) {
+                    return nodeToMd(td, Object.assign({}, ctx, { inline: true })).trim();
+                  });
+                })
+              : [];
+            var lines = ['| ' + headers.join(' | ') + ' |', '| ' + sep.join(' | ') + ' |'];
+            rows.forEach(function (r) {
+              lines.push('| ' + r.join(' | ') + ' |');
+            });
+            return '\n' + lines.join('\n') + '\n';
+          }
+          case 'head':
+          case 'style':
+          case 'script':
+            return '';
+          default:
+            return inner();
+        }
+      }
+
+      var body = doc.body;
+      var result = nodeToMd(body);
+      // clean up excess blank lines
+      return result.replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    // ── Direction toggle ─────────────────────────────────────────
+    function setDirection(dir) {
+      direction = dir;
+      dirToggle.textContent = dir === 'md2html' ? t.dirMdHtml : t.dirHtmlMd;
+      inEl.placeholder = dir === 'md2html' ? t.mdPh : t.htmlPh;
+
+      var isMd2Html = dir === 'md2html';
+      tabPreview.style.display = isMd2Html ? '' : 'none';
+      if (!isMd2Html && tabPreview.classList.contains('active')) {
+        setMode('source');
+      }
+      tabSource.textContent = isMd2Html ? t.source : t.mdOut;
+
+      lastHtml = '';
+      lastMd = '';
+      process();
+    }
+
+    dirToggle.addEventListener('click', function () {
+      setDirection(direction === 'md2html' ? 'html2md' : 'md2html');
+    });
+
+    // ── Process input ─────────────────────────────────────────────
     var lastRaw = '';
     function process() {
       var raw = inEl.value;
@@ -545,30 +715,47 @@ const t = {
         statusEl.textContent = t.empty;
         statusEl.className = 'mh-status';
         lastHtml = '';
+        lastMd = '';
         lastRaw = '';
         return;
       }
       if (raw === lastRaw) return;
       lastRaw = raw;
-      var html;
-      try {
-        html = md2html(raw);
-      } catch (e) {
-        html = '<p>error: ' + esc(e.message) + '</p>';
+
+      if (direction === 'md2html') {
+        var html;
+        try {
+          html = md2html(raw);
+        } catch (e) {
+          html = '<p>error: ' + esc(e.message) + '</p>';
+        }
+        lastHtml = html;
+        previewEl.innerHTML = html;
+        sourceEl.textContent = html;
+        sourceEl.className = 'mh-source';
+        var words = raw.trim().split(/\s+/).length;
+        statusEl.textContent = words + ' words → ' + html.length + ' chars HTML';
+        statusEl.className = 'mh-status ok';
+      } else {
+        var md;
+        try {
+          md = html2md(raw);
+        } catch (e) {
+          md = 'error: ' + e.message;
+        }
+        lastMd = md;
+        previewEl.innerHTML = '';
+        sourceEl.textContent = md;
+        sourceEl.className = 'mh-source';
+        var chars = raw.length;
+        statusEl.textContent = chars + ' chars HTML → ' + md.split(/\s+/).length + ' words MD';
+        statusEl.className = 'mh-status ok';
       }
-      lastHtml = html;
-      previewEl.innerHTML = html;
-      sourceEl.textContent = html;
-      sourceEl.className = 'mh-source';
-      var words = raw.trim().split(/\s+/).length;
-      statusEl.textContent = words + ' words → ' + html.length + ' chars HTML';
-      statusEl.className = 'mh-status ok';
     }
 
     inEl.addEventListener('input', process);
 
     function setMode(m) {
-      mode = m;
       previewEl.style.display = m === 'preview' ? '' : 'none';
       sourceEl.style.display = m === 'source' ? '' : 'none';
       tabPreview.classList.toggle('active', m === 'preview');
@@ -582,8 +769,9 @@ const t = {
     });
 
     copyBtn.addEventListener('click', function () {
-      if (!lastHtml) return;
-      navigator.clipboard.writeText(lastHtml).then(function () {
+      var toCopy = direction === 'md2html' ? lastHtml : lastMd;
+      if (!toCopy) return;
+      navigator.clipboard.writeText(toCopy).then(function () {
         copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
         copyBtn.classList.add('done');
         setTimeout(function () {
@@ -607,7 +795,7 @@ const t = {
       var mod = e.ctrlKey || e.metaKey;
       if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
-        if (lastHtml) copyBtn.click();
+        copyBtn.click();
       }
       if (e.key === 'Escape' && !mod) {
         clearBtn.click();
@@ -615,9 +803,10 @@ const t = {
     });
 
     window.toolGetPreset = function () {
-      return { input: inEl.value };
+      return { input: inEl.value, direction: direction };
     };
     window.toolSetPreset = function (cfg) {
+      if (cfg.direction && cfg.direction !== direction) setDirection(cfg.direction);
       inEl.value = cfg.input ?? '';
       lastRaw = '';
       inEl.dispatchEvent(new Event('input', { bubbles: true }));

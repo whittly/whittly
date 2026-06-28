@@ -417,6 +417,37 @@ export const CATALOG: Tool[] = [
     desc: 'parse quartz cron expressions with seconds and L/W/# syntax',
     new: true,
   },
+  // text
+  {
+    cat: 'text',
+    icon: 'ti-git-diff',
+    name: 'json diff',
+    desc: 'deep-diff two json objects — added, removed, changed',
+    new: true,
+  },
+  // data
+  {
+    cat: 'data',
+    icon: 'ti-shield-half',
+    name: 'chmod calculator',
+    desc: 'octal ↔ symbolic unix file permissions',
+    new: true,
+  },
+  {
+    cat: 'data',
+    icon: 'ti-world-www',
+    name: 'url parser',
+    desc: 'break a url into components and rebuild',
+    new: true,
+  },
+  // convert
+  {
+    cat: 'convert',
+    icon: 'ti-variable',
+    name: '.env ↔ json',
+    desc: 'convert .env files to json and back',
+    new: true,
+  },
 ];
 
 export const CAT_META: Record<Category, CatMeta> = {

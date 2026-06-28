@@ -1,0 +1,422 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  ph: isRu ? 'вставьте URL…' : 'paste a URL…',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  empty: isRu ? '← вставьте URL' : '← paste a URL',
+  invalid: isRu ? 'невалидный URL' : 'invalid URL',
+  components: isRu ? 'компоненты' : 'components',
+  params: isRu ? 'параметры' : 'query params',
+  rebuild: isRu ? 'URL rebuilt' : 'URL rebuilt',
+  none: isRu ? '(нет)' : '(none)',
+  scheme: 'scheme',
+  host: 'host',
+  port: 'port',
+  pathname: 'pathname',
+  search: 'search',
+  hash: 'hash',
+  username: 'username',
+  password: 'password',
+  origin: 'origin',
+};
+---
+
+<style is:global>
+  .up {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .up-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .up-input-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 0.5px solid var(--line);
+  }
+
+  .up-url-input {
+    flex: 1;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    min-width: 0;
+  }
+  .up-url-input.error {
+    color: #e54d42;
+  }
+
+  .up-body {
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 0.5px 1fr;
+    min-height: 300px;
+  }
+
+  .up-section {
+    padding: 16px 20px 20px;
+    overflow: auto;
+  }
+
+  .up-vsep {
+    background: var(--line);
+  }
+
+  .up-section-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }
+
+  .up-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .up-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .up-row:last-child {
+    border-bottom: none;
+  }
+
+  .up-row-key {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border-right: 0.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .up-row-val {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+  }
+  .up-row-val.empty {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .up-params-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 0.5px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .up-param-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+  }
+
+  .up-param-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .up-param-row:last-child {
+    border-bottom: none;
+  }
+
+  .up-param-cell {
+    padding: 7px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    word-break: break-all;
+  }
+  .up-param-cell.head {
+    color: var(--ink-faint);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .up-param-cell:first-child {
+    border-right: 0.5px solid var(--line);
+    color: var(--accent);
+  }
+  .up-param-cell:last-child {
+    color: var(--ink-soft);
+  }
+
+  .up-ph {
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 8px 0;
+  }
+
+  .up-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .up-status.ok {
+    color: var(--good);
+  }
+  .up-status.err {
+    color: #e54d42;
+  }
+
+  .up-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .up-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .up-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  @media (max-width: 680px) {
+    .up-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1px auto;
+    }
+    .up-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="up">
+  <div class="up-bar">
+    <span class="local-badge">// client-only</span>
+    <span class="up-status" id="upStatus">{t.empty}</span>
+    <button class="up-action" id="upCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    <button class="up-action" id="upClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+
+  <div class="up-input-row">
+    <input
+      type="text"
+      class="up-url-input"
+      id="upInput"
+      placeholder={t.ph}
+      spellcheck="false"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="up-body">
+    <div class="up-section">
+      <div class="up-section-head">// {t.components}</div>
+      <div class="up-rows" id="upComponents">
+        <div class="up-ph">{t.empty}</div>
+      </div>
+    </div>
+    <div class="up-vsep"></div>
+    <div class="up-section">
+      <div class="up-section-head">// {t.params}</div>
+      <div id="upParams">
+        <div class="up-ph">{t.empty}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inputEl = document.getElementById('upInput');
+    var compsEl = document.getElementById('upComponents');
+    var paramsEl = document.getElementById('upParams');
+    var statusEl = document.getElementById('upStatus');
+    var copyBtn = document.getElementById('upCopy');
+    var clearBtn = document.getElementById('upClear');
+    var lastUrl = '';
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function row(key, val) {
+      var isEmpty = !val;
+      return (
+        '<div class="up-row">' +
+        '<div class="up-row-key">' +
+        esc(key) +
+        '</div>' +
+        '<div class="up-row-val' +
+        (isEmpty ? ' empty' : '') +
+        '">' +
+        esc(isEmpty ? t.none : val) +
+        '</div>' +
+        '</div>'
+      );
+    }
+
+    function process() {
+      var raw = inputEl.value.trim();
+      if (!raw) {
+        compsEl.innerHTML = '<div class="up-ph">' + t.empty + '</div>';
+        paramsEl.innerHTML = '<div class="up-ph">' + t.empty + '</div>';
+        statusEl.textContent = t.empty;
+        statusEl.className = 'up-status';
+        inputEl.classList.remove('error');
+        lastUrl = '';
+        return;
+      }
+
+      var url;
+      try {
+        var input = raw.includes('://') ? raw : 'https://' + raw;
+        url = new URL(input);
+      } catch (e) {
+        compsEl.innerHTML = '<div class="up-ph">' + t.invalid + '</div>';
+        paramsEl.innerHTML = '<div class="up-ph">' + t.invalid + '</div>';
+        statusEl.textContent = t.invalid;
+        statusEl.className = 'up-status err';
+        inputEl.classList.add('error');
+        lastUrl = '';
+        return;
+      }
+
+      inputEl.classList.remove('error');
+      lastUrl = url.href;
+
+      var html =
+        row(t.scheme, url.protocol.replace(':', '')) +
+        row(t.host, url.hostname) +
+        row(
+          t.port,
+          url.port || (url.protocol === 'https:' ? '443' : url.protocol === 'http:' ? '80' : '')
+        ) +
+        row(t.pathname, url.pathname) +
+        row(t.search, url.search) +
+        row(t.hash, url.hash) +
+        row(t.username, url.username) +
+        row(t.password, url.password) +
+        row(t.origin, url.origin);
+
+      compsEl.innerHTML = html;
+
+      var params = Array.from(url.searchParams.entries());
+      if (!params.length) {
+        paramsEl.innerHTML = '<div class="up-ph">' + t.none + '</div>';
+      } else {
+        var pHtml =
+          '<div class="up-params-table">' +
+          '<div class="up-param-head">' +
+          '<div class="up-param-cell head">key</div>' +
+          '<div class="up-param-cell head">value</div>' +
+          '</div>' +
+          params
+            .map(function (p) {
+              return (
+                '<div class="up-param-row">' +
+                '<div class="up-param-cell">' +
+                esc(p[0]) +
+                '</div>' +
+                '<div class="up-param-cell">' +
+                esc(p[1]) +
+                '</div>' +
+                '</div>'
+              );
+            })
+            .join('') +
+          '</div>';
+        paramsEl.innerHTML = pHtml;
+      }
+
+      var paramCount = params.length;
+      statusEl.textContent =
+        url.hostname +
+        (paramCount ? ' (' + paramCount + ' param' + (paramCount !== 1 ? 's' : '') + ')' : '');
+      statusEl.className = 'up-status ok';
+    }
+
+    inputEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastUrl) return;
+      navigator.clipboard.writeText(lastUrl).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      process();
+      inputEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.up');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey) clearBtn.click();
+    });
+
+    window.toolGetPreset = function () {
+      return { url: inputEl.value };
+    };
+    window.toolSetPreset = function (cfg) {
+      inputEl.value = cfg.url ?? '';
+      process();
+    };
+  })();
+</script>

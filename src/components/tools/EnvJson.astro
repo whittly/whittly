@@ -1,0 +1,376 @@
+---
+interface Props {
+  lang?: 'en' | 'ru';
+}
+const { lang = 'en' } = Astro.props;
+const isRu = lang === 'ru';
+const t = {
+  envPh: isRu ? 'KEY=value\n# комментарий' : 'KEY=value\n# comment',
+  jsonPh: isRu ? '{"KEY": "value"}' : '{"KEY": "value"}',
+  copy: isRu ? 'копировать' : 'copy',
+  copied: isRu ? 'скопировано' : 'copied',
+  clear: isRu ? 'очистить' : 'clear',
+  envLabel: '.env',
+  jsonLabel: 'JSON',
+  empty: isRu ? '← введите .env или JSON' : '← enter .env or JSON',
+  dirEnvJson: '.env → JSON',
+  dirJsonEnv: 'JSON → .env',
+  invalid: isRu ? 'невалидный JSON' : 'invalid JSON',
+  pairs: isRu ? 'пар' : 'pairs',
+};
+---
+
+<style is:global>
+  .ej {
+    background: var(--surface);
+    border: 0.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .ej-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--line);
+    background: var(--surface-sunken);
+    flex-wrap: wrap;
+  }
+
+  .ej-dir-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 3px 10px;
+    border: 0.5px solid var(--accent);
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .ej-dir-toggle:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .ej-sep-mini {
+    width: 0.5px;
+    height: 16px;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+
+  .ej-panels {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 340px;
+    max-height: calc(100vh - 320px);
+  }
+
+  .ej-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .ej-col-head {
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    background: var(--surface-sunken);
+    border-bottom: 0.5px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .ej-in {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .ej-vsep {
+    background: var(--line);
+  }
+
+  .ej-out-wrap {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface-sunken);
+  }
+
+  .ej-out {
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+    overflow: auto;
+    margin: 0;
+  }
+  .ej-out.ph {
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+  .ej-out.err {
+    color: #e54d42;
+    font-size: 13px;
+  }
+
+  .ej-status {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ej-status.ok {
+    color: var(--good);
+  }
+  .ej-status.err {
+    color: #e54d42;
+  }
+
+  .ej-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 0.5px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ej-action:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .ej-action.done {
+    color: var(--good);
+    border-color: var(--good);
+  }
+
+  @media (max-width: 680px) {
+    .ej-panels {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1px 200px;
+      max-height: none;
+    }
+    .ej-vsep {
+      width: 100%;
+      height: 1px;
+    }
+  }
+</style>
+
+<div class="ej">
+  <div class="ej-bar">
+    <button class="ej-dir-toggle" id="ejDirToggle">{t.dirEnvJson}</button>
+    <div class="ej-sep-mini"></div>
+    <span class="local-badge">// client-only</span>
+    <span class="ej-status" id="ejStatus">{t.empty}</span>
+    <button class="ej-action" id="ejCopy"><i class="ti ti-copy"></i>{t.copy}</button>
+    <button class="ej-action" id="ejClear"
+      ><i class="ti ti-x"></i>{t.clear}<span class="kbd-hint">esc</span></button
+    >
+  </div>
+
+  <div class="ej-panels">
+    <div class="ej-col">
+      <div class="ej-col-head" id="ejInLabel">// {t.envLabel}</div>
+      <textarea class="ej-in" id="ejIn" spellcheck="false" placeholder={t.envPh}></textarea>
+    </div>
+    <div class="ej-vsep"></div>
+    <div class="ej-out-wrap">
+      <div class="ej-col-head" id="ejOutLabel">// {t.jsonLabel}</div>
+      <pre class="ej-out ph" id="ejOut">{t.empty}</pre>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ t }}>
+  (function () {
+    var inEl = document.getElementById('ejIn');
+    var outEl = document.getElementById('ejOut');
+    var statusEl = document.getElementById('ejStatus');
+    var copyBtn = document.getElementById('ejCopy');
+    var clearBtn = document.getElementById('ejClear');
+    var dirToggle = document.getElementById('ejDirToggle');
+    var inLabel = document.getElementById('ejInLabel');
+    var outLabel = document.getElementById('ejOutLabel');
+    var direction = 'env2json';
+    var lastOutput = '';
+
+    function parseEnv(text) {
+      var result = {};
+      text.split('\n').forEach(function (line) {
+        var trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) return;
+        var eqIdx = trimmed.indexOf('=');
+        if (eqIdx === -1) return;
+        var key = trimmed.slice(0, eqIdx).trim();
+        var val = trimmed.slice(eqIdx + 1).trim();
+        if (!key) return;
+        // strip optional surrounding quotes
+        if (
+          (val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'"))
+        ) {
+          val = val.slice(1, -1);
+        }
+        result[key] = val;
+      });
+      return result;
+    }
+
+    function jsonToEnv(obj) {
+      return Object.entries(obj)
+        .map(function (pair) {
+          var k = pair[0];
+          var v = pair[1];
+          var valStr = v === null ? '' : String(v);
+          var needsQuotes = valStr.includes(' ') || valStr.includes('#') || valStr.includes('=');
+          return k + '=' + (needsQuotes ? '"' + valStr.replace(/"/g, '\\"') + '"' : valStr);
+        })
+        .join('\n');
+    }
+
+    function setDirection(dir) {
+      direction = dir;
+      if (dir === 'env2json') {
+        dirToggle.textContent = t.dirEnvJson;
+        inLabel.textContent = '// ' + t.envLabel;
+        outLabel.textContent = '// ' + t.jsonLabel;
+        inEl.placeholder = t.envPh;
+      } else {
+        dirToggle.textContent = t.dirJsonEnv;
+        inLabel.textContent = '// ' + t.jsonLabel;
+        outLabel.textContent = '// ' + t.envLabel;
+        inEl.placeholder = t.jsonPh;
+      }
+      inEl.value = '';
+      lastOutput = '';
+      process();
+    }
+
+    dirToggle.addEventListener('click', function () {
+      setDirection(direction === 'env2json' ? 'json2env' : 'env2json');
+    });
+
+    var lastRaw = '';
+    function process() {
+      var raw = inEl.value;
+      if (!raw.trim()) {
+        outEl.textContent = t.empty;
+        outEl.className = 'ej-out ph';
+        statusEl.textContent = t.empty;
+        statusEl.className = 'ej-status';
+        lastOutput = '';
+        lastRaw = '';
+        return;
+      }
+      if (raw === lastRaw) return;
+      lastRaw = raw;
+
+      if (direction === 'env2json') {
+        var obj = parseEnv(raw);
+        var count = Object.keys(obj).length;
+        var json = JSON.stringify(obj, null, 2);
+        outEl.textContent = json;
+        outEl.className = 'ej-out';
+        lastOutput = json;
+        statusEl.textContent = count + ' ' + t.pairs;
+        statusEl.className = 'ej-status ok';
+      } else {
+        var parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (e) {
+          outEl.textContent = t.invalid + ': ' + e.message;
+          outEl.className = 'ej-out err';
+          statusEl.textContent = t.invalid;
+          statusEl.className = 'ej-status err';
+          lastOutput = '';
+          return;
+        }
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          outEl.textContent = 'expected a JSON object';
+          outEl.className = 'ej-out err';
+          statusEl.textContent = 'expected object';
+          statusEl.className = 'ej-status err';
+          lastOutput = '';
+          return;
+        }
+        var env = jsonToEnv(parsed);
+        var cnt = Object.keys(parsed).length;
+        outEl.textContent = env;
+        outEl.className = 'ej-out';
+        lastOutput = env;
+        statusEl.textContent = cnt + ' ' + t.pairs;
+        statusEl.className = 'ej-status ok';
+      }
+    }
+
+    inEl.addEventListener('input', process);
+
+    copyBtn.addEventListener('click', function () {
+      if (!lastOutput) return;
+      navigator.clipboard.writeText(lastOutput).then(function () {
+        copyBtn.innerHTML = '<i class="ti ti-check"></i>' + t.copied;
+        copyBtn.classList.add('done');
+        setTimeout(function () {
+          copyBtn.innerHTML = '<i class="ti ti-copy"></i>' + t.copy;
+          copyBtn.classList.remove('done');
+        }, 1500);
+      });
+    });
+
+    clearBtn.addEventListener('click', function () {
+      inEl.value = '';
+      lastRaw = '';
+      process();
+      inEl.focus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var toolEl = document.querySelector('.ej');
+      if (!toolEl || !toolEl.contains(document.activeElement)) return;
+      if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey) clearBtn.click();
+    });
+
+    window.toolGetPreset = function () {
+      return { input: inEl.value, direction: direction };
+    };
+    window.toolSetPreset = function (cfg) {
+      if (cfg.direction && cfg.direction !== direction) setDirection(cfg.direction);
+      inEl.value = cfg.input ?? '';
+      lastRaw = '';
+      inEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+  })();
+</script>

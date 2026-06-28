@@ -57,6 +57,10 @@ import MarkdownHtml from './tools/MarkdownHtml.astro';
 import YamlJson from './tools/YamlJson.astro';
 import QrCode from './tools/QrCode.astro';
 import SvgOptimizer from './tools/SvgOptimizer.astro';
+import JsonDiff from './tools/JsonDiff.astro';
+import ChmodCalculator from './tools/ChmodCalculator.astro';
+import UrlParser from './tools/UrlParser.astro';
+import EnvJson from './tools/EnvJson.astro';
 
 const TOOL_MAP: Record<string, any> = {
   'json-formatter': JsonFormatter,
@@ -110,6 +114,10 @@ const TOOL_MAP: Record<string, any> = {
   'yaml-json': YamlJson,
   'qr-code': QrCode,
   'svg-optimizer': SvgOptimizer,
+  'json-diff': JsonDiff,
+  'chmod-calculator': ChmodCalculator,
+  'url-parser': UrlParser,
+  'env-json': EnvJson,
 };
 
 interface Props {

@@ -1033,6 +1033,156 @@ export const TOOL_CONTENT_EN: Record<string, ToolContent> = {
       },
     ],
   },
+
+  'thread-dump-analyzer': {
+    about:
+      "A Java thread dump is a snapshot of all thread states in a JVM process at a given moment, produced by jstack, kill -3, or JConsole. It captures each thread's name, OS thread ID, Java state (RUNNABLE, BLOCKED, WAITING, TIMED_WAITING), full stack trace, and any monitor locks it holds or waits for. This tool parses raw jstack output into a structured view with state summaries, deadlock detection, and blocking chain analysis.",
+    useCases: [
+      'Diagnose a deadlocked production JVM by identifying the circular lock dependency between threads',
+      'Find threads stuck in BLOCKED state to locate contention bottlenecks around synchronized blocks',
+      'Identify CPU-consuming threads by correlating RUNNABLE threads with top -H output',
+      'Compare thread counts before and after a load spike to detect thread pool saturation or leaks',
+    ],
+    faq: [
+      {
+        q: 'How do I generate a thread dump?',
+        a: 'Run jstack <pid> in a terminal, or press Ctrl+Break on Windows JVMs. In containers, use kubectl exec <pod> -- jstack 1. You can also trigger a dump via JMX, VisualVM, or by sending SIGQUIT to the Java process.',
+      },
+      {
+        q: 'What is the difference between BLOCKED and WAITING?',
+        a: 'BLOCKED means a thread is waiting to acquire a monitor lock (synchronized block) currently held by another thread. WAITING or TIMED_WAITING means a thread is voluntarily suspended via Object.wait(), Thread.sleep(), or LockSupport.park() — it is not competing for a lock.',
+      },
+      {
+        q: 'Can I detect deadlocks?',
+        a: 'Yes. The analyzer identifies deadlock cycles automatically — threads that each hold a lock the other needs. The raw jstack output also includes a "Found one Java-level deadlock" section when a deadlock is present.',
+      },
+    ],
+  },
+
+  'json-typescript': {
+    about:
+      'This tool infers TypeScript interface definitions from a JSON sample. It inspects every key, determines the most specific type for each value (string, number, boolean, null, array, or nested object), and generates clean TypeScript interfaces with proper nesting. Arrays are analyzed element-by-element and produce union types when elements have varying shapes.',
+    useCases: [
+      'Generate TypeScript types for a REST API response copied from browser DevTools Network tab',
+      "Scaffold model interfaces from a Prisma or Mongoose schema's sample document",
+      'Type an external SDK payload that ships without type definitions',
+      "Quickly type a configuration file's JSON shape to enable editor autocomplete",
+    ],
+    faq: [
+      {
+        q: 'Does it handle nested objects?',
+        a: 'Yes. Nested objects produce separate named interfaces (e.g. interface Address { ... }) referenced by the parent. The tool names nested types from the key name, capitalised.',
+      },
+      {
+        q: 'What happens with mixed-type arrays?',
+        a: 'If an array contains elements of different types, the tool produces a union type: (string | number)[]. Empty arrays produce unknown[].',
+      },
+      {
+        q: 'Does it handle null and optional fields?',
+        a: 'Null values produce type | null. Fields are marked optional (?) when needed. For truly optional fields, paste a representative sample and adjust the output manually.',
+      },
+    ],
+  },
+
+  'json-diff': {
+    about:
+      'JSON Diff performs a deep structural comparison between two JSON objects and reports every change as an added key (+), removed key (−), or changed value (~). The diff walks nested objects and arrays recursively, reporting paths in dot-notation (user.address.city) so you can pinpoint exactly what changed at any depth. Everything runs in your browser — no JSON leaves your machine.',
+    useCases: [
+      'Compare two API responses to find exactly which fields changed between versions',
+      'Audit configuration drift between a staging and production JSON config',
+      'Debug a serialization bug by comparing the before and after snapshots of an object',
+      'Validate that a migration script transformed data correctly by diffing sample rows',
+    ],
+    faq: [
+      {
+        q: 'Does it diff arrays element-by-element?',
+        a: 'Yes. Array elements are compared by index. If an element was inserted or removed, all subsequent indices shift and appear as changes. For large arrays this can produce verbose output — consider comparing specific slices.',
+      },
+      {
+        q: 'What does the path notation mean?',
+        a: 'Paths use dot notation for object keys (a.b.c) and bracket notation for array indices (items[2].name). The full path tells you exactly where in the nested structure the change occurred.',
+      },
+      {
+        q: 'Are nested objects expanded?',
+        a: 'Yes. If an object value changes, the diff recurses into it and reports individual field changes rather than showing the whole object as changed. Only primitive values (string, number, boolean, null) are shown as leaf-level diffs.',
+      },
+    ],
+  },
+
+  'chmod-calculator': {
+    about:
+      'Unix file permissions are stored as a 9-bit mask split into three groups — owner, group, and others — each with three bits for read (4), write (2), and execute (1). Adding the bits gives a single octal digit per group, producing the familiar three-digit notation like 755 or 644. This tool lets you toggle permissions via checkboxes or type an octal value directly, with both representations always in sync.',
+    useCases: [
+      'Generate the exact chmod command needed before running it on a server',
+      'Decode an octal permission string from ls -l output into human-readable rights',
+      'Set secure defaults for web server files (644 for files, 755 for directories)',
+      'Explain Unix permission concepts when onboarding junior developers',
+    ],
+    faq: [
+      {
+        q: 'What does the execute bit mean on a directory?',
+        a: 'On a directory, the execute bit controls whether a user can enter (cd into) the directory and access its contents. Without it, even a directory with read permission will refuse to list files if execute is missing.',
+      },
+      {
+        q: 'What is the difference between 755 and 777?',
+        a: '755 gives the owner full access (rwx) and everyone else read+execute (r-x) — the standard for executables and directories. 777 gives everyone full write access, which is a security risk and rarely the right choice on shared systems.',
+      },
+      {
+        q: 'Why does chmod 644 use three digits, not four?',
+        a: 'chmod accepts 3- or 4-digit octal. The optional leading digit controls special bits: setuid (4), setgid (2), and sticky (1). Most files only need the three permission digits. The calculator shows the three-digit form used in everyday practice.',
+      },
+    ],
+  },
+
+  'url-parser': {
+    about:
+      "Every URL is a structured string following RFC 3986, composed of a scheme (https), authority (host + optional port), path, query string, and fragment. This tool uses the browser's native URL API to parse any valid URL into its components and displays all query parameters in a key/value table. The parsed URL is always reconstructed and shown as the canonical form.",
+    useCases: [
+      'Inspect OAuth redirect URIs to verify that all required parameters are present',
+      'Debug a failing API call by checking whether the query string is encoded correctly',
+      'Extract the hostname from a list of full URLs for domain analysis',
+      'Understand the structure of a complex URL with many nested query parameters',
+    ],
+    faq: [
+      {
+        q: 'Does it handle URLs without a scheme?',
+        a: 'Yes. If you paste a URL without https:// the tool automatically prepends it for parsing. The displayed scheme will then reflect the added prefix. Paste the full URL to see the exact original scheme.',
+      },
+      {
+        q: 'Are percent-encoded characters decoded?',
+        a: 'Query parameter values are shown decoded (e.g. %20 → space). The raw encoded form is visible in the search field row. This mirrors how browsers and servers interpret the values in practice.',
+      },
+      {
+        q: 'What is the origin?',
+        a: "The origin is the combination of scheme + host + port: https://example.com:8443. It is the security boundary used by the browser's same-origin policy. Two URLs with the same origin can share cookies and make cross-frame calls freely.",
+      },
+    ],
+  },
+
+  'env-json': {
+    about:
+      '.env files store environment variables as KEY=VALUE pairs, one per line. Lines starting with # are comments and blank lines are ignored. Values can optionally be wrapped in single or double quotes. This tool converts between .env text and JSON objects in both directions — useful for comparing environment configs, migrating to a secrets manager that speaks JSON, or seeding a local env from a JSON export.',
+    useCases: [
+      'Convert a .env file exported from Vercel or Render into a JSON object for programmatic use',
+      'Seed a Docker Compose environment block by converting a JSON secrets export to .env format',
+      'Compare two .env files by converting both to JSON and using a diff tool',
+      'Generate a .env template from a JSON schema by converting example values',
+    ],
+    faq: [
+      {
+        q: 'Are comments preserved in .env → JSON conversion?',
+        a: 'No. Comments (lines starting with #) and blank lines are skipped during parsing — JSON has no comment syntax. In the reverse direction (JSON → .env) no comments are added either, since the tool only knows key/value pairs.',
+      },
+      {
+        q: 'What happens to quoted values?',
+        a: 'Both single-quoted and double-quoted values are unquoted during parsing: KEY="hello world" becomes {"KEY": "hello world"}. In the reverse direction, values containing spaces, # or = characters are automatically re-quoted with double quotes.',
+      },
+      {
+        q: 'Does it support multi-line values?',
+        a: 'No. Each line is treated as an independent key=value pair. Multi-line values (using escaped newlines or quoted newlines) are a non-standard extension not supported here. Flatten multi-line values to a single line before converting.',
+      },
+    ],
+  },
 };
 
 export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
@@ -2062,6 +2212,156 @@ export const TOOL_CONTENT_RU: Record<string, ToolContent> = {
       {
         q: 'SVG будет корректно отображаться после оптимизации?',
         a: 'Да для стандартных проходов. Удаление комментариев, DOCTYPE, XML-деклараций, title/desc/metadata, пустых атрибутов и сжатие пробелов — всё визуально безопасно. Проход «округление чисел» (toPrecision 4) может вызвать субпиксельные различия на очень точных путях.',
+      },
+    ],
+  },
+
+  'thread-dump-analyzer': {
+    about:
+      'Thread dump Java — снимок состояний всех тредов JVM-процесса в конкретный момент, создаваемый через jstack, kill -3 или JConsole. Он фиксирует имя, OS thread ID, Java-состояние (RUNNABLE, BLOCKED, WAITING, TIMED_WAITING), стектрейс и блокировки каждого треда. Инструмент парсит вывод jstack в структурированное представление со сводкой по состояниям, обнаружением дедлоков и анализом цепочек блокировок.',
+    useCases: [
+      'Диагностировать дедлок в продакшен-JVM, выявив циклическую зависимость блокировок',
+      'Найти треды в BLOCKED для поиска узких мест синхронизации в synchronized-блоках',
+      'Выявить CPU-потребляющие треды, сопоставив RUNNABLE-треды с выводом top -H',
+      'Сравнить количество тредов до и после нагрузки для обнаружения утечек тредов',
+    ],
+    faq: [
+      {
+        q: 'Как сгенерировать thread dump?',
+        a: 'Выполните jstack <pid> в терминале или Ctrl+Break в Windows JVM. В контейнерах: kubectl exec <pod> -- jstack 1. Также можно через JMX, VisualVM или SIGQUIT процессу.',
+      },
+      {
+        q: 'Чем BLOCKED отличается от WAITING?',
+        a: 'BLOCKED — тред ждёт захвата монитора (synchronized-блока), удерживаемого другим тредом. WAITING/TIMED_WAITING — тред добровольно приостановлен через Object.wait(), Thread.sleep() или LockSupport.park() и не конкурирует за блокировку.',
+      },
+      {
+        q: 'Можно ли обнаружить дедлоки?',
+        a: 'Да. Анализатор автоматически выявляет циклы дедлоков. Вывод jstack также содержит секцию "Found one Java-level deadlock" при наличии дедлока.',
+      },
+    ],
+  },
+
+  'json-typescript': {
+    about:
+      'Инструмент выводит TypeScript-интерфейсы из JSON-примера. Он анализирует каждый ключ, определяет наиболее конкретный тип (string, number, boolean, null, массив, вложенный объект) и генерирует чистые интерфейсы с правильной вложенностью. Массивы анализируются поэлементно — разнородные элементы дают union-типы.',
+    useCases: [
+      'Сгенерировать TypeScript-типы для ответа REST API из вкладки Network DevTools',
+      'Создать интерфейсы моделей из примера документа Prisma или Mongoose-схемы',
+      'Типизировать payload внешнего SDK без готовых type definitions',
+      'Быстро типизировать JSON-конфиг для автодополнения в редакторе',
+    ],
+    faq: [
+      {
+        q: 'Поддерживаются ли вложенные объекты?',
+        a: 'Да. Вложенные объекты создают отдельные именованные интерфейсы, на которые ссылается родительский. Имена типов формируются из имени ключа с заглавной буквы.',
+      },
+      {
+        q: 'Что происходит с массивами разных типов?',
+        a: 'Разнородные элементы дают union-тип: (string | number)[]. Пустые массивы — unknown[].',
+      },
+      {
+        q: 'Поддерживаются ли null и опциональные поля?',
+        a: 'Null-значения дают type | null. При необходимости поля помечаются опциональными (?). Для полей, присутствующих не во всех объектах, скорректируйте вывод вручную.',
+      },
+    ],
+  },
+
+  'json-diff': {
+    about:
+      'JSON Diff выполняет глубокое структурное сравнение двух JSON-объектов и фиксирует каждое изменение: добавленный ключ (+), удалённый ключ (−) или изменённое значение (~). Инструмент рекурсивно обходит вложенные объекты и массивы, выводя пути в dot-нотации (user.address.city), чтобы точно указать место изменения на любой глубине. Всё работает в браузере — данные не покидают ваш компьютер.',
+    useCases: [
+      'Сравнить два ответа API и найти, какие поля изменились между версиями',
+      'Обнаружить расхождения в конфигурации между стейджингом и продакшеном',
+      'Отладить баг сериализации, сравнив снимки объекта до и после',
+      'Проверить корректность скрипта миграции, сравнив примеры записей до и после',
+    ],
+    faq: [
+      {
+        q: 'Сравниваются ли элементы массива поэлементно?',
+        a: 'Да. Элементы массива сравниваются по индексу. Если элемент вставлен или удалён, все последующие индексы сдвигаются и отображаются как изменения. Для больших массивов это может дать объёмный вывод.',
+      },
+      {
+        q: 'Что означает нотация пути?',
+        a: 'Пути используют dot-нотацию для ключей объектов (a.b.c) и скобочную нотацию для индексов массивов (items[2].name). Полный путь точно указывает место изменения в структуре.',
+      },
+      {
+        q: 'Раскрываются ли вложенные объекты?',
+        a: 'Да. Если значение-объект изменилось, diff рекурсивно входит в него и показывает отдельные изменения полей, а не весь объект целиком. На листовом уровне отображаются только примитивы.',
+      },
+    ],
+  },
+
+  'chmod-calculator': {
+    about:
+      'Права доступа Unix хранятся в виде 9-битной маски, разделённой на три группы — владелец, группа, остальные — каждая с тремя битами: чтение (4), запись (2), выполнение (1). Сумма битов даёт одну восьмеричную цифру на группу, образуя привычную трёхзначную запись: 755 или 644. Инструмент позволяет переключать права через чекбоксы или вводить восьмеричное значение напрямую — оба представления всегда синхронизированы.',
+    useCases: [
+      'Сформировать точную команду chmod перед выполнением на сервере',
+      'Декодировать восьмеричную строку прав из вывода ls -l в понятный формат',
+      'Установить безопасные права для файлов веб-сервера (644 для файлов, 755 для директорий)',
+      'Объяснить концепцию прав Unix при введении в курс дела новых разработчиков',
+    ],
+    faq: [
+      {
+        q: 'Что означает бит выполнения у директории?',
+        a: 'Для директории бит выполнения управляет возможностью войти в неё (cd) и обращаться к содержимому. Без него даже директория с правом чтения отказывает в доступе к файлам.',
+      },
+      {
+        q: 'В чём разница между 755 и 777?',
+        a: '755 даёт владельцу полный доступ (rwx), а всем остальным — чтение и выполнение (r-x). Это стандарт для исполняемых файлов и директорий. 777 даёт всем право записи — это риск безопасности на общих системах.',
+      },
+      {
+        q: 'Почему chmod 644 записывается тремя цифрами, а не четырьмя?',
+        a: 'chmod принимает 3 или 4 восьмеричные цифры. Опциональная ведущая цифра управляет специальными битами: setuid (4), setgid (2) и sticky (1). Большинству файлов нужны только три цифры прав. Калькулятор показывает трёхзначный формат.',
+      },
+    ],
+  },
+
+  'url-parser': {
+    about:
+      'Каждый URL — структурированная строка по RFC 3986, состоящая из схемы (https), authority (хост + опциональный порт), пути, строки запроса и фрагмента. Инструмент использует нативный URL API браузера для разбора любого валидного URL на компоненты и отображает все query-параметры в виде таблицы ключ/значение.',
+    useCases: [
+      'Проверить OAuth redirect URI — убедиться, что все обязательные параметры присутствуют',
+      'Отладить падающий API-запрос, проверив правильность кодирования query-строки',
+      'Извлечь hostname из списка полных URL для анализа доменов',
+      'Разобраться в структуре сложного URL со многими вложенными query-параметрами',
+    ],
+    faq: [
+      {
+        q: 'Работает ли с URL без схемы?',
+        a: 'Да. Если вставить URL без https://, инструмент автоматически добавит его для парсинга. Чтобы увидеть точную оригинальную схему, вставьте полный URL.',
+      },
+      {
+        q: 'Декодируются ли percent-encoded символы?',
+        a: 'Значения query-параметров отображаются в декодированном виде (например, %20 → пробел). Сырое закодированное значение видно в строке search. Это соответствует тому, как браузеры и серверы интерпретируют значения на практике.',
+      },
+      {
+        q: 'Что такое origin?',
+        a: 'Origin — комбинация схемы, хоста и порта: https://example.com:8443. Это граница безопасности браузера, используемая политикой same-origin. Два URL с одинаковым origin могут свободно обмениваться куками и делать cross-frame вызовы.',
+      },
+    ],
+  },
+
+  'env-json': {
+    about:
+      '.env-файлы хранят переменные окружения в виде пар KEY=VALUE, по одной на строку. Строки, начинающиеся с #, являются комментариями, пустые строки игнорируются. Значения могут быть обёрнуты в одинарные или двойные кавычки. Инструмент конвертирует .env-текст в JSON-объекты и обратно — удобно для сравнения конфигов окружений или миграции в менеджер секретов.',
+    useCases: [
+      'Конвертировать .env-файл, экспортированный из Vercel или Render, в JSON для программной обработки',
+      'Заполнить секцию environment Docker Compose, конвертировав JSON-экспорт секретов в .env',
+      'Сравнить два .env-файла, конвертировав оба в JSON и использовав diff-инструмент',
+      'Сгенерировать .env-шаблон из JSON-схемы с примерами значений',
+    ],
+    faq: [
+      {
+        q: 'Сохраняются ли комментарии при конвертации .env → JSON?',
+        a: 'Нет. Комментарии (строки, начинающиеся с #) и пустые строки пропускаются при парсинге — в JSON нет синтаксиса для комментариев. В обратном направлении (JSON → .env) комментарии также не добавляются.',
+      },
+      {
+        q: 'Что происходит с закавыченными значениями?',
+        a: 'Значения в одинарных и двойных кавычках раскавычиваются при парсинге: KEY="hello world" превращается в {"KEY": "hello world"}. В обратном направлении значения, содержащие пробелы, # или =, автоматически оборачиваются в двойные кавычки.',
+      },
+      {
+        q: 'Поддерживаются ли многострочные значения?',
+        a: 'Нет. Каждая строка считается отдельной парой key=value. Многострочные значения (с экранированными переносами или переносами в кавычках) — нестандартное расширение, которое здесь не поддерживается. Приведите такие значения к одной строке перед конвертацией.',
       },
     ],
   },
